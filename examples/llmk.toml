@@ -1,0 +1,6 @@
+# This is a simple example of llmk.toml.
+# Public domain.
+
+source = "simple.tex"
+latex = "latex"
+max_repeat = 3

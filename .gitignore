@@ -1,0 +1,31 @@
+# LaTeX auxiliary files
+*.aux
+*.lof
+*.log
+*.lot
+*.fls
+*.out
+*.toc
+*.fmt
+
+# Build tool auxiliary files
+*.synctex
+*.synctex.gz
+*.synctex.gz(busy)
+*.pdfsync
+
+# Generated documents
+*.dvi
+*.pdf
+*.1
+
+# Bundle
+.bundle
+vendor/*
+
+# Temporaly
+tmp/*
+llmk-*.zip
+
+# local
+.vimrc
