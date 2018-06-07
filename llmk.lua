@@ -6,14 +6,21 @@
 
 -- program information
 prog_name = 'llmk'
-version = '0.0.1'
+version = '0.0.0'
 author = 'Takuto ASAKURA (wtsnjp)'
 
 -- option flags (default)
 debug = {
   ['version'] = false,
+  ['config'] = false,
 }
 verbosity_level = 0
+
+-- config table (default)
+config = {
+  ['latex'] = 'lualatex',
+  ['max_repeat'] = 3,
+}
 
 ----------------------------------------
 
@@ -45,50 +52,15 @@ random = math.random
 ----------------------------------------
 
 do
-  local function run_luatex(fn)
-    local tex_cmd = 'lualatex --halt-on-error ' .. fn
+  local function run_latex(fn)
+    local tex_cmd = config['latex'] .. ' ' .. fn
     err_print('info', 'TeX command: "' .. tex_cmd .. '"')
-
-    if verbosity_level < 2 then
-      tex_cmd = tex_cmd .. ' >' .. fn .. '.out'
-    end
-
     os.execute(tex_cmd)
   end
 
-  local function rm_all(dir)
-    for f in lfs.dir(dir) do
-      rm(dir .. '/' .. f)
-    end
-    rmdir(dir)
-  end
-
-  function generate_doc(keyword)
-    doc_name = keyword .. '-' .. prog_name
-    local latex_fn = doc_name .. '.tex'
-    local pdf_fn = doc_name .. '.pdf'
-    local sandbox = doc_name .. '-sandbox'
-    local origin = pwd()
-
-    -- sandbox
-    mkdir(sandbox)
-    cd(sandbox)
-
-    -- luatex
-    local latex_src = generate_latex_src(keyword)
-
-    local f = io.open(latex_fn, 'w')
-    f:write(latex_src)
-    f:close()
-    run_luatex(latex_fn)
-
-    mv(pdf_fn, origin .. '/' .. pdf_fn)
-
-    -- clean up
-    cd(origin)
-    rm_all(sandbox)
-
-    return pdf_fn
+  function make(fns)
+    fn = fns[1]
+    run_latex(fn)
   end
 end
 
@@ -102,13 +74,13 @@ do
 
   -- help texts
   local usage_text = [[
-Usage: llmk[.lua] [OPTION...] [FILE]
+Usage: llmk[.lua] [OPTION...] [FILE...]
 
 Options:
   -h, --help            Print this help message.
   -V, --version         Print the version number.
 
-Please report bugs to <wtsnjp@gmail.com>.
+Please report bugs to <tkt.asakura@gmail.com>.
 ]]
 
   local version_text = [[
@@ -192,8 +164,6 @@ This is free software: you are free to change and redistribute it.
         action = 'help'
       elseif (curr_arg == '-V') or (curr_arg == '--version') then
         action = 'version'
-      elseif (curr_arg == '-f') or (curr_arg == '--files') then
-        action = 'file'
       else
         err_print('error', 'unknown option: ' .. curr_arg)
         err_print('error', error_msg)
@@ -220,6 +190,7 @@ This is free software: you are free to change and redistribute it.
       os.exit(exit_ok)
     end
 
+    make(arg)
     os.exit(exit_ok)
   end
 end
