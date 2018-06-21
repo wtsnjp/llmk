@@ -22,6 +22,11 @@ config = {
   ['max_repeat'] = 3,
 }
 
+-- exit codes
+exit_ok = 0
+exit_error = 1
+exit_usage = 2
+
 ----------------------------------------
 
 -- library
@@ -97,6 +102,7 @@ do
 
         if char():match(nl) then
           err_print('error', 'Single-line string cannot contain line break')
+          os.exit(exit_error)
         end
 
         -- TODO: process escape characters
@@ -120,6 +126,7 @@ do
           break
         else
           err_print('Invalid number')
+          os.exit(exit_error)
         end
         step()
       end
@@ -160,6 +167,7 @@ do
 
         if key == '' then
           err_print('error', 'Empty key name')
+          os.exit(exit_error)
         end
 
         local value = get_value()
@@ -167,6 +175,7 @@ do
           -- duplicate keys are not allowed
           if obj[key] then
             err_print('error', 'Cannot redefine key "' .. key .. '"')
+            os.exit(exit_error)
           end
           obj[key] = value
         end
@@ -182,6 +191,7 @@ do
         -- if garbage remains on this line, raise an error
         if not char():match(nl) and cursor < toml:len() then
           err_print('error', 'Invalid primitive')
+          os.exit(exit_error)
         end
 
       --elseif char() == '[' then
@@ -226,12 +236,21 @@ do
     end
   end
 
-  function fetch_config(fns)
-    local fn = fns[1]
-
+  function fetch_config_from_latex_source(fn)
     local toml = get_toml(fn)
-    local new_config = parse_toml(toml)
-    update_config(new_config)
+    update_config(parse_toml(toml))
+  end
+
+  function fetch_config_from_llmk_toml()
+    local f = io.open('llmk.toml')
+    if f ~= nil then
+      local toml = f:read('*all')
+      update_config(parse_toml(toml))
+      f:close()
+    else
+      err_print('error', 'llmk.toml not found')
+      os.exit(exit_error)
+    end
   end
 end
 
@@ -245,19 +264,25 @@ do
   end
 
   function make(fns)
-    fn = fns[1]
-    run_latex(fn)
+    if #fns > 0 then
+      local fn = fns[1]
+      fetch_config_from_latex_source(fn)
+      run_latex(fn)
+    else
+      fetch_config_from_llmk_toml()
+      if config.source then
+        run_latex(config.source)
+      else
+        err_print('error', 'No source detected')
+        os.exit(exit_error)
+      end
+    end
   end
 end
 
 ----------------------------------------
 
 do
-  -- exit codes
-  local exit_ok = 0
-  local exit_error = 1
-  local exit_usage = 2
-
   -- help texts
   local usage_text = [[
 Usage: llmk[.lua] [OPTION...] [FILE...]
@@ -281,16 +306,11 @@ This is free software: you are free to change and redistribute it.
 
   -- show uasage / help
   local function show_usage(out, text)
-    out:write(usage_text:format(text))
+    out:write(usage_text)
   end
 
   -- execution functions
   local function read_options()
-    if #arg == 0 then
-      show_usage(io.stderr, '')
-      os.exit(exit_usage)
-    end
-
     local curr_arg
     local action = false
 
@@ -362,7 +382,7 @@ This is free software: you are free to change and redistribute it.
 
   local function do_action()
     if action == 'help' then
-      show_usage(io.stdout, action_text)
+      show_usage(io.stdout)
     elseif action == 'version' then
       io.stdout:write(version_text:format(prog_name, version, author))
     end
@@ -376,7 +396,6 @@ This is free software: you are free to change and redistribute it.
       os.exit(exit_ok)
     end
 
-    fetch_config(arg)
     make(arg)
     os.exit(exit_ok)
   end
