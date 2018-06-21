@@ -40,20 +40,206 @@ function dbg_print(dbg_type, msg)
   end
 end
 
--- short function names
-cd     = lfs.chdir
-pwd    = lfs.currentdir
-mv     = os.rename
-rm     = os.remove
-mkdir  = lfs.mkdir
-rmdir  = lfs.rmdir
-random = math.random
+----------------------------------------
+
+do
+  local function parse_toml(toml)
+    -- basic local variables
+    local ws = '[\009\032]'
+    local nl = '[\10\13\10]'
+
+    local buffer = ''
+    local cursor = 1
+
+    local res = {}
+    local obj = res
+
+    -- basic local functions
+    local function char(n)
+      n = n or 0
+      return toml:sub(cursor + n, cursor + n)
+    end
+
+    local function step(n)
+      n = n or 1
+      cursor = cursor + n
+    end
+
+    local function skip_ws()
+      while(char():match(ws)) do
+        step()
+      end
+    end
+
+    local function trim(str)
+      return str:gsub('^%s*(.-)%s*$', '%1')
+    end
+
+    local function bounds()
+      return cursor <= toml:len()
+    end
+
+    -- parse functions for each type
+    local function parse_string()
+      -- TODO: multiline
+      local del = char() -- ' or "
+      local str = ''
+
+      -- skip the quotes
+      step()
+
+      while(bounds()) do
+        -- end of string
+        if char() == del then
+          step()
+          break
+        end
+
+        if char():match(nl) then
+          err_print('error', 'Single-line string cannot contain line break')
+        end
+
+        -- TODO: process escape characters
+        str = str .. char()
+        step()
+      end
+
+      return str
+    end
+
+    local function parse_number()
+      -- TODO: exp, date
+      local num = ''
+
+      while(bounds()) do
+        if char():match('[%+%-%.eE_0-9]') then
+          if char() ~= '_' then
+            num = num .. char()
+          end
+        elseif char():match(ws) or char() == '#' or char():match(nl) then
+          break
+        else
+          err_print('Invalid number')
+        end
+        step()
+      end
+
+      return tonumber(num)
+    end
+
+    -- judge the type and get the value
+    local function get_value()
+      if (char() == '"' or char() == "'") then
+        return parse_string()
+      elseif char():match('[%+%-0-9]') then
+        return parse_number()
+      -- TODO: array, inline table, boolean
+      end
+    end
+
+    -- main loop of parser
+    while(cursor <= toml:len()) do
+      -- ignore comments and whitespace
+      if char() == '#' then
+        while(not char():match(nl)) do
+          step()
+        end
+      end
+
+      if char():match(nl) then
+        -- do nothing; skip
+      end
+
+      if char() == '=' then
+        step()
+        skip_ws()
+
+        -- prepare the key
+        key = trim(buffer)
+        buffer = ''
+
+        if key == '' then
+          err_print('error', 'Empty key name')
+        end
+
+        local value = get_value()
+        if value then
+          -- duplicate keys are not allowed
+          if obj[key] then
+            err_print('error', 'Cannot redefine key "' .. key .. '"')
+          end
+          obj[key] = value
+        end
+
+        -- skip whitespace and comments
+        skip_ws()
+        if char() == '#' then
+          while(bounds() and not char():match(nl)) do
+            step()
+          end
+        end
+
+        -- if garbage remains on this line, raise an error
+        if not char():match(nl) and cursor < toml:len() then
+          err_print('error', 'Invalid primitive')
+        end
+
+      --elseif char() == '[' then
+        -- TODO: arrays
+
+      --elseif (char() == '"' or char() == "'") then
+        -- TODO: quoted keys
+      end
+
+      -- put the char to the buffer and proceed
+      buffer = buffer .. (char():match(nl) and '' or char())
+      step()
+    end
+
+    return res
+  end
+
+  local function get_toml(fn)
+    local toml = ''
+    local toml_area = false
+
+    f = io.open(fn)
+
+    for l in f:lines() do
+      if string.match(l, '^%s*%%%s*%+%+%++%s*$') then
+        toml_area = not toml_area
+      else
+        if toml_area then
+          toml = toml .. string.match(l, '^%s*%%%s*(.*)%s*$') .. '\n'
+        end
+      end
+    end
+
+    f:close()
+
+    return toml
+  end
+
+  local function update_config(tab)
+    for k, v in pairs(tab) do
+      config[k] = v
+    end
+  end
+
+  function fetch_config(fns)
+    local fn = fns[1]
+
+    local toml = get_toml(fn)
+    local new_config = parse_toml(toml)
+    update_config(new_config)
+  end
+end
 
 ----------------------------------------
 
 do
   local function run_latex(fn)
-    local tex_cmd = config['latex'] .. ' ' .. fn
+    local tex_cmd = config.latex .. ' ' .. fn
     err_print('info', 'TeX command: "' .. tex_cmd .. '"')
     os.execute(tex_cmd)
   end
@@ -190,6 +376,7 @@ This is free software: you are free to change and redistribute it.
       os.exit(exit_ok)
     end
 
+    fetch_config(arg)
     make(arg)
     os.exit(exit_ok)
   end
