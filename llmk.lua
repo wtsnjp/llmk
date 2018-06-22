@@ -19,17 +19,31 @@ debug = {
 }
 verbosity_level = 1
 
--- config table (default)
+-- exit codes
+exit_ok = 0
+exit_error = 1
+exit_parser = 2
+
+----------------------------------------
+
+-- basic config table
 config = {
   latex = 'lualatex',
   sequence = { 'latex', 'dvipdf' },
   max_repeat = 3,
 }
 
--- exit codes
-exit_ok = 0
-exit_error = 1
-exit_parser = 2
+-- program presets
+config.programs = {
+  latex = {
+    command = '',
+    arg = '%T',
+  },
+  dvipdf = {
+    command = '',
+    arg = '%B',
+  },
+}
 
 ----------------------------------------
 
@@ -235,8 +249,19 @@ do
   end
 
   local function update_config(tab)
+    -- merge the table from TOML
     for k, v in pairs(tab) do
       config[k] = v
+    end
+
+    -- set essential program names from top-level
+    -- TODO: make DRY
+    if (config.programs.latex.command == '' and config.latex) then
+      config.programs.latex.command = config.latex
+    end
+
+    if (config.programs.dvipdf.command == '' and config.dvipdf) then
+      config.programs.dvipdf.command = config.dvipdf
     end
   end
 
@@ -261,13 +286,41 @@ end
 ----------------------------------------
 
 do
+  local function construct_cmd(fn, prog)
+    local cmd = prog.command
+    local cmd_arg = prog.arg
+
+    -- construct the argument
+    local tmp = '/' .. fn
+    local basename = tmp:match('^.*/(.*)%..*$')
+
+    cmd_arg = cmd_arg:gsub('%%T', fn)
+    cmd_arg = cmd_arg:gsub('%%B', basename)
+
+    -- construct
+    return cmd .. ' ' .. cmd_arg
+  end
+
   local function run_latex(fn)
     for _, v in ipairs(config.sequence) do
-      prog = config[v]
-      if prog then
-        local command = prog .. ' ' .. fn
-        err_print('info', 'run command: "' .. command .. '"')
-        os.execute(command)
+      local prog = config.programs[v]
+
+      if type(prog) ~= 'table' then
+        err_print('error', 'Unknown program "' .. v .. '" deteted in the sequence.')
+        os.exit(exit_error)
+      end
+
+      if type(prog.command) ~= 'string' then
+        err_print('error', 'Command name for "' .. v .. '" is not detected.')
+        os.exit(exit_error)
+      end
+
+      if #prog.command > 0 then
+        local cmd = construct_cmd(fn, prog)
+        err_print('info', 'running "' .. cmd .. '"')
+        os.execute(cmd)
+      else
+        -- just skip
       end
     end
   end
@@ -305,7 +358,7 @@ Options:
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -dLIST, --debug=LIST  Activate debug output restricted to LIST.
 
-Please report bugs to <tkt.asakura@gmail.com>.
+Please report bugs to <wtsnjp@gmail.com>.
 ]]
 
   local version_text = [[
