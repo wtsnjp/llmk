@@ -13,15 +13,17 @@ llmk_toml = 'llmk.toml'
 
 -- option flags (default)
 debug = {
-  ['version'] = false,
-  ['config'] = false,
+  version = false,
+  config = false,
+  parser = false,
 }
-verbosity_level = 0
+verbosity_level = 1
 
 -- config table (default)
 config = {
-  ['latex'] = 'lualatex',
-  ['max_repeat'] = 3,
+  latex = 'lualatex',
+  sequence = { 'latex', 'dvipdf' },
+  max_repeat = 3,
 }
 
 -- exit codes
@@ -36,7 +38,7 @@ require 'lfs'
 
 -- global functions
 function err_print(err_type, msg)
-  if (verbosity_level > 0) or (err_type == 'error') then
+  if (verbosity_level > 1) or (err_type == 'error') then
     io.stderr:write(prog_name .. ' ' .. err_type .. ': ' .. msg .. '\n')
   end
 end
@@ -260,9 +262,14 @@ end
 
 do
   local function run_latex(fn)
-    local tex_cmd = config.latex .. ' ' .. fn
-    err_print('info', 'TeX command: "' .. tex_cmd .. '"')
-    os.execute(tex_cmd)
+    for _, v in ipairs(config.sequence) do
+      prog = config[v]
+      if prog then
+        local command = prog .. ' ' .. fn
+        err_print('info', 'run command: "' .. command .. '"')
+        os.execute(command)
+      end
+    end
   end
 
   function make(fns)
@@ -292,6 +299,11 @@ Usage: llmk[.lua] [OPTION...] [FILE...]
 Options:
   -h, --help            Print this help message.
   -V, --version         Print the version number.
+
+  -q, --quiet           Suppress warnings and most error messages.
+  -v, --verbose         Print additional information (eg, viewer command).
+  -D, --debug           Activate all debug output (equal to "--debug=all").
+  -dLIST, --debug=LIST  Activate debug output restricted to LIST.
 
 Please report bugs to <tkt.asakura@gmail.com>.
 ]]
@@ -370,6 +382,26 @@ This is free software: you are free to change and redistribute it.
         action = 'help'
       elseif (curr_arg == '-V') or (curr_arg == '--version') then
         action = 'version'
+      -- debug
+      elseif (curr_arg == '-D') or (curr_arg == '--debug' and v == 'all') then
+        if verbosity_level < 1 then verbosity_level = 1 end
+        for c, _ in pairs(debug) do
+          debug[c] = true
+        end
+      elseif (curr_arg == '-d') or (curr_arg == 'debug') then
+        if verbosity_level < 1 then verbosity_level = 1 end
+        if debug[v] == nil then
+          err_print('warning', 'unknown debug category: "' .. v .. '".')
+        else
+          debug['version'] = true
+          debug[v] = true
+        end
+      -- verbosity
+      elseif (curr_arg == '-q') or (curr_arg == '--quiet') then
+        verbosity_level = 0
+      elseif (curr_arg == '-v') or (curr_arg == '--verbose') then
+        verbosity_level = 2
+      -- problem
       else
         err_print('error', 'unknown option: ' .. curr_arg)
         os.exit(exit_error)
