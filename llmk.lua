@@ -9,6 +9,8 @@ prog_name = 'llmk'
 version = '0.0.0'
 author = 'Takuto ASAKURA (wtsnjp)'
 
+llmk_toml = 'llmk.toml'
+
 -- option flags (default)
 debug = {
   ['version'] = false,
@@ -25,7 +27,7 @@ config = {
 -- exit codes
 exit_ok = 0
 exit_error = 1
-exit_usage = 2
+exit_parser = 2
 
 ----------------------------------------
 
@@ -48,6 +50,11 @@ end
 ----------------------------------------
 
 do
+  local function parser_err(msg)
+    err_print('error', 'parser: ' .. msg)
+    os.exit(exit_parser)
+  end
+
   local function parse_toml(toml)
     -- basic local variables
     local ws = '[\009\032]'
@@ -101,8 +108,7 @@ do
         end
 
         if char():match(nl) then
-          err_print('error', 'Single-line string cannot contain line break')
-          os.exit(exit_error)
+          parser_err('Single-line string cannot contain line break')
         end
 
         -- TODO: process escape characters
@@ -125,8 +131,7 @@ do
         elseif char():match(ws) or char() == '#' or char():match(nl) then
           break
         else
-          err_print('Invalid number')
-          os.exit(exit_error)
+          parser_err('Invalid number')
         end
         step()
       end
@@ -166,16 +171,14 @@ do
         buffer = ''
 
         if key == '' then
-          err_print('error', 'Empty key name')
-          os.exit(exit_error)
+          parser_err('Empty key name')
         end
 
         local value = get_value()
         if value then
           -- duplicate keys are not allowed
           if obj[key] then
-            err_print('error', 'Cannot redefine key "' .. key .. '"')
-            os.exit(exit_error)
+            parser_err('Cannot redefine key "' .. key .. '"')
           end
           obj[key] = value
         end
@@ -190,8 +193,7 @@ do
 
         -- if garbage remains on this line, raise an error
         if not char():match(nl) and cursor < toml:len() then
-          err_print('error', 'Invalid primitive')
-          os.exit(exit_error)
+          parser_err('Invalid primitive')
         end
 
       --elseif char() == '[' then
@@ -242,13 +244,13 @@ do
   end
 
   function fetch_config_from_llmk_toml()
-    local f = io.open('llmk.toml')
+    local f = io.open(llmk_toml)
     if f ~= nil then
       local toml = f:read('*all')
       update_config(parse_toml(toml))
       f:close()
     else
-      err_print('error', 'llmk.toml not found')
+      err_print('error', 'not found: ' .. llmk_toml)
       os.exit(exit_error)
     end
   end
@@ -301,8 +303,6 @@ Copyright 2018 %s.
 License: The MIT License <https://opensource.org/licenses/mit-license.php>.
 This is free software: you are free to change and redistribute it.
 ]]
-
-  local error_msg = "ERROR"
 
   -- show uasage / help
   local function show_usage(out, text)
@@ -372,7 +372,6 @@ This is free software: you are free to change and redistribute it.
         action = 'version'
       else
         err_print('error', 'unknown option: ' .. curr_arg)
-        err_print('error', error_msg)
         os.exit(exit_error)
       end
     end
