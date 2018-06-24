@@ -26,27 +26,6 @@ exit_parser = 2
 
 ----------------------------------------
 
--- basic config table
-config = {
-  latex = 'lualatex',
-  sequence = { 'latex', 'dvipdf' },
-  max_repeat = 3,
-}
-
--- program presets
-config.programs = {
-  latex = {
-    command = '',
-    arg = '%T',
-  },
-  dvipdf = {
-    command = '',
-    arg = '%B',
-  },
-}
-
-----------------------------------------
-
 -- library
 require 'lfs'
 
@@ -61,6 +40,27 @@ function dbg_print(dbg_type, msg)
   if debug[dbg_type] then
     io.stderr:write(prog_name .. ' debug-' .. dbg_type .. ': ' .. msg .. '\n')
   end
+end
+
+function init_config()
+  -- basic config table
+  config = {
+    latex = 'lualatex',
+    sequence = { 'latex', 'dvipdf' },
+    max_repeat = 3,
+  }
+
+  -- program presets
+  config.programs = {
+    latex = {
+      command = '',
+      arg = '%T',
+    },
+    dvipdf = {
+      command = '',
+      arg = '%B',
+    },
+  }
 end
 
 ----------------------------------------
@@ -301,7 +301,9 @@ do
     return cmd .. ' ' .. cmd_arg
   end
 
-  local function run_latex(fn)
+  local function run_sequence(fn)
+    err_print('info', 'Begining a sequence for "' .. fn .. '"')
+
     for _, v in ipairs(config.sequence) do
       local prog = config.programs[v]
 
@@ -327,13 +329,16 @@ do
 
   function make(fns)
     if #fns > 0 then
-      local fn = fns[1]
-      fetch_config_from_latex_source(fn)
-      run_latex(fn)
+      for _, fn in ipairs(fns) do
+        init_config()
+        fetch_config_from_latex_source(fn)
+        run_sequence(fn)
+      end
     else
+      init_config()
       fetch_config_from_llmk_toml()
       if config.source then
-        run_latex(config.source)
+        run_sequence(config.source)
       else
         err_print('error', 'No source detected')
         os.exit(exit_error)
@@ -346,7 +351,7 @@ end
 
 do
   -- help texts
-  local usage_text = [[
+  local help_text = [[
 Usage: llmk[.lua] [OPTION...] [FILE...]
 
 Options:
@@ -368,11 +373,6 @@ Copyright 2018 %s.
 License: The MIT License <https://opensource.org/licenses/mit-license.php>.
 This is free software: you are free to change and redistribute it.
 ]]
-
-  -- show uasage / help
-  local function show_usage(out, text)
-    out:write(usage_text)
-  end
 
   -- execution functions
   local function read_options()
@@ -466,7 +466,7 @@ This is free software: you are free to change and redistribute it.
 
   local function do_action()
     if action == 'help' then
-      show_usage(io.stdout)
+      io.stdout:write(help_text)
     elseif action == 'version' then
       io.stdout:write(version_text:format(prog_name, version, author))
     end
