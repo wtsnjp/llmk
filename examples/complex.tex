@@ -1,0 +1,28 @@
+% This is a complex example LaTeX source for llmk.
+% Public domain.
+
+% +++
+% # This should be a comment
+% sequence = [ "latex", "latex", "latex", "dvipdf" ]
+%
+% [programs.latex]
+%   command = "uplatex"
+%   arg = "%B"
+%   
+% [programs.dvipdf]
+%   command = "dvipdfmx"
+%   arg = "%B"
+% +++
+
+\documentclass{article}
+\begin{document}
+
+\section{Foo}\label{sec:foo}
+
+Hello \textsf{llmk}!
+
+\section{Bar}
+
+Happy \textsf{llmk}! See Section~\ref{sec:foo}.
+
+\end{document}
