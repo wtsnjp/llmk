@@ -155,12 +155,57 @@ do
       return tonumber(num)
     end
 
+    local parse_array, get_value
+
+    function parse_array()
+      step()
+      skip_ws()
+
+      local a_type
+      local array = {}
+
+      while(bounds()) do
+        if char() == ']' then
+          break
+        elseif char():match(nl) then
+          step()
+          skip_ws()
+        elseif char() == '#' then
+          while(bounds() and not char():match(nl)) do
+            step()
+          end
+        else
+          local v = get_value()
+          if not v then break end
+
+          if a_type == nil then
+            a_type = type(v)
+          elseif a_type ~= type(v) then
+            parser_err('Mixed types in array')
+          end
+
+          array = array or {}
+          table.insert(array, v)
+
+          if char() == ',' then
+            step()
+          end
+          skip_ws()
+        end
+      end
+      step()
+
+      return array
+    end
+
     -- judge the type and get the value
-    local function get_value()
+    function get_value()
       if (char() == '"' or char() == "'") then
         return parse_string()
       elseif char():match('[%+%-0-9]') then
         return parse_number()
+      elseif char() == '[' then
+        return parse_array()
       -- TODO: array, inline table, boolean
       end
     end
@@ -212,9 +257,78 @@ do
           parser_err('Invalid primitive')
         end
 
-      --elseif char() == '[' then
-        -- TODO: arrays
+      elseif char() == '[' then
+        buffer = ''
+        step()
+        local table_array = false
 
+        if char() == '[' then
+          table_array = true
+          step()
+        end
+
+        obj = res
+
+        local function process_key(is_last)
+          is_last = is_last or false
+          buffer = trim(buffer)
+
+          if buffer == '' then
+            parser_err('Empty table name')
+          end
+
+          if is_last and obj[buffer] and not table_array and #obj[buffer] > 0 then
+            parser_err('Cannot redefine tabel')
+          end
+
+          if table_array then
+            if obj[buffer] then
+              obj = obj[buffer]
+              if is_last then
+                table.insert(obj, {})
+              end
+              obj = obj[#obj]
+            else
+              obj[buffer] = {}
+              obj = obj[buffer]
+              if is_last then
+                table.insert(obj, {})
+                obj = obj[1]
+              end
+            end
+          else
+            obj[buffer] = obj[buffer] or {}
+            obj = obj[buffer]
+          end
+        end
+
+        while(bounds()) do
+          if char() == ']' then
+            if table_array then
+              if char(1) ~= ']' then
+                parser_err('Mismatching brackets')
+              else
+                step()
+              end
+            end
+            step()
+
+            process_key(true)
+            buffer = ''
+            break
+          --elseif char() == '"' or char() == "'" then
+            -- TODO: quoted keys
+          elseif char() == '.' then
+            step()
+            process_key()
+            buffer = ''
+          else
+            buffer = buffer .. char()
+            step()
+          end
+        end
+
+        buffer = ''
       --elseif (char() == '"' or char() == "'") then
         -- TODO: quoted keys
       end
