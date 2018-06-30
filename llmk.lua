@@ -13,7 +13,6 @@ llmk_toml = 'llmk.toml'
 
 -- option flags (default)
 debug = {
-  version = false,
   config = false,
   parser = false,
 }
@@ -242,6 +241,7 @@ do
             parser_err('Cannot redefine key "' .. key .. '"')
           end
           obj[key] = value
+          --dbg_print('parser', 'Entry "' .. key .. ' = ' .. value .. '"')
         end
 
         -- skip whitespace and comments
@@ -451,8 +451,12 @@ do
     else
       init_config()
       fetch_config_from_llmk_toml()
-      if config.source then
+      if type(config.source) == 'string' then
         run_sequence(config.source)
+      elseif type(config.source) == 'table' then
+        for _, fn in ipairs(config.source) do
+          run_sequence(fn)
+        end
       else
         err_print('error', 'No source detected')
         os.exit(exit_error)
@@ -560,7 +564,6 @@ This is free software: you are free to change and redistribute it.
         if debug[v] == nil then
           err_print('warning', 'unknown debug category: "' .. v .. '".')
         else
-          debug['version'] = true
           debug[v] = true
         end
       -- verbosity

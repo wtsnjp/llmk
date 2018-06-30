@@ -1,6 +1,6 @@
 # This is a simple example of llmk.toml.
 # Public domain.
 
-source = "simple.tex"
-latex = "latex"
+source = [ "simple.tex", "default.tex" ]
+latex = "xelatex"
 max_repeat = 3
