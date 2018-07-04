@@ -481,14 +481,14 @@ Options:
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -dLIST, --debug=LIST  Activate debug output restricted to LIST.
 
-Please report bugs to <wtsnjp@gmail.com>.
+Please report bugs to <tkt.asakura@gmail.com>.
 ]]
 
   local version_text = [[
 %s %s
 
 Copyright 2018 %s.
-License: The MIT License <https://opensource.org/licenses/mit-license.php>.
+License: The MIT License <https://opensource.org/licenses/mit-license>.
 This is free software: you are free to change and redistribute it.
 ]]
 
