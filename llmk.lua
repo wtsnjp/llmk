@@ -53,11 +53,11 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
-      arg = '%T',
+      arg = '"%T"',
     },
     dvipdf = {
       command = '',
-      arg = '%B',
+      arg = '"%B.dvi"',
     },
   }
 end
@@ -344,8 +344,21 @@ do
   local function get_toml(fn)
     local toml = ''
     local toml_area = false
+    local toml_source = fn
 
-    f = io.open(fn)
+    local f = io.open(toml_source)
+
+    -- check the existence; if not, try with prefix ".tex"
+    if f == nil then
+      toml_source = fn .. '.tex'
+      f = io.open(toml_source)
+      if f == nil then
+        err_print('error', 'not found: ' .. fn)
+        os.exit(exit_error)
+      end
+    end
+
+    dbg_print('config', 'Fetching TOML from the file "' .. toml_source .. '".')
 
     for l in f:lines() do
       if string.match(l, '^%s*%%%s*%+%+%++%s*$') then
@@ -409,7 +422,11 @@ do
     local basename = tmp:match('^.*/(.*)%..*$')
 
     cmd_arg = cmd_arg:gsub('%%T', fn)
-    cmd_arg = cmd_arg:gsub('%%B', basename)
+    if basename then
+      cmd_arg = cmd_arg:gsub('%%B', basename)
+    else
+      cmd_arg = cmd_arg:gsub('%%B', fn)
+    end
 
     -- construct
     return cmd .. ' ' .. cmd_arg
@@ -433,7 +450,7 @@ do
 
       if #prog.command > 0 then
         local cmd = construct_cmd(fn, prog)
-        err_print('info', 'running "' .. cmd .. '"')
+        err_print('info', 'Running command: ' .. cmd)
         os.execute(cmd)
       else
         -- just skip
@@ -555,12 +572,10 @@ This is free software: you are free to change and redistribute it.
         action = 'version'
       -- debug
       elseif (curr_arg == '-D') or (curr_arg == '--debug' and v == 'all') then
-        if verbosity_level < 1 then verbosity_level = 1 end
         for c, _ in pairs(debug) do
           debug[c] = true
         end
       elseif (curr_arg == '-d') or (curr_arg == 'debug') then
-        if verbosity_level < 1 then verbosity_level = 1 end
         if debug[v] == nil then
           err_print('warning', 'unknown debug category: "' .. v .. '".')
         else
