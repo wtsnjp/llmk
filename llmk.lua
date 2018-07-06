@@ -53,6 +53,7 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
+      opt = '-file-line-error -synctex=1',
       arg = '"%T"',
     },
     dvipdf = {
@@ -415,6 +416,7 @@ end
 do
   local function construct_cmd(fn, prog)
     local cmd = prog.command
+    local cmd_opt = prog.opt
     local cmd_arg = prog.arg
 
     -- construct the argument
@@ -428,8 +430,12 @@ do
       cmd_arg = cmd_arg:gsub('%%B', fn)
     end
 
-    -- construct
-    return cmd .. ' ' .. cmd_arg
+    -- whole command
+    if cmd_opt and cmd_arg ~= '' then
+      return cmd .. ' ' .. cmd_opt .. ' ' .. cmd_arg
+    else
+      return cmd .. ' ' .. cmd_arg
+    end
   end
 
   local function run_sequence(fn)
