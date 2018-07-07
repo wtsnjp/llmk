@@ -54,11 +54,11 @@ function init_config()
     latex = {
       command = '',
       opt = '-file-line-error -synctex=1',
-      arg = '"%T"',
+      arg = '%T',
     },
     dvipdf = {
       command = '',
-      arg = '"%B.dvi"',
+      arg = '%B.dvi',
     },
   }
 end
@@ -432,9 +432,9 @@ do
 
     -- whole command
     if cmd_opt and cmd_arg ~= '' then
-      return cmd .. ' ' .. cmd_opt .. ' ' .. cmd_arg
+      return cmd .. ' ' .. cmd_opt .. ' "' .. cmd_arg .. '"'
     else
-      return cmd .. ' ' .. cmd_arg
+      return cmd .. ' "' .. cmd_arg .. '"'
     end
   end
 
@@ -500,7 +500,7 @@ Options:
   -V, --version         Print the version number.
 
   -q, --quiet           Suppress warnings and most error messages.
-  -v, --verbose         Print additional information (eg, viewer command).
+  -v, --verbose         Print additional information.
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -dLIST, --debug=LIST  Activate debug output restricted to LIST.
 
