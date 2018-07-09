@@ -381,8 +381,10 @@ do
   end
 
   local function fetch_from_top_level(name)
-    if config.programs[name].command == '' and config[name] then
-      config.programs[name].command = config[name]
+    if config.programs[name] then
+      if config.programs[name].command == '' and config[name] then
+        config.programs[name].command = config[name]
+      end
     end
   end
 
