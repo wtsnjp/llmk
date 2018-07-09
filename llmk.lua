@@ -358,7 +358,7 @@ do
       toml_source = fn .. '.tex'
       f = io.open(toml_source)
       if f == nil then
-        err_print('error', 'not found: ' .. fn)
+        err_print('error', 'No file "' .. fn .. '" found.')
         os.exit(exit_error)
       end
     end
@@ -421,7 +421,7 @@ do
       update_config(parse_toml(toml))
       f:close()
     else
-      err_print('error', 'not found: ' .. llmk_toml)
+      err_print('error', 'No target specified and no ' .. llmk_toml .. ' found.')
       os.exit(exit_error)
     end
   end
@@ -497,7 +497,7 @@ do
           run_sequence(fn)
         end
       else
-        err_print('error', 'No source detected')
+        err_print('error', 'No source detected.')
         os.exit(exit_error)
       end
     end
@@ -518,7 +518,7 @@ Options:
   -q, --quiet           Suppress warnings and most error messages.
   -v, --verbose         Print additional information.
   -D, --debug           Activate all debug output (equal to "--debug=all").
-  -dLIST, --debug=LIST  Activate debug output restricted to LIST.
+  -d CAT, --debug=CAT   Activate debug output restricted to CAT.
 
 Please report bugs to <tkt.asakura@gmail.com>.
 ]]
@@ -541,15 +541,17 @@ This is free software: you are free to change and redistribute it.
     local function getopt(arg, options)
       local tmp
       local tab = {}
-      local saved_arg = { table.unpack(arg) }
+      local saved_arg = {table.unpack(arg)}
       for k, v in ipairs(saved_arg) do
-        if string.sub(v, 1, 2) == "--" then
+        if string.sub(v, 1, 2) == '--' then
           table.remove(arg, 1)
-          local x = string.find(v, "=", 1, true)
-          if x then tab[string.sub(v, 3, x-1)] = string.sub(v, x+1)
-          else   tab[string.sub(v, 3)] = true
-          end
-        elseif string.sub(v, 1, 1) == "-" then
+          local x = string.find(v, '=', 1, true)
+            if x then
+              table.insert(tab, {string.sub(v, 3, x-1), string.sub(v, x+1)})
+            else
+              table.insert(tab, {string.sub(v, 3), true})
+            end
+        elseif string.sub(v, 1, 1) == '-' then
           table.remove(arg, 1)
           local y = 2
           local l = string.len(v)
@@ -565,12 +567,12 @@ This is free software: you are free to change and redistribute it.
                 tmp = saved_arg[k + 1]
               end
               if string.match(tmp, '^%-') then
-                tab[jopt] = false
+                table.insert(tab, {jopt, false})
               else
-                tab[jopt] = tmp
+                table.insert(tab, {jopt, tmp})
               end
             else
-              tab[jopt] = true
+              table.insert(tab, {jopt, true})
             end
             y = y + 1
           end
@@ -580,7 +582,8 @@ This is free software: you are free to change and redistribute it.
     end
 
     opts = getopt(arg, 'd')
-    for k, v in pairs(opts) do
+    for _, tp in pairs(opts) do
+      k, v = tp[1], tp[2]
       if #k == 1 then
         curr_arg = '-' .. k
       else
