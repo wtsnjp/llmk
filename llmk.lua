@@ -60,6 +60,10 @@ function init_config()
       command = '',
       arg = '%B.dvi',
     },
+    bibtex = {
+      command = '',
+      arg = '%B.bib',
+    },
   }
 end
 
@@ -376,20 +380,30 @@ do
     return toml
   end
 
+  local function fetch_from_top_level(name)
+    if config.programs[name].command == '' and config[name] then
+      config.programs[name].command = config[name]
+    end
+  end
+
   local function update_config(tab)
     -- merge the table from TOML
-    for k, v in pairs(tab) do
-      config[k] = v
+    local function merge_table(tab1, tab2)
+      for k, v in pairs(tab2) do
+        if type(k) == 'table' then
+          tab1[k] = merge_table(tab1[k], v)
+        else
+          tab1[k] = v
+        end
+      end
+      return tab1
     end
+    config = merge_table(config, tab)
 
     -- set essential program names from top-level
-    -- TODO: make DRY
-    if (config.programs.latex.command == '' and config.latex) then
-      config.programs.latex.command = config.latex
-    end
-
-    if (config.programs.dvipdf.command == '' and config.dvipdf) then
-      config.programs.dvipdf.command = config.dvipdf
+    local prg_names = {'latex', 'dvipdf', 'bibtex'}
+    for _, name in pairs(prg_names) do
+      fetch_from_top_level(name)
     end
   end
 
@@ -456,7 +470,7 @@ do
 
       if #prog.command > 0 then
         local cmd = construct_cmd(fn, prog)
-        err_print('info', 'Running command: ' .. cmd)
+        err_print('info', 'Running ' .. cmd)
         os.execute(cmd)
       else
         -- just skip
