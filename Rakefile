@@ -21,17 +21,17 @@ CLEAN.include(["doc/*", "tmp"])
 CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
 CLOBBER.include(["doc/*.pdf", "*.zip"])
 
-#desc "Run tests (only listed specs, if specified)"
-#task :test do |task, args|
-#  # run rspec
-#  args = args.to_a
-#  if args.size > 0
-#    f_list = args.map{|f| "spec/#{f}_spec.rb"}.join(" ")
-#    sh "bundle exec rspec #{f_list}"
-#  else
-#    sh "bundle exec rspec"
-#  end
-#end
+desc "Run tests (only listed specs, if specified)"
+task :test do |task, args|
+  # run rspec
+  args = args.to_a
+  if args.size > 0
+    f_list = args.map{|f| "spec/#{f}_spec.rb"}.join(" ")
+    sh "bundle exec rspec #{f_list}"
+  else
+    sh "bundle exec rspec"
+  end
+end
 
 desc "Generate all documentation"
 task :doc do
