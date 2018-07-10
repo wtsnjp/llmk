@@ -23,6 +23,8 @@ Please report bugs to <tkt.asakura@gmail.com>.
 EXPECTED
   end
 
+  before(:all) { set_default_env }
+
   context "with --help" do
     before(:each) { run_llmk "--help" }
     before(:each) { stop_all_commands }
