@@ -1,0 +1,24 @@
+os:
+  - osx
+  - linux
+dist: trusty
+sudo: false
+
+language: ruby
+
+addons:
+  apt:
+    packages:
+      - liblz4-tool
+
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install lz4 xz; fi
+  - wget https://raw.githubusercontent.com/y-yu/install-tex-travis/master/install-tex.sh
+  - chmod +x install-tex.sh
+
+install:
+  - . ./install-tex.sh
+  - bundle install
+
+script:
+  - bundle exec rake test

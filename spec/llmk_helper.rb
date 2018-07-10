@@ -9,9 +9,9 @@ module Helplers
   # running the target llmk
   def run_llmk(*args)
     if args.size > 0
-      run "llmk #{args.join(' ')}"
+      run "texlua #{PWD}/llmk.lua #{args.join(' ')}"
     else
-      run "llmk"
+      run "texlua #{PWD}/llmk.lua"
     end
   end
 
