@@ -22,6 +22,7 @@ verbosity_level = 1
 exit_ok = 0
 exit_error = 1
 exit_parser = 2
+exit_failure = 3
 
 ----------------------------------------
 
@@ -473,7 +474,12 @@ do
       if #prog.command > 0 then
         local cmd = construct_cmd(fn, prog)
         err_print('info', 'Running ' .. cmd)
-        os.execute(cmd)
+        local status = os.execute(cmd)
+        if status ~= 0 then
+          err_print('error',
+            'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
+          os.exit(exit_failure)
+        end
       else
         -- just skip
       end
