@@ -10,14 +10,12 @@ build: off
 install:
   - curl -O https://raw.githubusercontent.com/y-yu/install-tex-appveyor/master/install-tex.sh
   - bash ./install-tex.sh
+  - tlmgr install collection-langjapanese
   - bundle config --local path vendor/bundle
   - bundle install
 
 before_test:
   - texlua -v
-  - ruby -v
-  - gem -v
-  - bundle -v
 
 test_script:
   - bundle exec rake test

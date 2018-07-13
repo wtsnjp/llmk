@@ -475,7 +475,7 @@ do
         local cmd = construct_cmd(fn, prog)
         err_print('info', 'Running ' .. cmd)
         local status = os.execute(cmd)
-        if status ~= 0 then
+        if status > 0 then
           err_print('error',
             'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
           os.exit(exit_failure)

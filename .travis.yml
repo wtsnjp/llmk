@@ -14,10 +14,12 @@ addons:
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install lz4 xz; fi
   - wget https://raw.githubusercontent.com/y-yu/install-tex-travis/master/install-tex.sh
-  - chmod +x install-tex.sh
+  - wget https://raw.githubusercontent.com/y-yu/install-tex-travis/master/tlmgr.sh
+  - chmod +x install-tex.sh tlmgr.sh
 
 install:
   - . ./install-tex.sh
+  - ./tlmgr.sh install collection-langjapanese
   - bundle install
 
 script:
