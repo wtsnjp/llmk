@@ -602,13 +602,14 @@ This is free software: you are free to change and redistribute it.
       elseif (curr_arg == '-V') or (curr_arg == '--version') then
         action = 'version'
       -- debug
-      elseif (curr_arg == '-D') or (curr_arg == '--debug' and v == 'all') then
+      elseif (curr_arg == '-D') or
+        (curr_arg == '--debug' and (v == 'all' or v == true)) then
         for c, _ in pairs(debug) do
           debug[c] = true
         end
-      elseif (curr_arg == '-d') or (curr_arg == 'debug') then
+      elseif (curr_arg == '-d') or (curr_arg == '--debug') then
         if debug[v] == nil then
-          err_print('warning', 'unknown debug category: "' .. v .. '".')
+          err_print('warning', 'unknown debug category: ' .. v)
         else
           debug[v] = true
         end
