@@ -46,7 +46,7 @@ function init_config()
   -- basic config table
   config = {
     latex = 'lualatex',
-    sequence = { 'latex', 'dvipdf' },
+    sequence = {'latex', 'dvipdf'},
     max_repeat = 3,
   }
 
@@ -393,7 +393,7 @@ do
     -- merge the table from TOML
     local function merge_table(tab1, tab2)
       for k, v in pairs(tab2) do
-        if type(k) == 'table' then
+        if type(tab1[k]) == 'table' then
           tab1[k] = merge_table(tab1[k], v)
         else
           tab1[k] = v
@@ -407,6 +407,22 @@ do
     local prg_names = {'latex', 'dvipdf', 'bibtex'}
     for _, name in pairs(prg_names) do
       fetch_from_top_level(name)
+    end
+
+    -- show config table (for debug)
+    local function print_table(tab, ind)
+      for k, v in pairs(tab) do
+        if type(v) == 'table' then
+          dbg_print('config', string.rep(' ', ind) .. k .. ':')
+          print_table(v, ind + 2)
+        else
+          dbg_print('config', string.rep(' ', ind) .. k .. ': ' .. v)
+        end
+      end
+    end
+    if debug.config then
+      dbg_print('config', 'The final config table is as follows:')
+      print_table(config, 2)
     end
   end
 
