@@ -12,7 +12,7 @@ This is yet another build tool for LaTeX documents. The features of **llmk** are
 
 ## Basic Usage
 
-The easiest way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as TOML format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` (at least three).
+The easiest way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as [TOML](https://github.com/toml-lang/toml) format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` characters (at least three).
 
 Here's a very simple example:
 
@@ -37,7 +37,7 @@ Suppose we save this file as `hello.tex`, then run
 $ llmk hello.tex
 ```
 
-will produce a PDF document (`hello.pdf`) with XeLaTeX since it specified in the TOML line of the source.
+will produce a PDF document (`hello.pdf`) with XeLaTeX, since it is specified in the TOML line of the source.
 
 You can find other example LaTeX document files in the [examples](./examples) directory.
 
@@ -60,13 +60,13 @@ If you run llmk without any argument, llmk will load `llmk.toml` in the working 
 $ llmk
 ```
 
-### Custom Compile Sequence
+### Custom compile sequence
 
-You can setup custom sequence for processing LaTeX documents; use `sequence` key to specify the order of programs to process the documents and specify the detailed settings for each programs.
+You can setup custom sequence for processing LaTeX documents; use `sequence` key to specify the order of programs to process the documents and specify the detailed settings for each program.
 
-For the simple use, you can specify the command name in the top-level just like `latex = "lualatex"`, which is already shown in the former examples (only available for latex, dvipdf, and bibtex).
+For the simple use, you can specify the command name in the top-level just like `latex = "lualatex"`, which is already shown in the former examples (only available for `latex`, `dvipdf`, and `bibtex`).
 
-However, it is impossible to specify more detailed settings (e.g., command line options). If you want to change those settings as well, you have to use tables of TOML; write `[programs.<name>]` and then write the each setting following to that:
+However, it is impossible to specify more detailed settings (e.g., command line options) with this simple manner. If you want to change those settings as well, you have to use tables of TOML; write `[programs.<name>]` and then write the each setting following to that:
 
 ```toml
 # custom sequence
@@ -86,7 +86,7 @@ dvipdf = "dvipdfmx"
   arg = "%B"
 ```
 
-In the `arg` keys in each program, some special formatters are available. Those formatters will be replaced to appropriate strings before executing the programs:
+In the `arg` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
 
 * `%T`: the file name given to llmk as an argument (target)
 * `%B`: the base name of `%T`
@@ -108,7 +108,7 @@ This is the list of currently available TOML keys.
 		* `arg` (type: *string*)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 
-### Default Settings for Each Program
+### Default settings for each program
 
 * `latex`
 	* `command = "lualatex"`
