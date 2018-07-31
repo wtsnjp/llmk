@@ -59,11 +59,11 @@ function init_config()
     },
     dvipdf = {
       command = '',
-      arg = '%B.dvi',
+      arg = '%B',
     },
     bibtex = {
       command = '',
-      arg = '%B.bib',
+      arg = '%B',
     },
   }
 end
@@ -465,7 +465,11 @@ do
 
     -- whole command
     if cmd_opt and cmd_arg ~= '' then
-      return cmd .. ' ' .. cmd_opt .. ' "' .. cmd_arg .. '"'
+      if cmd_opt ~= '' then
+        return cmd .. ' ' .. cmd_opt .. ' "' .. cmd_arg .. '"'
+      else
+        return cmd .. ' "' .. cmd_arg .. '"'
+      end
     else
       return cmd .. ' "' .. cmd_arg .. '"'
     end

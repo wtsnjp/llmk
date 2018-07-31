@@ -116,10 +116,10 @@ This is the list of currently available TOML keys.
 	* `arg = "%T"`
 * `dvipdf`
 	* `command = ""`
-	* `arg = "%B.dvi"`
+	* `arg = "%B"`
 * `bibtex`
 	* `command = ""`
-	* `arg = "%B.bib"`
+	* `arg = "%B"`
 
 ## License
 
