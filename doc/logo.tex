@@ -33,8 +33,8 @@
 
 % ----- colors -----
 \usepackage{xcolor}
-% paleturquoise (RGB: 169, 255, 242; CMYK: 23, 0, 12, 0)
-\definecolor{color1}{RGB}{169, 255, 242}
+% paleturquoise (RGB: 143, 229, 216; CMYK: 38, 0, 6, 10)
+\definecolor{color1}{RGB}{143, 229, 216}
 % symphony blue (RGB: 24, 87, 227; CMYK: 92, 63, 0, 0)
 \definecolor{color2}{RGB}{24, 87, 227}
 % obaku (RGB: 255, 242, 127; CMYK: 1, 5, 62, 0)
@@ -71,7 +71,7 @@
 \node [octagon, minimum width = 1cm, fill = color2, right = 0.4cm of n1] (n2) {};
 \node [star, minimum width = 1cm, fill = color3, right = 0.4cm of n2] (n3) {};
 \begin{pgfonlayer}{bg}
-\draw [ultra thick, shorten >= -0.2cm] (n1) -- (n3);
+\draw [ultra thick, shorten <= -0.2cm, shorten >= -0.2cm] (n1) -- (n3);
 \end{pgfonlayer}
 \end{tikzpicture}
 
