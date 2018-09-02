@@ -54,7 +54,7 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
-      opt = '-file-line-error -synctex=1',
+      opt = '-interaction=nonstopmode -file-line-error -synctex=1',
       arg = '%T',
     },
     dvipdf = {
@@ -448,31 +448,51 @@ end
 
 do
   local function construct_cmd(fn, prog)
-    local cmd = prog.command
-    local cmd_opt = prog.opt
-    local cmd_arg = prog.arg
+    -- construct the option
+    local cmd_opt = ''
+
+    if prog.opt then
+      -- normarize to a table
+      if type(prog.opt) ~= 'table' then
+        prog.opt = {prog.opt}
+      end
+
+      -- construct each option
+      for _, opt in ipairs(prog.opt) do
+        if #opt > 0 then
+          cmd_opt = cmd_opt .. ' ' .. opt
+        end
+      end
+    end
 
     -- construct the argument
-    local tmp = '/' .. fn
-    local basename = tmp:match('^.*/(.*)%..*$')
+    local cmd_arg = ''
 
-    cmd_arg = cmd_arg:gsub('%%T', fn)
-    if basename then
-      cmd_arg = cmd_arg:gsub('%%B', basename)
-    else
-      cmd_arg = cmd_arg:gsub('%%B', fn)
+    if prog.arg then
+      local tmp = '/' .. fn
+      local basename = tmp:match('^.*/(.*)%..*$')
+
+      -- normarize to a table
+      if type(prog.arg) ~= 'table' then
+        prog.arg = {prog.arg}
+      end
+
+      -- construct each argument
+      for _, arg in ipairs(prog.arg) do
+        arg = arg:gsub('%%T', fn)
+
+        if basename then
+          arg = arg:gsub('%%B', basename)
+        else
+          arg = arg:gsub('%%B', fn)
+        end
+
+        cmd_arg = cmd_arg .. ' "' .. arg .. '"'
+      end
     end
 
     -- whole command
-    if cmd_opt and cmd_arg ~= '' then
-      if cmd_opt ~= '' then
-        return cmd .. ' ' .. cmd_opt .. ' "' .. cmd_arg .. '"'
-      else
-        return cmd .. ' "' .. cmd_arg .. '"'
-      end
-    else
-      return cmd .. ' "' .. cmd_arg .. '"'
-    end
+    return prog.command .. cmd_opt .. cmd_arg
   end
 
   local function run_sequence(fn)
