@@ -54,16 +54,16 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
-      opt = '-interaction=nonstopmode -file-line-error -synctex=1',
-      arg = '%T',
+      opts = '-interaction=nonstopmode -file-line-error -synctex=1',
+      args = '%T',
     },
     dvipdf = {
       command = '',
-      arg = '%B',
+      args = '%B',
     },
     bibtex = {
       command = '',
-      arg = '%B',
+      args = '%B',
     },
   }
 end
@@ -451,14 +451,14 @@ do
     -- construct the option
     local cmd_opt = ''
 
-    if prog.opt then
+    if prog.opts then
       -- normarize to a table
-      if type(prog.opt) ~= 'table' then
-        prog.opt = {prog.opt}
+      if type(prog.opts) ~= 'table' then
+        prog.opts = {prog.opts}
       end
 
       -- construct each option
-      for _, opt in ipairs(prog.opt) do
+      for _, opt in ipairs(prog.opts) do
         if #opt > 0 then
           cmd_opt = cmd_opt .. ' ' .. opt
         end
@@ -468,17 +468,17 @@ do
     -- construct the argument
     local cmd_arg = ''
 
-    if prog.arg then
+    if prog.args then
       local tmp = '/' .. fn
       local basename = tmp:match('^.*/(.*)%..*$')
 
       -- normarize to a table
-      if type(prog.arg) ~= 'table' then
-        prog.arg = {prog.arg}
+      if type(prog.args) ~= 'table' then
+        prog.args = {prog.args}
       end
 
       -- construct each argument
-      for _, arg in ipairs(prog.arg) do
+      for _, arg in ipairs(prog.args) do
         arg = arg:gsub('%%T', fn)
 
         if basename then
