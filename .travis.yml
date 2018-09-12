@@ -10,17 +10,25 @@ addons:
   apt:
     packages:
       - liblz4-tool
+      - ghostscript
+
+cache:
+  directories:
+    - vendor/bundle
+    - $HOME/texlive
+    - $HOME/.texlive
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install lz4 xz; fi
-  - wget https://raw.githubusercontent.com/y-yu/install-tex-travis/master/install-tex.sh
-  - wget https://raw.githubusercontent.com/y-yu/install-tex-travis/master/tlmgr.sh
-  - chmod +x install-tex.sh tlmgr.sh
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
+      brew install lz4 xz ghostscript;
+      export PATH=$PATH:$HOME/texlive/bin/x86_64-darwin;
+    else
+      export PATH=$PATH:$HOME/texlive/bin/x86_64-linux;
+    fi
 
 install:
-  - . ./install-tex.sh
-  - ./tlmgr.sh install collection-langjapanese
-  - bundle install
+  - bundle install --without production --deployment
+  - bundle exec rake setup_travis
 
 script:
   - bundle exec rake test
