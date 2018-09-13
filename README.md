@@ -78,15 +78,15 @@ dvipdf = "dvipdfmx"
 # detailed settings for each program
 [programs.latex]
   command = "uplatex"
-  opt = "-halt-on-error"
-  arg = "%T"
+  opts = "-halt-on-error"
+  args = "%T"
 
 [programs.bibtex]
   command = "biber"
-  arg = "%B"
+  args = "%B"
 ```
 
-In the `arg` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
+In the `args` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
 
 * `%T`: the file name given to llmk as an argument (target)
 * `%B`: the base name of `%T`
@@ -104,22 +104,26 @@ This is the list of currently available TOML keys.
 * `programs` (type: *table*)
 	* \<program name\>
 		* `command` (type: *string*)
-		* `opt` (type: *string*)
-		* `arg` (type: *string*)
+		* `opts` (type: *string* or *array of strings*)
+		* `args` (type: *string* or *array of strings*)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 
 ### Default settings for each program
 
 * `latex`
 	* `command = "lualatex"`
-	* `opt = "-file-line-error -synctex=1"`
-	* `arg = "%T"`
+	* `opts = "-file-line-error -synctex=1"`
+	* `args = "%T"`
 * `dvipdf`
 	* `command = ""`
-	* `arg = "%B"`
+	* `args = "%B"`
 * `bibtex`
 	* `command = ""`
-	* `arg = "%B"`
+	* `args = "%B"`
+
+## Acknowledgements
+
+This project is supported by [TeX Development Fund](https://www.tug.org/tc/devfund/) created by TeX Users Group.
 
 ## License
 
