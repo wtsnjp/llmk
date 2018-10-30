@@ -21,6 +21,7 @@ CLEAN.include(["doc/*", "tmp"])
 CLEAN.include(["*.log", "*.synctex.gz", "*.dvi", "*.pdf", "*.aux"])
 CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
 CLOBBER.include(["doc/*.pdf", "*.zip"])
+CLEAN.exclude(["doc/logo.png"])
 
 desc "Run tests (only listed specs, if specified)"
 task :test do |task, args|
