@@ -15,6 +15,7 @@ llmk_toml = 'llmk.toml'
 debug = {
   config = false,
   parser = false,
+  run = false,
 }
 verbosity_level = 1
 
@@ -46,6 +47,7 @@ function init_config()
   -- basic config table
   config = {
     latex = 'lualatex',
+    dvipdf = 'dvipdfmx',
     sequence = {'latex', 'dvipdf'},
     max_repeat = 3,
   }
@@ -59,7 +61,8 @@ function init_config()
     },
     dvipdf = {
       command = '',
-      args = '%B',
+      target = '%B.dvi',
+      args = '%T',
     },
     bibtex = {
       command = '',
@@ -349,7 +352,7 @@ do
 
   local function get_toml(fn)
     local toml = ''
-    local toml_area = false
+    local toml_field = false
     local toml_source = fn
 
     local f = io.open(toml_source)
@@ -366,11 +369,13 @@ do
 
     dbg_print('config', 'Fetching TOML from the file "' .. toml_source .. '".')
 
+    -- only topmost field is valid
     for l in f:lines() do
       if string.match(l, '^%s*%%%s*%+%+%++%s*$') then
-        toml_area = not toml_area
+        if not toml_field then toml_field = true
+        else break end
       else
-        if toml_area then
+        if toml_field then
           toml = toml .. string.match(l, '^%s*%%%s*(.*)%s*$') .. '\n'
         end
       end
@@ -381,6 +386,7 @@ do
     return toml
   end
 
+  -- copy command name from top level
   local function fetch_from_top_level(name)
     if config.programs[name] then
       if config.programs[name].command == '' and config[name] then
@@ -447,12 +453,28 @@ end
 ----------------------------------------
 
 do
-  local function construct_cmd(fn, prog)
+  local function replace_specifiers(str, source, target)
+    local tmp = '/' .. source
+    local basename = tmp:match('^.*/(.*)%..*$')
+
+    str = str:gsub('%%S', source)
+    str = str:gsub('%%T', target)
+
+    if basename then
+      str = str:gsub('%%B', basename)
+    else
+      str = str:gsub('%%B', source)
+    end
+
+    return str
+  end
+
+  local function construct_cmd(prog, fn, target)
     -- construct the option
     local cmd_opt = ''
 
     if prog.opts then
-      -- normarize to a table
+      -- normalize to a table
       if type(prog.opts) ~= 'table' then
         prog.opts = {prog.opts}
       end
@@ -469,23 +491,14 @@ do
     local cmd_arg = ''
 
     if prog.args then
-      local tmp = '/' .. fn
-      local basename = tmp:match('^.*/(.*)%..*$')
-
-      -- normarize to a table
+      -- normalize to a table
       if type(prog.args) ~= 'table' then
         prog.args = {prog.args}
       end
 
       -- construct each argument
       for _, arg in ipairs(prog.args) do
-        arg = arg:gsub('%%T', fn)
-
-        if basename then
-          arg = arg:gsub('%%B', basename)
-        else
-          arg = arg:gsub('%%B', fn)
-        end
+        arg = replace_specifiers(arg, fn, target)
 
         cmd_arg = cmd_arg .. ' "' .. arg .. '"'
       end
@@ -495,26 +508,20 @@ do
     return prog.command .. cmd_opt .. cmd_arg
   end
 
-  local function run_sequence(fn)
-    err_print('info', 'Begining a sequence for "' .. fn .. '"')
-
-    for _, v in ipairs(config.sequence) do
-      local prog = config.programs[v]
-
-      if type(prog) ~= 'table' then
-        err_print('error', 'Unknown program "' .. v .. '" deteted in the sequence.')
-        os.exit(exit_error)
-      end
-
-      if type(prog.command) ~= 'string' then
-        err_print('error', 'Command name for "' .. v .. '" is not detected.')
-        os.exit(exit_error)
-      end
-
+  local function run_program(prog, fn, target)
       if #prog.command > 0 then
-        local cmd = construct_cmd(fn, prog)
+        -- does target exist?
+        if not lfs.isfile(target) then
+          dbg_print('run',
+            'Skiping "' .. prog.command .. '" because target (' ..
+            target .. ') does not exist.')
+          return
+        end
+
+        local cmd = construct_cmd(prog, fn, target)
         err_print('info', 'Running ' .. cmd)
         local status = os.execute(cmd)
+
         if status > 0 then
           err_print('error',
             'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
@@ -523,6 +530,37 @@ do
       else
         -- just skip
       end
+  end
+
+  local function run_sequence(fn)
+    err_print('info', 'Begining a sequence for "' .. fn .. '"')
+
+    for _, v in ipairs(config.sequence) do
+      dbg_print('run', 'Preparing for program "' .. v .. '".')
+      local prog = config.programs[v]
+
+      -- check prog table
+      if type(prog) ~= 'table' then
+        err_print('error', 'Unknown program "' .. v .. '" deteted in the sequence.')
+        os.exit(exit_error)
+      end
+
+      -- check prog.command
+      if type(prog.command) ~= 'string' then
+        err_print('error', 'Command name for "' .. v .. '" is not detected.')
+        os.exit(exit_error)
+      end
+
+      -- check prog.target
+      local target = prog.target or fn
+      target = replace_specifiers(target, fn, fn)
+
+      if type(target) ~= 'string' then
+        err_print('error', 'Target for "' .. v .. '" is not valid.')
+        os.exit(exit_error)
+      end
+
+      run_program(prog, fn, target)
     end
   end
 
