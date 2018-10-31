@@ -369,9 +369,13 @@ do
 
     dbg_print('config', 'Fetching TOML from the file "' .. toml_source .. '".')
 
-    -- only topmost field is valid
+    local first_line = true
+    local shebang
+
     for l in f:lines() do
+      -- 1. llmk-style TOML field
       if string.match(l, '^%s*%%%s*%+%+%++%s*$') then
+        -- NOTE: only topmost field is valid
         if not toml_field then toml_field = true
         else break end
       else
@@ -379,9 +383,20 @@ do
           toml = toml .. string.match(l, '^%s*%%%s*(.*)%s*$') .. '\n'
         end
       end
+
+      -- 2. shebang
+      if first_line then
+        first_line = false
+        shebang = string.match(l, '^%s*%%#!%s*(.*)%s*$')
+      end
     end
 
     f:close()
+
+    -- shebang to TOML
+    if toml == '' and shebang then
+      toml = 'latex = "' .. shebang .. '"\n'
+    end
 
     return toml
   end
