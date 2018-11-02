@@ -1,11 +1,6 @@
 require 'spec_helper'
-require 'llmk_helper'
 require 'fileutils'
 require 'pathname'
-
-RSpec.configure do |c|
-  c.include Helplers
-end
 
 RSpec.describe "Processing example", :type => :aruba do
   # constants
@@ -13,7 +8,6 @@ RSpec.describe "Processing example", :type => :aruba do
   EXAMPLE_DIR = PWD + "examples"
   WORKING_DIR = PWD + "tmp/aruba"
 
-  before(:all) { set_default_env }
   before(:each) { FileUtils.cp_r "#{EXAMPLE_DIR}/.", WORKING_DIR }
 
   context "llmk.toml" do

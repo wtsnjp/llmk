@@ -1,9 +1,4 @@
 require 'spec_helper'
-require 'llmk_helper'
-
-RSpec.configure do |c|
-  c.include Helplers
-end
 
 RSpec.describe "Showing help", :type => :aruba do
   let(:help_text) do
@@ -22,8 +17,6 @@ Options:
 Please report bugs to <tkt.asakura@gmail.com>.
 EXPECTED
   end
-
-  before(:all) { set_default_env }
 
   context "with --help" do
     before(:each) { run_llmk "--help" }

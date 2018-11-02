@@ -1,9 +1,4 @@
 require 'spec_helper'
-require 'llmk_helper'
-
-RSpec.configure do |c|
-  c.include Helplers
-end
 
 RSpec.describe "Showing version", :type => :aruba do
   let(:version) { "0.0.0" }
@@ -17,8 +12,6 @@ License: The MIT License <https://opensource.org/licenses/mit-license>.
 This is free software: you are free to change and redistribute it.
 EXPECTED
   end
-
-  before(:all) { set_default_env }
 
   context "with --version" do
     before(:each) { run_llmk "--version" }

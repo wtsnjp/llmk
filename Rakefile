@@ -3,6 +3,7 @@
 
 require 'rake/clean'
 require 'pathname'
+require 'optparse'
 
 # basics
 LLMK_VERSION = "0.0.0"
@@ -23,16 +24,39 @@ CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
 CLOBBER.include(["doc/*.pdf", "*.zip"])
 CLEAN.exclude(["doc/logo.png"])
 
-desc "Run tests (only listed specs, if specified)"
+desc "Run tests [options available]"
 task :test do |task, args|
-  # run rspec
-  args = args.to_a
-  if args.size > 0
-    f_list = args.map{|f| "spec/#{f}_spec.rb"}.join(" ")
-    sh "bundle exec rspec #{f_list}"
-  else
-    sh "bundle exec rspec"
+  # parse options
+  options = {}
+  if ARGV.delete("--")
+    OptionParser.new do |opts|
+      opts.banner = "Usage: rake test [-- OPTION...]"
+      opts.on("-o", "--opts=OPTS", "Pass OPTS to RSpec") do |args|
+        options[:args] = args
+      end
+      opts.on("-l", "--list=LIST", "Load only specified specs in LIST") do |args|
+        options[:list] = args
+      end
+    end.parse!(ARGV)
   end
+
+  # construct options
+  opt_args = if options[:args]
+    " " + options[:args].strip
+  else
+    ""
+  end
+  opt_files = if options[:list]
+    " " + options[:list].split(",").map{|i|"spec/#{i.strip}_spec.rb"}.join(" ")
+  else
+    ""
+  end
+
+  # run rspec
+  sh "bundle exec rspec" + opt_args + opt_files
+
+  # make sure to end this process
+  exit 0
 end
 
 desc "Generate all documentation"
