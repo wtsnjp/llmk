@@ -19,10 +19,10 @@ OPT_ORG = "--organization=\"llmk #{LLMK_VERSION}\""
 
 # cleaning
 CLEAN.include(["doc/*", "tmp"])
-CLEAN.include(["*.log", "*.synctex.gz", "*.dvi", "*.pdf", "*.aux"])
+CLEAN.include(["**/*.log", "**/*.synctex.gz", "**/*.dvi", "**/*.pdf", "**/*.aux"])
 CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
-CLOBBER.include(["doc/*.pdf", "*.zip"])
 CLEAN.exclude(["doc/logo.png"])
+CLOBBER.include(["doc/*.pdf", "*.zip"])
 
 desc "Run tests [options available]"
 task :test do |task, args|
