@@ -534,7 +534,7 @@ do
         end
 
         local cmd = construct_cmd(prog, fn, target)
-        err_print('info', 'Running ' .. cmd)
+        err_print('info', 'Running command: ' .. cmd)
         local status = os.execute(cmd)
 
         if status > 0 then
@@ -548,7 +548,7 @@ do
   end
 
   local function run_sequence(fn)
-    err_print('info', 'Begining a sequence for "' .. fn .. '"')
+    err_print('info', 'Beginning a sequence for "' .. fn .. '".')
 
     for _, v in ipairs(config.sequence) do
       dbg_print('run', 'Preparing for program "' .. v .. '".')
