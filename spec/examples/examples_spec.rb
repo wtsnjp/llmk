@@ -1,0 +1,80 @@
+require 'spec_helper'
+
+RSpec.describe "Processing example", :type => :aruba do
+  include_context "examples"
+  include_context "messages"
+
+  def info_line_seq file
+    info_line "Beginning a sequence for \"#{file}\"."
+  end
+
+  def info_line_runcmd cmd, file
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1"
+    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
+  end
+
+  context "llmk.toml" do
+    before(:each) { run_llmk "-v" }
+    before(:each) { stop_all_commands }
+
+    it "should produce simple.pdf and default.pdf" do
+      expect(stderr).to include(info_line_seq 'simple.tex')
+      expect(stderr).to include(info_line_runcmd 'xelatex', 'simple.tex')
+
+      expect(stderr).to include(info_line_seq 'default.tex')
+      expect(stderr).to include(info_line_runcmd 'xelatex', 'default.tex')
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+
+  context "default.tex" do
+    before(:each) { run_llmk "-v", "default.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce default.pdf" do
+      expect(stderr).to include(info_line_seq 'default.tex')
+      expect(stderr).to include(info_line_runcmd 'lualatex', 'default.tex')
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+  
+  context "simple.tex" do
+    before(:each) { run_llmk "-v", "simple.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce simple.pdf" do
+      expect(stderr).to include(info_line_seq 'simple.tex')
+      expect(stderr).to include(info_line_runcmd 'xelatex', 'simple.tex')
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+  
+  context "complex.tex" do
+    before(:each) { run_llmk "-v", "complex.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce complex.pdf" do
+      expect(stderr).to include(info_line_seq 'complex.tex')
+      expect(stderr).to include(info_line_runcmd 'uplatex', 'complex.tex')
+      expect(stderr).to include(info_line 'Running command: dvipdfmx "complex"')
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+  
+  context "platex.tex" do
+    before(:each) { run_llmk "-v", "platex.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce platex.pdf" do
+      expect(stderr).to include(info_line_seq 'platex.tex')
+      expect(stderr).to include(info_line_runcmd 'platex', 'platex.tex')
+      expect(stderr).to include(info_line 'Running command: dvipdfmx "platex.dvi"')
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+end
