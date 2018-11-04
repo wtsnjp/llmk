@@ -10,12 +10,14 @@ version = '0.0.0'
 author = 'Takuto ASAKURA (wtsnjp)'
 
 llmk_toml = 'llmk.toml'
+start_time = os.time()
 
 -- option flags (default)
 debug = {
   config = false,
   parser = false,
   run = false,
+  fdb = false,
 }
 verbosity_level = 1
 
@@ -29,6 +31,7 @@ exit_failure = 3
 
 -- library
 require 'lfs'
+require 'md5'
 
 -- global functions
 function err_print(err_type, msg)
@@ -41,6 +44,23 @@ function dbg_print(dbg_type, msg)
   if debug[dbg_type] then
     io.stderr:write(prog_name .. ' debug-' .. dbg_type .. ': ' .. msg .. '\n')
   end
+end
+
+function dbg_print_table(dbg_type, table)
+  local indent = 2
+
+  local function helper(tab, ind)
+    for k, v in pairs(tab) do
+      if type(v) == 'table' then
+        dbg_print(dbg_type, string.rep(' ', ind) .. k .. ':')
+        helper(v, ind + indent)
+      else
+        dbg_print(dbg_type, string.rep(' ', ind) .. k .. ': ' .. tostring(v))
+      end
+    end
+  end
+
+  helper(table, indent)
 end
 
 function init_config()
@@ -56,6 +76,7 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
+      force = true,
       opts = '-interaction=nonstopmode -file-line-error -synctex=1',
       args = '%T',
     },
@@ -206,6 +227,29 @@ do
       return array
     end
 
+    function parse_boolean()
+      local bool
+
+      if toml:sub(cursor, cursor + 3) == 'true' then
+        step(4)
+        bool = true
+      elseif toml:sub(cursor, cursor + 4) == 'false' then
+        step(5)
+        bool = false
+      else
+        parser_err('Invalid primitive')
+      end
+
+      skip_ws()
+      if char() == '#' then
+        while(not char():match(nl)) do
+          step()
+        end
+      end
+
+      return bool
+    end
+
     -- judge the type and get the value
     function get_value()
       if (char() == '"' or char() == "'") then
@@ -214,7 +258,9 @@ do
         return parse_number()
       elseif char() == '[' then
         return parse_array()
-      -- TODO: array, inline table, boolean
+      -- TODO: array, inline table
+      else
+        return parse_boolean()
       end
     end
 
@@ -431,19 +477,9 @@ do
     end
 
     -- show config table (for debug)
-    local function print_table(tab, ind)
-      for k, v in pairs(tab) do
-        if type(v) == 'table' then
-          dbg_print('config', string.rep(' ', ind) .. k .. ':')
-          print_table(v, ind + 2)
-        else
-          dbg_print('config', string.rep(' ', ind) .. k .. ': ' .. v)
-        end
-      end
-    end
     if debug.config then
       dbg_print('config', 'The final config table is as follows:')
-      print_table(config, 2)
+      dbg_print_table('config', config)
     end
   end
 
@@ -468,6 +504,21 @@ end
 ----------------------------------------
 
 do
+  local function table_copy(org)
+    local org_type = type(org)
+    local copy
+    if org_type == 'table' then
+      copy = {}
+      for org_key, org_value in next, org, nil do
+        copy[table_copy(org_key)] = table_copy(org_value)
+      end
+      setmetatable(copy, table_copy(getmetatable(org)))
+    else -- number, string, boolean, etc.
+        copy = org
+    end
+    return copy
+  end
+
   local function replace_specifiers(str, source, target)
     local tmp = '/' .. source
     local basename = tmp:match('^.*/(.*)%..*$')
@@ -523,7 +574,41 @@ do
     return prog.command .. cmd_opt .. cmd_arg
   end
 
-  local function run_program(prog, fn, target)
+  local function mtime_file(path)
+    return lfs.attributes(path, 'modification')
+  end
+
+  local function md5sum_file(path)
+    local f = assert(io.open(path, 'rb'))
+    local content = f:read('*a')
+    f:close()
+    return md5.sumhexa(content)
+  end
+
+  local function init_file_database(fn)
+    -- the template
+    local fdb = {
+      targets = {},
+    }
+
+    -- target information
+    for _, v in ipairs(config.sequence) do
+      local name = config.programs[v].target or ''
+      name = replace_specifiers(name, fn, fn)
+
+      if lfs.isfile(name) then
+        fdb.targets[name] = {
+          mtime = mtime_file(name),
+          size = lfs.attributes(name, 'size'),
+          md5sum = md5sum_file(name),
+        }
+      end
+    end
+
+    return fdb
+  end
+
+  local function run_program(prog, fn, fdb)
     -- does command specified?
     if #prog.command < 1 then
       dbg_print('run',
@@ -532,14 +617,22 @@ do
     end
 
     -- does target exist?
-    if not lfs.isfile(target) then
+    if not lfs.isfile(prog.target) then
       dbg_print('run',
         'Skiping "' .. prog.command .. '" because target (' ..
-        target .. ') does not exist.')
+        prog.target .. ') does not exist.')
       return
     end
 
-    local cmd = construct_cmd(prog, fn, target)
+    -- Is the target modified?
+    if not prog.force and mtime_file(prog.target) < start_time then
+      dbg_print('run',
+        'Skiping "' .. prog.command .. '" because target (' ..
+        prog.target .. ') is not updated.')
+      return
+    end
+
+    local cmd = construct_cmd(prog, fn, prog.target)
     err_print('info', 'Running command: ' .. cmd)
     local status = os.execute(cmd)
 
@@ -553,9 +646,18 @@ do
   local function run_sequence(fn)
     err_print('info', 'Beginning a sequence for "' .. fn .. '".')
 
+    -- create a file database
+    local fdb = init_file_database(fn)
+
+    -- show file database (for debug)
+    if debug.fdb then
+      dbg_print('fdb', 'The initial file database is as follows:')
+      dbg_print_table('fdb', fdb)
+    end
+
     for _, v in ipairs(config.sequence) do
       dbg_print('run', 'Preparing for program "' .. v .. '".')
-      local prog = config.programs[v]
+      local prog = table_copy(config.programs[v])
 
       -- check prog table
       if type(prog) ~= 'table' then
@@ -571,14 +673,14 @@ do
 
       -- check prog.target
       local target = prog.target or fn
-      target = replace_specifiers(target, fn, fn)
+      prog.target = replace_specifiers(target, fn, fn)
 
-      if type(target) ~= 'string' then
+      if type(prog.target) ~= 'string' then
         err_print('error', 'Target for "' .. v .. '" is not valid.')
         os.exit(exit_error)
       end
 
-      run_program(prog, fn, target)
+      run_program(prog, fn, fdb)
     end
   end
 
