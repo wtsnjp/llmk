@@ -524,27 +524,30 @@ do
   end
 
   local function run_program(prog, fn, target)
-      if #prog.command > 0 then
-        -- does target exist?
-        if not lfs.isfile(target) then
-          dbg_print('run',
-            'Skiping "' .. prog.command .. '" because target (' ..
-            target .. ') does not exist.')
-          return
-        end
+    -- does command specified?
+    if #prog.command < 1 then
+      dbg_print('run',
+        'Skiping "' .. prog.command .. '" because command does not exist.')
+      return
+    end
 
-        local cmd = construct_cmd(prog, fn, target)
-        err_print('info', 'Running command: ' .. cmd)
-        local status = os.execute(cmd)
+    -- does target exist?
+    if not lfs.isfile(target) then
+      dbg_print('run',
+        'Skiping "' .. prog.command .. '" because target (' ..
+        target .. ') does not exist.')
+      return
+    end
 
-        if status > 0 then
-          err_print('error',
-            'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
-          os.exit(exit_failure)
-        end
-      else
-        -- just skip
-      end
+    local cmd = construct_cmd(prog, fn, target)
+    err_print('info', 'Running command: ' .. cmd)
+    local status = os.execute(cmd)
+
+    if status > 0 then
+      err_print('error',
+        'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
+      os.exit(exit_failure)
+    end
   end
 
   local function run_sequence(fn)
