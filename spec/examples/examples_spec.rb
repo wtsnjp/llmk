@@ -24,6 +24,9 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_seq 'default.tex')
       expect(stderr).to include(info_line_runcmd 'xelatex', 'default.tex')
 
+      expect(file?('simple.pdf')).to be true
+      expect(file?('default.pdf')).to be true
+
       expect(last_command_started).to be_successfully_executed
     end
   end
@@ -33,8 +36,11 @@ RSpec.describe "Processing example", :type => :aruba do
     before(:each) { stop_all_commands }
 
     it "should produce default.pdf" do
+      puts "\n" + stdout + "\n"
       expect(stderr).to include(info_line_seq 'default.tex')
       expect(stderr).to include(info_line_runcmd 'lualatex', 'default.tex')
+
+      expect(file?('default.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
     end
@@ -47,6 +53,8 @@ RSpec.describe "Processing example", :type => :aruba do
     it "should produce simple.pdf" do
       expect(stderr).to include(info_line_seq 'simple.tex')
       expect(stderr).to include(info_line_runcmd 'xelatex', 'simple.tex')
+
+      expect(file?('simple.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
     end
@@ -61,6 +69,8 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_runcmd 'uplatex', 'complex.tex')
       expect(stderr).to include(info_line 'Running command: dvipdfmx "complex"')
 
+      expect(file?('complex.pdf')).to be true
+
       expect(last_command_started).to be_successfully_executed
     end
   end
@@ -73,6 +83,8 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_seq 'platex.tex')
       expect(stderr).to include(info_line_runcmd 'platex', 'platex.tex')
       expect(stderr).to include(info_line 'Running command: dvipdfmx "platex.dvi"')
+
+      expect(file?('platex.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
     end
