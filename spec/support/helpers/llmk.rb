@@ -1,11 +1,16 @@
 require 'aruba/rspec'
 require 'pathname'
+require 'os'
 
 module SpecHelplers
   module Llmk
     # constants
     PWD = Pathname.pwd
-    PATH = ENV["PATH"]
+    if OS.windows?
+      PATH = ENV["Path"]
+    else
+      PATH = ENV["PATH"]
+    end
 
     # running the target llmk
     def run_llmk(*args)
@@ -21,7 +26,11 @@ module SpecHelplers
       ENV.clear
 
       # basics
-      ENV["PATH"] = PATH
+      if OS.windows?
+        ENV["Path"] = PATH
+      else
+        ENV["PATH"] = PATH
+      end
     end
 
     # generate debug line

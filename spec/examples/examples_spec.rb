@@ -36,7 +36,6 @@ RSpec.describe "Processing example", :type => :aruba do
     before(:each) { stop_all_commands }
 
     it "should produce default.pdf" do
-      puts "\n" + stdout + "\n"
       expect(stderr).to include(info_line_seq 'default.tex')
       expect(stderr).to include(info_line_runcmd 'lualatex', 'default.tex')
 

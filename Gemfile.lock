@@ -36,6 +36,7 @@ GEM
     multi_json (1.13.1)
     multi_test (0.1.2)
     mustache (1.1.0)
+    os (1.0.0)
     rake (12.3.1)
     rdiscount (2.2.0.1)
     ronn (0.7.3)
@@ -62,6 +63,7 @@ PLATFORMS
 
 DEPENDENCIES
   aruba (~> 0.14.5)
+  os (~> 1.0.0)
   rake (~> 12.3.0)
   ronn (~> 0.7.3)
   rspec (~> 3.7.0)
