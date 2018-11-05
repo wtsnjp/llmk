@@ -76,8 +76,9 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
-      force = true,
       opts = '-interaction=nonstopmode -file-line-error -synctex=1',
+      auxiliary = '%B.aux',
+      force = true,
     },
     dvipdf = {
       command = '',
@@ -574,38 +575,117 @@ do
     return prog.command .. cmd_opt .. cmd_arg
   end
 
-  local function mtime_file(path)
+  local function file_mtime(path)
     return lfs.attributes(path, 'modification')
   end
 
-  local function md5sum_file(path)
+  local function file_size(path)
+    return lfs.attributes(path, 'size')
+  end
+
+  local function file_md5sum(path)
     local f = assert(io.open(path, 'rb'))
     local content = f:read('*a')
     f:close()
     return md5.sumhexa(content)
   end
 
+  local function file_status(path)
+    return {
+      mtime = file_mtime(path),
+      size = file_size(path),
+      md5sum = file_md5sum(path),
+    }
+  end
+
   local function init_file_database(fn)
     -- the template
     local fdb = {
       targets = {},
+      auxiliary = {},
     }
 
-    -- target information
+    -- investigate current status
     for _, v in ipairs(config.sequence) do
-      local name = config.programs[v].target or ''
-      name = replace_specifiers(name, fn, fn)
+      -- names
+      local tar = config.programs[v].tar or ''
+      local aux = config.programs[v].auxiliary or ''
+      tar = replace_specifiers(tar, fn, fn)
+      aux = replace_specifiers(aux, fn, tar)
 
-      if lfs.isfile(name) then
-        fdb.targets[name] = {
-          mtime = mtime_file(name),
-          size = lfs.attributes(name, 'size'),
-          md5sum = md5sum_file(name),
-        }
+      -- target
+      if tar ~= '' then
+        if lfs.isfile(tar) and not fdb.targets[tar] then
+          fdb.targets[tar] = file_status(tar)
+        end
+      end
+
+      -- auxiliary
+      if aux ~= '' then
+        if lfs.isfile(aux) and not fdb.auxiliary[aux] then
+          fdb.auxiliary[aux] = file_status(aux)
+        end
       end
     end
 
     return fdb
+  end
+
+  local function check_rerun(prog, fdb)
+    dbg_print('run', 'Checking the neccessity of rerun.')
+
+    local aux = prog.auxiliary
+    local old_aux_exist = false
+    local old_status
+
+    -- if aux file does not exist, no chance of rerun
+    if not aux then
+      dbg_print('run', 'No auxiliary file specified.')
+      return false, fdb
+    end
+
+    -- if aux file does not exist, no chance of rerun
+    if not lfs.isfile(aux) then
+      dbg_print('run', 'The auxiliary file "' .. aux .. '" does not exist.')
+      return false, fdb
+    end
+
+    -- copy old information and update fdb
+    if fdb.auxiliary[aux] then
+      old_aux_exist = true
+      old_status = table_copy(fdb.auxiliary[aux])
+    end
+    local aux_status = file_status(aux)
+    fdb.auxiliary[aux] = aux_status
+
+    -- if aux file is not new, no rerun
+    local new = aux_status.mtime > start_time 
+    if not new and old_aux_exist then
+      new = aux_status.mtime > old_status.mtime
+    end
+
+    if not new then
+      dbg_print('run', 'No rerun because the aux file is not new.')
+      return false, fdb
+    end
+
+    -- if aux file is empty (or almost), no rerun
+    if aux_status.size < 9 then -- aux file contains "\\relax \n" by default
+      dbg_print('run', 'No rerun because the aux file is (almost) empty.')
+      return false, fdb
+    end
+
+    -- if new aux is not different from older one, no rerun
+    if old_aux_exist then
+      if aux_status.md5sum == old_status.md5sum then
+        dbg_print('run', 'No rerun because the aux file has not been changed.')
+        return false, fdb
+      end
+    end
+
+    -- ok, then try rerun
+    dbg_print('run', 'Try to rerun!')
+    return true, fdb
   end
 
   local function run_program(prog, fn, fdb)
@@ -624,8 +704,8 @@ do
       return
     end
 
-    -- Is the target modified?
-    if not prog.force and mtime_file(prog.target) < start_time then
+    -- is the target modified?
+    if not prog.force and file_mtime(prog.target) < start_time then
       dbg_print('run',
         'Skiping "' .. prog.command .. '" because target (' ..
         prog.target .. ') is not updated.')
@@ -658,6 +738,7 @@ do
     for _, v in ipairs(config.sequence) do
       dbg_print('run', 'Preparing for program "' .. v .. '".')
       local prog = table_copy(config.programs[v])
+      local should_rerun
 
       -- check prog table
       if type(prog) ~= 'table' then
@@ -680,7 +761,18 @@ do
         os.exit(exit_error)
       end
 
-      run_program(prog, fn, fdb)
+      -- execute the command
+      local exe_count = 0
+      while true do
+        exe_count = exe_count + 1
+        run_program(prog, fn, fdb)
+
+        -- if not neccesarry to rerun or reached to max_repeat, break the loop
+        should_rerun, fdb = check_rerun(prog, fdb)
+        if not ((exe_count < config.max_repeat) and should_rerun) then
+          break
+        end
+      end
     end
   end
 
