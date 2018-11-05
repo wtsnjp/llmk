@@ -81,7 +81,11 @@ function init_config()
   config.programs = {
     latex = {
       command = '',
-      opts = '-interaction=nonstopmode -file-line-error -synctex=1',
+      opts = {
+        '-interaction=nonstopmode',
+        '-file-line-error',
+        '-synctex=1',
+      },
       auxiliary = '%B.aux',
       force = true,
     },
@@ -487,6 +491,12 @@ do
 
   function fetch_config_from_latex_source(fn)
     local toml = get_toml(fn)
+    if toml == '' then
+      err_print('warning',
+        'Neither TOML field nor shebang is found in "' .. fn ..
+        '"; using default config.')
+    end
+
     update_config(parse_toml(toml))
   end
 
@@ -578,40 +588,32 @@ do
 
       -- setup the `prog.opts`
       if prog.opts then -- `prog.opts` is optional
-        local cur_opts
-
         -- normalize to a table
         if type(prog.opts) ~= 'table' then
-          cur_opts = {prog.opts}
+          prog.opts = {prog.opts}
         end
 
         -- replace specifiers as usual
-        for idx, opt in ipairs(cur_opts) do
-          cur_opts[idx] = replace_specifiers(opt, fn, cur_target)
+        for idx, opt in ipairs(prog.opts) do
+          prog.opts[idx] = replace_specifiers(opt, fn, cur_target)
         end
-
-        prog.opts = cur_opts
       end
 
       -- setup the `prog.args`
-      local cur_args
-
       if not prog.args then
         -- the default value of `prog.args` is [`cur_target`]
-        cur_args = {cur_target}
+        prog.args = {cur_target}
       else
         -- normalize to a table
         if type(prog.args) ~= 'table' then
-          cur_args = {prog.args}
+          prog.args = {prog.args}
         end
 
         -- replace specifiers as usual
-        for idx, arg in ipairs(cur_args) do
-          cur_args[idx] = replace_specifiers(arg, fn, cur_target)
+        for idx, arg in ipairs(prog.args) do
+          prog.args[idx] = replace_specifiers(arg, fn, cur_target)
         end
       end
-
-      prog.args = cur_args
 
       -- setup the `prog.auxiliary`
       if prog.auxiliary then -- `prog.auxiliary` is optional
