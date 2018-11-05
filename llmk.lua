@@ -78,12 +78,10 @@ function init_config()
       command = '',
       force = true,
       opts = '-interaction=nonstopmode -file-line-error -synctex=1',
-      args = '%T',
     },
     dvipdf = {
       command = '',
       target = '%B.dvi',
-      args = '%T',
     },
     bibtex = {
       command = '',
@@ -556,18 +554,20 @@ do
     -- construct the argument
     local cmd_arg = ''
 
-    if prog.args then
-      -- normalize to a table
-      if type(prog.args) ~= 'table' then
-        prog.args = {prog.args}
-      end
+    -- normalize
+    if not prog.args then
+      -- the default value is ["%T"]
+      prog.args = {'%T'}
+    elseif type(prog.args) ~= 'table' then
+      -- put into a sequence (table)
+      prog.args = {prog.args}
+    end
 
-      -- construct each argument
-      for _, arg in ipairs(prog.args) do
-        arg = replace_specifiers(arg, fn, target)
+    -- construct each argument
+    for _, arg in ipairs(prog.args) do
+      arg = replace_specifiers(arg, fn, target)
 
-        cmd_arg = cmd_arg .. ' "' .. arg .. '"'
-      end
+      cmd_arg = cmd_arg .. ' "' .. arg .. '"'
     end
 
     -- whole command
