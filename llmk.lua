@@ -18,6 +18,7 @@ debug = {
   parser = false,
   run = false,
   fdb = false,
+  programs = false,
 }
 verbosity_level = 1
 
@@ -47,6 +48,8 @@ function dbg_print(dbg_type, msg)
 end
 
 function dbg_print_table(dbg_type, table)
+  if not debug[dbg_type] then return end
+
   local indent = 2
 
   local function helper(tab, ind)
@@ -54,7 +57,9 @@ function dbg_print_table(dbg_type, table)
       if type(v) == 'table' then
         dbg_print(dbg_type, string.rep(' ', ind) .. k .. ':')
         helper(v, ind + indent)
-      else
+      elseif type(v) == 'string' then
+        dbg_print(dbg_type, string.rep(' ', ind) .. k .. ': "' .. (v) .. '"')
+      else -- number,  boolean, etc.
         dbg_print(dbg_type, string.rep(' ', ind) .. k .. ': ' .. tostring(v))
       end
     end
@@ -476,10 +481,8 @@ do
     end
 
     -- show config table (for debug)
-    if debug.config then
-      dbg_print('config', 'The final config table is as follows:')
-      dbg_print_table('config', config)
-    end
+    dbg_print('config', 'The final config table is as follows:')
+    dbg_print_table('config', config)
   end
 
   function fetch_config_from_latex_source(fn)
@@ -534,45 +537,96 @@ do
     return str
   end
 
-  local function construct_cmd(prog, fn, target)
-    -- construct the option
-    local cmd_opt = ''
+  local function setup_programs(fn)
+    --[[Setup the programs table for each sequence.
 
-    if prog.opts then
-      -- normalize to a table
-      if type(prog.opts) ~= 'table' then
-        prog.opts = {prog.opts}
+    Collecting tables of only related programs, which appears in the
+    `config.sequence`, and replace all specifiers.
+
+    Args:
+      fn (str): the input FILE name
+
+    Returns:
+      table of program tables
+    ]]
+    local new_programs = {}
+
+    for _, name in ipairs(config.sequence) do
+      -- skip if already setup
+      if new_programs[name] then goto continue end
+
+      -- is the program known?
+      if not config.programs[name] then
+        err_print('error', 'Unknown program "' .. name .. '" is in the sequence.')
+        os.exit(exit_error)
       end
 
-      -- construct each option
-      for _, opt in ipairs(prog.opts) do
-        if #opt > 0 then
-          cmd_opt = cmd_opt .. ' ' .. opt
+      local prog = table_copy(config.programs[name])
+
+      -- setup the `prog.target`
+      local cur_target
+
+      if not prog.target then
+        -- the default value of `prog.target` is `fn`
+        cur_target = fn
+      else
+        -- here, %T should be replaced by `fn`
+        cur_target = replace_specifiers(prog.target, fn, fn)
+      end
+
+      prog.target = cur_target
+
+      -- setup the `prog.opts`
+      if prog.opts then -- `prog.opts` is optional
+        local cur_opts
+
+        -- normalize to a table
+        if type(prog.opts) ~= 'table' then
+          cur_opts = {prog.opts}
+        end
+
+        -- replace specifiers as usual
+        for idx, opt in ipairs(cur_opts) do
+          cur_opts[idx] = replace_specifiers(opt, fn, cur_target)
+        end
+
+        prog.opts = cur_opts
+      end
+
+      -- setup the `prog.args`
+      local cur_args
+
+      if not prog.args then
+        -- the default value of `prog.args` is [`cur_target`]
+        cur_args = {cur_target}
+      else
+        -- normalize to a table
+        if type(prog.args) ~= 'table' then
+          cur_args = {prog.args}
+        end
+
+        -- replace specifiers as usual
+        for idx, arg in ipairs(cur_args) do
+          cur_args[idx] = replace_specifiers(arg, fn, cur_target)
         end
       end
+
+      prog.args = cur_args
+
+      -- setup the `prog.auxiliary`
+      if prog.auxiliary then -- `prog.auxiliary` is optional
+        -- replace specifiers as usual
+        prog.auxiliary = replace_specifiers(prog.auxiliary, fn, cur_target)
+      end
+
+      -- register the program
+      new_programs[name] = prog
+
+      -- for continue
+      ::continue::
     end
 
-    -- construct the argument
-    local cmd_arg = ''
-
-    -- normalize
-    if not prog.args then
-      -- the default value is ["%T"]
-      prog.args = {'%T'}
-    elseif type(prog.args) ~= 'table' then
-      -- put into a sequence (table)
-      prog.args = {prog.args}
-    end
-
-    -- construct each argument
-    for _, arg in ipairs(prog.args) do
-      arg = replace_specifiers(arg, fn, target)
-
-      cmd_arg = cmd_arg .. ' "' .. arg .. '"'
-    end
-
-    -- whole command
-    return prog.command .. cmd_opt .. cmd_arg
+    return new_programs
   end
 
   local function file_mtime(path)
@@ -598,7 +652,7 @@ do
     }
   end
 
-  local function init_file_database(fn)
+  local function init_file_database(programs, fn)
     -- the template
     local fdb = {
       targets = {},
@@ -608,27 +662,48 @@ do
     -- investigate current status
     for _, v in ipairs(config.sequence) do
       -- names
-      local tar = config.programs[v].tar or ''
-      local aux = config.programs[v].auxiliary or ''
-      tar = replace_specifiers(tar, fn, fn)
-      aux = replace_specifiers(aux, fn, tar)
+      local cur_target = programs[v].target
+      local cur_aux = programs[v].auxiliary
 
       -- target
-      if tar ~= '' then
-        if lfs.isfile(tar) and not fdb.targets[tar] then
-          fdb.targets[tar] = file_status(tar)
-        end
+      if lfs.isfile(cur_target) and not fdb.targets[cur_target] then
+        fdb.targets[cur_target] = file_status(cur_target)
       end
 
       -- auxiliary
-      if aux ~= '' then
-        if lfs.isfile(aux) and not fdb.auxiliary[aux] then
-          fdb.auxiliary[aux] = file_status(aux)
+      if cur_aux then -- `prog.auxiliary` is optional
+        if lfs.isfile(cur_aux) and not fdb.auxiliary[cur_aux] then
+          fdb.auxiliary[cur_aux] = file_status(cur_aux)
         end
       end
     end
 
     return fdb
+  end
+
+  local function construct_cmd(prog, fn, target)
+    -- construct the option
+    local cmd_opt = ''
+
+    if prog.opts then
+      -- construct each option
+      for _, opt in ipairs(prog.opts) do
+        if #opt > 0 then
+          cmd_opt = cmd_opt .. ' ' .. opt
+        end
+      end
+    end
+
+    -- construct the argument
+    local cmd_arg = ''
+
+    -- construct each argument
+    for _, arg in ipairs(prog.args) do
+      cmd_arg = cmd_arg .. ' "' .. arg .. '"'
+    end
+
+    -- whole command
+    return prog.command .. cmd_opt .. cmd_arg
   end
 
   local function check_rerun(prog, fdb)
@@ -726,36 +801,29 @@ do
   local function run_sequence(fn)
     err_print('info', 'Beginning a sequence for "' .. fn .. '".')
 
-    -- create a file database
-    local fdb = init_file_database(fn)
+    -- setup the programs table
+    local programs = setup_programs(fn)
+    dbg_print('programs', 'Current programs table:')
+    dbg_print_table('programs', programs)
 
-    -- show file database (for debug)
-    if debug.fdb then
-      dbg_print('fdb', 'The initial file database is as follows:')
-      dbg_print_table('fdb', fdb)
-    end
+    -- create a file database
+    local fdb = init_file_database(programs, fn)
+    dbg_print('fdb', 'The initial file database is as follows:')
+    dbg_print_table('fdb', fdb)
 
     for _, v in ipairs(config.sequence) do
       dbg_print('run', 'Preparing for program "' .. v .. '".')
-      local prog = table_copy(config.programs[v])
+      local prog = programs[v]
       local should_rerun
 
-      -- check prog table
-      if type(prog) ~= 'table' then
-        err_print('error', 'Unknown program "' .. v .. '" deteted in the sequence.')
-        os.exit(exit_error)
-      end
-
       -- check prog.command
+      -- TODO: move this to pre-checking process
       if type(prog.command) ~= 'string' then
         err_print('error', 'Command name for "' .. v .. '" is not detected.')
         os.exit(exit_error)
       end
 
-      -- check prog.target
-      local target = prog.target or fn
-      prog.target = replace_specifiers(target, fn, fn)
-
+      -- TODO: move this to pre-checking process
       if type(prog.target) ~= 'string' then
         err_print('error', 'Target for "' .. v .. '" is not valid.')
         os.exit(exit_error)
