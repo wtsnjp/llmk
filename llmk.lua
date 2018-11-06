@@ -460,7 +460,7 @@ do
   -- copy command name from top level
   local function fetch_from_top_level(name)
     if config.programs[name] then
-      if config.programs[name].command == '' and config[name] then
+      if not config.programs[name].command and config[name] then
         config.programs[name].command = config[name]
       end
     end
@@ -553,7 +553,7 @@ do
     --[[Setup the programs table for each sequence.
 
     Collecting tables of only related programs, which appears in the
-    `config.sequence`, and replace all specifiers.
+    `config.sequence` or `prog.postprocess`, and replace all specifiers.
 
     Args:
       fn (str): the input FILE name
@@ -561,18 +561,41 @@ do
     Returns:
       table of program tables
     ]]
+    local prog_names = {}
     local new_programs = {}
 
-    for _, name in ipairs(config.sequence) do
-      -- skip if already setup
-      if new_programs[name] then goto continue end
-
+    -- collect related programs
+    local function add_prog_name(name)
       -- is the program known?
       if not config.programs[name] then
         err_print('error', 'Unknown program "' .. name .. '" is in the sequence.')
         os.exit(exit_error)
       end
 
+      -- if not new, no addition
+      for _, c in pairs(prog_names) do
+        if c == name then
+          return
+        end
+      end
+
+      -- if new, add it!
+      prog_names[#prog_names + 1] = name
+    end
+
+    for _, name in pairs(config.sequence) do
+      -- add the program name
+      add_prog_name(name)
+
+      -- add postprocess program if any
+      local postprocess = config.programs[name].postprocess
+      if postprocess then
+        add_prog_name(postprocess)
+      end
+    end
+
+    -- setup the programs
+    for _, name in ipairs(prog_names) do
       local prog = table_copy(config.programs[name])
 
       -- setup the `prog.target`
@@ -625,9 +648,6 @@ do
 
       -- register the program
       new_programs[name] = prog
-
-      -- for continue
-      ::continue::
     end
 
     return new_programs
@@ -738,7 +758,7 @@ do
     fdb.auxiliary[aux] = aux_status
 
     -- if aux file is not new, no rerun
-    local new = aux_status.mtime > start_time 
+    local new = aux_status.mtime >= start_time
     if not new and old_aux_exist then
       new = aux_status.mtime > old_status.mtime
     end
@@ -772,7 +792,7 @@ do
     if #prog.command < 1 then
       dbg_print('run',
         'Skiping "' .. prog.command .. '" because command does not exist.')
-      return
+      return false
     end
 
     -- does target exist?
@@ -780,7 +800,7 @@ do
       dbg_print('run',
         'Skiping "' .. prog.command .. '" because target (' ..
         prog.target .. ') does not exist.')
-      return
+      return false
     end
 
     -- is the target modified?
@@ -788,7 +808,7 @@ do
       dbg_print('run',
         'Skiping "' .. prog.command .. '" because target (' ..
         prog.target .. ') is not updated.')
-      return
+      return false
     end
 
     local cmd = construct_cmd(prog, fn, prog.target)
@@ -799,6 +819,49 @@ do
       err_print('error',
         'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
       os.exit(exit_failure)
+    end
+
+    return true
+  end
+
+  local function process_program(programs, name, fn, fdb)
+    local prog = programs[name]
+    local should_rerun
+
+    -- check prog.command
+    -- TODO: move this to pre-checking process
+    if type(prog.command) ~= 'string' then
+      err_print('error', 'Command name for "' .. name .. '" is not detected.')
+      os.exit(exit_error)
+    end
+
+    -- TODO: move this to pre-checking process
+    if type(prog.target) ~= 'string' then
+      err_print('error', 'Target for "' .. name .. '" is not valid.')
+      os.exit(exit_error)
+    end
+
+    -- execute the command
+    local run = false
+    local exe_count = 0
+    while true do
+      exe_count = exe_count + 1
+      run = run_program(prog, fn, fdb)
+
+      -- if the run is skipped, break immediately
+      if not run then break end
+
+      -- if not neccesarry to rerun or reached to max_repeat, break the loop
+      should_rerun, fdb = check_rerun(prog, fdb)
+      if not ((exe_count < config.max_repeat) and should_rerun) then
+        break
+      end
+    end
+
+    -- go to the postprocess process
+    if prog.postprocess and run then
+      dbg_print('run', 'Going to postprocess "' .. prog.postprocess .. '".')
+      process_program(programs, prog.postprocess, fn, fdb)
     end
   end
 
@@ -815,36 +878,9 @@ do
     dbg_print('fdb', 'The initial file database is as follows:')
     dbg_print_table('fdb', fdb)
 
-    for _, v in ipairs(config.sequence) do
-      dbg_print('run', 'Preparing for program "' .. v .. '".')
-      local prog = programs[v]
-      local should_rerun
-
-      -- check prog.command
-      -- TODO: move this to pre-checking process
-      if type(prog.command) ~= 'string' then
-        err_print('error', 'Command name for "' .. v .. '" is not detected.')
-        os.exit(exit_error)
-      end
-
-      -- TODO: move this to pre-checking process
-      if type(prog.target) ~= 'string' then
-        err_print('error', 'Target for "' .. v .. '" is not valid.')
-        os.exit(exit_error)
-      end
-
-      -- execute the command
-      local exe_count = 0
-      while true do
-        exe_count = exe_count + 1
-        run_program(prog, fn, fdb)
-
-        -- if not neccesarry to rerun or reached to max_repeat, break the loop
-        should_rerun, fdb = check_rerun(prog, fdb)
-        if not ((exe_count < config.max_repeat) and should_rerun) then
-          break
-        end
-      end
+    for _, name in ipairs(config.sequence) do
+      dbg_print('run', 'Preparing for program "' .. name .. '".')
+      process_program(programs, name, fn, fdb)
     end
   end
 
