@@ -73,7 +73,8 @@ function init_config()
   config = {
     latex = 'lualatex',
     dvipdf = 'dvipdfmx',
-    sequence = {'latex', 'dvipdf'},
+    bibtex = 'bibtex',
+    sequence = {'latex', 'dvipdf', 'bibtex'},
     max_repeat = 3,
   }
 
@@ -95,7 +96,8 @@ function init_config()
     },
     bibtex = {
       command = '',
-      args = '%B',
+      target = '%B.bib',
+      force = true,
     },
   }
 end
@@ -266,7 +268,7 @@ do
         return parse_number()
       elseif char() == '[' then
         return parse_array()
-      -- TODO: array, inline table
+      -- TODO: array of table, inline table
       else
         return parse_boolean()
       end
