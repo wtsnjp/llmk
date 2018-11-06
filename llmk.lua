@@ -72,16 +72,16 @@ function init_config()
   -- basic config table
   config = {
     latex = 'lualatex',
-    dvipdf = 'dvipdfmx',
     bibtex = 'bibtex',
-    sequence = {'latex', 'dvipdf', 'bibtex'},
+    makeindex = 'makeindex',
+    dvipdf = 'dvipdfmx',
+    sequence = {'latex', 'bibtex', 'makeindex', 'dvipdf'},
     max_repeat = 3,
   }
 
   -- program presets
   config.programs = {
     latex = {
-      command = '',
       opts = {
         '-interaction=nonstopmode',
         '-file-line-error',
@@ -90,14 +90,17 @@ function init_config()
       auxiliary = '%B.aux',
       force = true,
     },
-    dvipdf = {
-      command = '',
-      target = '%B.dvi',
-    },
     bibtex = {
-      command = '',
       target = '%B.bib',
       force = true,
+      postprocess = 'latex',
+    },
+    makeindex = {
+      target = '%B.idx',
+      postprocess = 'latex',
+    },
+    dvipdf = {
+      target = '%B.dvi',
     },
   }
 end
@@ -481,7 +484,7 @@ do
     config = merge_table(config, tab)
 
     -- set essential program names from top-level
-    local prg_names = {'latex', 'dvipdf', 'bibtex'}
+    local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf'}
     for _, name in pairs(prg_names) do
       fetch_from_top_level(name)
     end
