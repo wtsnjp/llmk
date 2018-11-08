@@ -92,6 +92,7 @@ function init_config()
     },
     bibtex = {
       target = '%B.bib',
+      args = '%B', -- "%B.bib" will result in an error
       force = true,
       postprocess = 'latex',
     },
