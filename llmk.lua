@@ -6,7 +6,7 @@
 
 -- program information
 prog_name = 'llmk'
-version = '0.0.0'
+version = '0.1'
 author = 'Takuto ASAKURA (wtsnjp)'
 
 llmk_toml = 'llmk.toml'
