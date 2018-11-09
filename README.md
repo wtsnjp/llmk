@@ -77,19 +77,20 @@ dvipdf = "dvipdfmx"
 
 # detailed settings for each program
 [programs.latex]
-  command = "uplatex"
-  opts = "-halt-on-error"
-  args = "%T"
+command = "uplatex"
+opts = "-halt-on-error"
+args = "%T"
 
 [programs.bibtex]
-  command = "biber"
-  args = "%B"
+command = "biber"
+args = "%B"
 ```
 
 In the `args` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
 
-* `%T`: the file name given to llmk as an argument (target)
-* `%B`: the base name of `%T`
+* `%S`: the file name given to llmk as an argument (source)
+* `%T`: the target for each program
+* `%B`: the base name of `%S`
 
 This way is a bit complicated but strong enough allowing you to use any kind of outer programs.
 
@@ -98,28 +99,55 @@ This way is a bit complicated but strong enough allowing you to use any kind of 
 This is the list of currently available TOML keys.
 
 * `latex` (type: *string*, default: `"lualatex"`)
-* `dvipdf` (type: *string*, default: `""`)
+* `dvipdf` (type: *string*, default: `"dvipdfmx"`)
 * `bibtex` (type: *string*, default: `""`)
-* `sequence` (type: *array of strings*, default: `["latex", "dvipdf"]`)
+* `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "dvipdf"]`)
 * `programs` (type: *table*)
 	* \<program name\>
-		* `command` (type: *string*)
+		* `command` (type: *string*, **required**)
+    	* `target` (type: *string*, default: the input FILE)
 		* `opts` (type: *string* or *array of strings*)
-		* `args` (type: *string* or *array of strings*)
+		* `args` (type: *string* or *array of strings*, default: `["%T"]`)
+		* `auxiliary` (type: *string*)
+		* `postprocess` (type: *string*)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
+* `max_repeat` (type: *int*, default: 3)
 
 ### Default settings for each program
 
+If following keys are omitted, these default values will be used instead.
+
+* `command` is **required** (no default)
+* `target = "%S"`
+* `opts = []`
+* `args = "%T"`
+
+Other from above, there are no default values (i.e., null).
+
+### Default `programs` table
+
 * `latex`
 	* `command = "lualatex"`
-	* `opts = "-file-line-error -synctex=1"`
-	* `args = "%T"`
-* `dvipdf`
-	* `command = ""`
-	* `args = "%B"`
+	* `opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]`
+	* `auxiliary = "%B.aux"`
 * `bibtex`
-	* `command = ""`
+	* `command = "bibtex"`
+	* `target = "%B.bib"`
 	* `args = "%B"`
+	* `postprocess = "latex"`
+* `makeindex`
+	* `command = "makeindex"`
+	* `target = "%B.idx"`
+	* `postprocess = "latex"`
+* `dvipdf`
+	* `command = "dvipdfmx"`
+	* `target = "%B.dvi"`
+* `dvips`
+	* `command = "dvips"`
+	* `target = "%B.dvi"`
+* `ps2pdf`
+	* `command = "ps2pdf"`
+	* `target = "%B.ps"`
 
 ## Acknowledgements
 
