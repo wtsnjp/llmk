@@ -16,6 +16,7 @@
 
 # Generated documents
 *.dvi
+*.ps
 *.pdf
 *.1
 

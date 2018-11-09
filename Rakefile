@@ -19,7 +19,10 @@ OPT_ORG = "--organization=\"llmk #{LLMK_VERSION}\""
 
 # cleaning
 CLEAN.include(["doc/*", "tmp"])
-CLEAN.include(["**/*.log", "**/*.synctex.gz", "**/*.dvi", "**/*.pdf", "**/*.aux"])
+CLEAN.include([
+  "**/*.log", "**/*.synctex.gz", "**/*.dvi",
+  "**/*.ps", "**/*.pdf", "**/*.aux"
+])
 CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
 CLEAN.exclude(["doc/logo.png"])
 CLOBBER.include(["doc/*.pdf", "*.zip"])
