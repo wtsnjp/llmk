@@ -75,6 +75,8 @@ function init_config()
     bibtex = 'bibtex',
     makeindex = 'makeindex',
     dvipdf = 'dvipdfmx',
+    dvips = 'dvips',
+    ps2pdf = 'ps2pdf',
     sequence = {'latex', 'bibtex', 'makeindex', 'dvipdf'},
     max_repeat = 3,
   }
@@ -102,6 +104,12 @@ function init_config()
     },
     dvipdf = {
       target = '%B.dvi',
+    },
+    dvips = {
+      target = '%B.dvi',
+    },
+    ps2pdf = {
+      target = '%B.ps',
     },
   }
 end
@@ -485,7 +493,7 @@ do
     config = merge_table(config, tab)
 
     -- set essential program names from top-level
-    local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf'}
+    local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf', 'dvips', 'ps2pdf'}
     for _, name in pairs(prg_names) do
       fetch_from_top_level(name)
     end
