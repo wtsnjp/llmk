@@ -90,20 +90,20 @@ function init_config()
         '-synctex=1',
       },
       auxiliary = '%B.aux',
-      force = true,
     },
     bibtex = {
       target = '%B.bib',
       args = '%B', -- "%B.bib" will result in an error
-      force = true,
       postprocess = 'latex',
     },
     makeindex = {
       target = '%B.idx',
+      force = false,
       postprocess = 'latex',
     },
     dvipdf = {
       target = '%B.dvi',
+      force = false,
     },
     dvips = {
       target = '%B.dvi',
@@ -656,6 +656,12 @@ do
       if prog.auxiliary then -- `prog.auxiliary` is optional
         -- replace specifiers as usual
         prog.auxiliary = replace_specifiers(prog.auxiliary, fn, cur_target)
+      end
+
+      -- setup the `prog.force`
+      if prog.force == nil then
+        -- the default value of `prog.force` is true
+        prog.force = true
       end
 
       -- register the program
