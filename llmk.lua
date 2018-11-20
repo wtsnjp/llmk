@@ -1,7 +1,13 @@
 #!/usr/bin/env texlua
 
 --
--- llmk.lua
+-- This is file `llmk.lua'.
+--
+-- Copyright (c) 2018 Takuto ASAKURA (wtsnjp)
+--   GitHub:   https://github.com/wtsnjp
+--   Twitter:  @wtsnjp
+--
+-- This sofware is distributed under the MIT License.
 --
 
 -- program information
