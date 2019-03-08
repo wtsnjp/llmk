@@ -93,7 +93,7 @@ task :setup_travis do
     # download install-tl
     sh "wget http://mirror.ctan.org/systems/texlive/tlnet/install-tl-unx.tar.gz"
     sh "tar zxvf install-tl-unx.tar.gz"
-    cd Dir.glob("install-tl-2018*")[0]
+    cd Dir.glob("install-tl-20[0-9][0-9]*")[0]
 
     # config
     profile = <<~EOF
@@ -145,7 +145,7 @@ task :setup_appveyor do
     # download install-tl
     sh "curl -O http://ctan.mirror.rafal.ca/systems/texlive/tlnet/install-tl.zip"
     sh "unzip install-tl.zip"
-    cd Dir.glob("install-tl-2018*")[0]
+    cd Dir.glob("install-tl-20[0-9][0-9]*")[0]
 
     # config
     profile = <<~EOF
