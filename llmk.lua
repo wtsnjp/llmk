@@ -431,16 +431,6 @@ do
 
     local f = io.open(toml_source)
 
-    -- check the existence; if not, try with prefix ".tex"
-    if f == nil then
-      toml_source = fn .. '.tex'
-      f = io.open(toml_source)
-      if f == nil then
-        err_print('error', 'No file "' .. fn .. '" found.')
-        os.exit(exit_error)
-      end
-    end
-
     dbg_print('config', 'Fetching TOML from the file "' .. toml_source .. '".')
 
     local first_line = true
@@ -908,12 +898,34 @@ do
     end
   end
 
+  -- return the filename if exits, even if the ".tex" extension is omitted
+  -- otherwise return nil
+  local function check_filename(fn)
+    if lfs.isfile(fn) then
+        return fn -- ok
+    end
+    local ext = fn:match("%.(.-)$")
+    if ext ~= nil then
+        return nil
+    end
+    local fn_ext = fn..".tex"
+    if lfs.isfile(fn_ext) then
+        return fn_ext
+    end
+  end
+
   function make(fns)
     if #fns > 0 then
       for _, fn in ipairs(fns) do
         init_config()
-        fetch_config_from_latex_source(fn)
-        run_sequence(fn)
+        ck_fn = check_filename(fn)
+        if ck_fn then
+          fetch_config_from_latex_source(ck_fn)
+          run_sequence(ck_fn)
+        else
+          err_print('error', 'No source file found for "'..fn..'".')
+          os.exit(exit_error)
+        end
       end
     else
       init_config()
