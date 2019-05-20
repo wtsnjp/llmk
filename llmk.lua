@@ -1,19 +1,78 @@
 #!/usr/bin/env texlua
 
---
--- This is file `llmk.lua'.
+-- The Light LaTeX Make tool
+-- This is the file `llmk.lua'.
 --
 -- Copyright 2018 Takuto ASAKURA (wtsnjp)
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
 -- This sofware is distributed under the MIT License.
---
+-- for more information, please refer to LICENCE file
 
 -- program information
-prog_name = 'llmk'
-version = '0.1'
-author = 'Takuto ASAKURA (wtsnjp)'
+local llmk_info = {
+  _VERSION     = 'llmk v0.1',
+  _NAME        = 'llmk',
+  _AUTHOR      = 'Takuto ASAKURA (wtsnjp)',
+  _DESCRIPTION = 'The Light LaTeX Make tool',
+  _URL         = 'https://github.com/wtsnjp/llmk',
+  _LICENSE     = 'MIT LICENSE (https://opensource.org/licenses/mit-license)',
+}
+
+----------------------------------------
+
+-- module 'getopt' : read options from the command line
+local GetOpt = {}
+
+-- modified Alternative Get Opt
+-- cf. http://lua-users.org/wiki/AlternativeGetOpt
+function GetOpt.from_arg(arg, options)
+  local tmp
+  local tab = {}
+  local saved_arg = {table.unpack(arg)}
+  for k, v in ipairs(saved_arg) do
+    if string.sub(v, 1, 2) == '--' then
+      table.remove(arg, 1)
+      local x = string.find(v, '=', 1, true)
+        if x then
+          table.insert(tab, {string.sub(v, 3, x-1), string.sub(v, x+1)})
+        else
+          table.insert(tab, {string.sub(v, 3), true})
+        end
+    elseif string.sub(v, 1, 1) == '-' then
+      table.remove(arg, 1)
+      local y = 2
+      local l = string.len(v)
+      local jopt
+      while (y <= l) do
+        jopt = string.sub(v, y, y)
+        if string.find(options, jopt, 1, true) then
+          if y < l then
+            tmp = string.sub(v, y+1)
+            y = l
+          else
+            table.remove(arg, 1)
+            tmp = saved_arg[k + 1]
+          end
+          if string.match(tmp, '^%-') then
+            table.insert(tab, {jopt, false})
+          else
+            table.insert(tab, {jopt, tmp})
+          end
+        else
+          table.insert(tab, {jopt, true})
+        end
+        y = y + 1
+      end
+    end
+  end
+  return tab
+end
+
+-- library references
+local lfs = require 'lfs'
+local md5 = require 'md5'
 
 llmk_toml = 'llmk.toml'
 start_time = os.time()
@@ -36,20 +95,16 @@ exit_failure = 3
 
 ----------------------------------------
 
--- library
-require 'lfs'
-require 'md5'
-
 -- global functions
 function err_print(err_type, msg)
   if (verbosity_level > 1) or (err_type == 'error') then
-    io.stderr:write(prog_name .. ' ' .. err_type .. ': ' .. msg .. '\n')
+    io.stderr:write(llmk_info._NAME .. ' ' .. err_type .. ': ' .. msg .. '\n')
   end
 end
 
 function dbg_print(dbg_type, msg)
   if debug[dbg_type] then
-    io.stderr:write(prog_name .. ' debug-' .. dbg_type .. ': ' .. msg .. '\n')
+    io.stderr:write(llmk_info._NAME .. ' debug-' .. dbg_type .. ': ' .. msg .. '\n')
   end
 end
 
@@ -967,67 +1022,14 @@ Options:
 Please report bugs to <tkt.asakura@gmail.com>.
 ]]
 
-  local version_text = [[
-%s %s
-
-Copyright 2018 %s.
-License: The MIT License <https://opensource.org/licenses/mit-license>.
-This is free software: you are free to change and redistribute it.
-]]
-
   -- execution functions
   local function read_options()
     local curr_arg
     local action = false
 
-    -- modified Alternative Get Opt
-    -- cf. http://lua-users.org/wiki/AlternativeGetOpt
-    local function getopt(arg, options)
-      local tmp
-      local tab = {}
-      local saved_arg = {table.unpack(arg)}
-      for k, v in ipairs(saved_arg) do
-        if string.sub(v, 1, 2) == '--' then
-          table.remove(arg, 1)
-          local x = string.find(v, '=', 1, true)
-            if x then
-              table.insert(tab, {string.sub(v, 3, x-1), string.sub(v, x+1)})
-            else
-              table.insert(tab, {string.sub(v, 3), true})
-            end
-        elseif string.sub(v, 1, 1) == '-' then
-          table.remove(arg, 1)
-          local y = 2
-          local l = string.len(v)
-          local jopt
-          while (y <= l) do
-            jopt = string.sub(v, y, y)
-            if string.find(options, jopt, 1, true) then
-              if y < l then
-                tmp = string.sub(v, y+1)
-                y = l
-              else
-                table.remove(arg, 1)
-                tmp = saved_arg[k + 1]
-              end
-              if string.match(tmp, '^%-') then
-                table.insert(tab, {jopt, false})
-              else
-                table.insert(tab, {jopt, tmp})
-              end
-            else
-              table.insert(tab, {jopt, true})
-            end
-            y = y + 1
-          end
-        end
-      end
-      return tab
-    end
-
-    opts = getopt(arg, 'd')
+    local opts = GetOpt.from_arg(arg, 'd')
     for _, tp in pairs(opts) do
-      k, v = tp[1], tp[2]
+      local k, v = tp[1], tp[2]
       if #k == 1 then
         curr_arg = '-' .. k
       else
@@ -1070,7 +1072,21 @@ This is free software: you are free to change and redistribute it.
     if action == 'help' then
       io.stdout:write(help_text)
     elseif action == 'version' then
-      io.stdout:write(version_text:format(prog_name, version, author))
+      local info = string.format([[
+This is %s
+%s
+
+Copyright 2018 %s.
+License: %s.
+This is free software: you are free to change and redistribute it.
+
+]],
+        llmk_info._VERSION,
+        llmk_info._DESCRIPTION,
+        llmk_info._AUTHOR,
+        llmk_info._LICENSE
+      )
+      io.stdout:write(info)
     end
   end
 
