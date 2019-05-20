@@ -3,7 +3,7 @@
 --
 -- This is file `llmk.lua'.
 --
--- Copyright (c) 2018 Takuto ASAKURA (wtsnjp)
+-- Copyright 2018 Takuto ASAKURA (wtsnjp)
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
@@ -902,15 +902,19 @@ do
   -- otherwise return nil
   local function check_filename(fn)
     if lfs.isfile(fn) then
-        return fn -- ok
+      return fn -- ok
     end
-    local ext = fn:match("%.(.-)$")
+
+    local ext = fn:match('%.(.-)$')
     if ext ~= nil then
-        return nil
+      return nil
     end
-    local fn_ext = fn..".tex"
-    if lfs.isfile(fn_ext) then
-        return fn_ext
+
+    local new_fn = fn .. '.tex'
+    if lfs.isfile(new_fn) then
+      return new_fn
+    else
+      return nil
     end
   end
 
@@ -918,12 +922,12 @@ do
     if #fns > 0 then
       for _, fn in ipairs(fns) do
         init_config()
-        ck_fn = check_filename(fn)
-        if ck_fn then
-          fetch_config_from_latex_source(ck_fn)
-          run_sequence(ck_fn)
+        local checked_fn = check_filename(fn)
+        if checked_fn then
+          fetch_config_from_latex_source(checked_fn)
+          run_sequence(checked_fn)
         else
-          err_print('error', 'No source file found for "'..fn..'".')
+          err_print('error', 'No source file found for "' .. fn .. '".')
           os.exit(exit_error)
         end
       end
