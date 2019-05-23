@@ -41,15 +41,20 @@ require 'lfs'
 require 'md5'
 
 -- global functions
-function err_print(err_type, msg)
+function log(label, msg, ...)
+  local prefix = prog_name .. ' ' .. label .. ': '
+  io.stderr:write(prefix .. msg:format(...) .. '\n')
+end
+
+function err_print(err_type, msg, ...)
   if (verbosity_level > 1) or (err_type == 'error') then
-    io.stderr:write(prog_name .. ' ' .. err_type .. ': ' .. msg .. '\n')
+    log(err_type, msg, ...)
   end
 end
 
-function dbg_print(dbg_type, msg)
+function dbg_print(dbg_type, msg, ...)
   if debug[dbg_type] then
-    io.stderr:write(prog_name .. ' debug-' .. dbg_type .. ': ' .. msg .. '\n')
+    log('debug-' .. dbg_type, msg, ...)
   end
 end
 
@@ -431,7 +436,7 @@ do
 
     local f = io.open(toml_source)
 
-    dbg_print('config', 'Fetching TOML from the file "' .. toml_source .. '".')
+    dbg_print('config', 'Fetching TOML from the file "%s".', toml_source)
 
     local first_line = true
     local shebang
@@ -503,8 +508,8 @@ do
     local toml = get_toml(fn)
     if toml == '' then
       err_print('warning',
-        'Neither TOML field nor shebang is found in "' .. fn ..
-        '"; using default config.')
+        'Neither TOML field nor shebang is found in "%s"; ' ..
+        'using default config.', fn)
     end
 
     update_config(parse_toml(toml))
@@ -517,7 +522,7 @@ do
       update_config(parse_toml(toml))
       f:close()
     else
-      err_print('error', 'No target specified and no ' .. llmk_toml .. ' found.')
+      err_print('error', 'No target specified and no %s found.', llmk_toml)
       os.exit(exit_error)
     end
   end
@@ -576,7 +581,7 @@ do
     local function add_prog_name(name)
       -- is the program known?
       if not config.programs[name] then
-        err_print('error', 'Unknown program "' .. name .. '" is in the sequence.')
+        err_print('error', 'Unknown program "%s" is in the sequence.', name)
         os.exit(exit_error)
       end
 
@@ -759,7 +764,7 @@ do
 
     -- if aux file does not exist, no chance of rerun
     if not lfs.isfile(aux) then
-      dbg_print('run', 'The auxiliary file "' .. aux .. '" does not exist.')
+      dbg_print('run', 'The auxiliary file "%s" does not exist.', aux)
       return false, fdb
     end
 
@@ -805,23 +810,23 @@ do
     -- does command specified?
     if #prog.command < 1 then
       dbg_print('run',
-        'Skiping "' .. prog.command .. '" because command does not exist.')
+        'Skiping "%s" because command does not exist.', prog.command)
       return false
     end
 
     -- does target exist?
     if not lfs.isfile(prog.target) then
       dbg_print('run',
-        'Skiping "' .. prog.command .. '" because target (' ..
-        prog.target .. ') does not exist.')
+        'Skiping "%s" because target (%s) does not exist.',
+        prog.command, prog.target)
       return false
     end
 
     -- is the target modified?
     if not prog.force and file_mtime(prog.target) < start_time then
       dbg_print('run',
-        'Skiping "' .. prog.command .. '" because target (' ..
-        prog.target .. ') is not updated.')
+        'Skiping "%s" because target (%s) is not updated.',
+        prog.command, prog.target)
       return false
     end
 
@@ -831,7 +836,7 @@ do
 
     if status > 0 then
       err_print('error',
-        'Fail running '.. cmd .. ' (exit code: ' .. status .. ')')
+        'Fail running %s (exit code: %d)', cmd, status)
       os.exit(exit_failure)
     end
 
@@ -845,13 +850,13 @@ do
     -- check prog.command
     -- TODO: move this to pre-checking process
     if type(prog.command) ~= 'string' then
-      err_print('error', 'Command name for "' .. name .. '" is not detected.')
+      err_print('error', 'Command name for "%s" is not detected.', name)
       os.exit(exit_error)
     end
 
     -- TODO: move this to pre-checking process
     if type(prog.target) ~= 'string' then
-      err_print('error', 'Target for "' .. name .. '" is not valid.')
+      err_print('error', 'Target for "%s" is not valid.', name)
       os.exit(exit_error)
     end
 
@@ -874,13 +879,13 @@ do
 
     -- go to the postprocess process
     if prog.postprocess and run then
-      dbg_print('run', 'Going to postprocess "' .. prog.postprocess .. '".')
+      dbg_print('run', 'Going to postprocess "%s".', prog.postprocess)
       process_program(programs, prog.postprocess, fn, fdb)
     end
   end
 
   local function run_sequence(fn)
-    err_print('info', 'Beginning a sequence for "' .. fn .. '".')
+    err_print('info', 'Beginning a sequence for "%s".', fn)
 
     -- setup the programs table
     local programs = setup_programs(fn)
@@ -893,7 +898,7 @@ do
     dbg_print_table('fdb', fdb)
 
     for _, name in ipairs(config.sequence) do
-      dbg_print('run', 'Preparing for program "' .. name .. '".')
+      dbg_print('run', 'Preparing for program "%s".', name)
       process_program(programs, name, fn, fdb)
     end
   end
@@ -927,7 +932,7 @@ do
           fetch_config_from_latex_source(checked_fn)
           run_sequence(checked_fn)
         else
-          err_print('error', 'No source file found for "' .. fn .. '".')
+          err_print('error', 'No source file found for "%s".', fn)
           os.exit(exit_error)
         end
       end
