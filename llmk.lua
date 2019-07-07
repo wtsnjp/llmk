@@ -23,7 +23,6 @@ M.version = '0.1'
 M.author = 'Takuto ASAKURA (wtsnjp)'
 
 M.llmk_toml = 'llmk.toml'
-M.start_time = os.time()
 
 -- option flags (default)
 M.debug = {
@@ -553,6 +552,9 @@ local M = {}
 local lfs = require 'lfs'
 local md5 = require 'md5'
 
+-- module local variable
+local start_time = os.time()
+
 local function table_copy(org)
   local org_type = type(org)
   local copy
@@ -799,7 +801,7 @@ local function check_rerun(prog, fdb)
   fdb.auxiliary[aux] = aux_status
 
   -- if aux file is not new, no rerun
-  local new = aux_status.mtime >= llmk.core.start_time
+  local new = aux_status.mtime >= start_time
   if not new and old_aux_exist then
     new = aux_status.mtime > old_status.mtime
   end
@@ -845,7 +847,7 @@ local function run_program(prog, fn, fdb)
   end
 
   -- is the target modified?
-  if not prog.force and file_mtime(prog.target) < llmk.core.start_time then
+  if not prog.force and file_mtime(prog.target) < start_time then
     llmk.util.dbg_print('run',
       'Skiping "%s" because target (%s) is not updated.',
       prog.command, prog.target)
