@@ -68,22 +68,23 @@ end
 function M.dbg_print_table(dbg_type, table)
   if not llmk.core.debug[dbg_type] then return end
 
-  local indent = 2
-
   local function helper(tab, ind)
+    local function pp(msg, ...)
+      M.dbg_print(dbg_type, string.rep(' ', ind) .. msg, ...)
+    end
     for k, v in pairs(tab) do
       if type(v) == 'table' then
-        M.dbg_print(dbg_type, string.rep(' ', ind) .. k .. ':')
-        helper(v, ind + indent)
+        pp(k .. ':')
+        helper(v, ind + 2)
       elseif type(v) == 'string' then
-        M.dbg_print(dbg_type, string.rep(' ', ind) .. k .. ': "' .. (v) .. '"')
+        pp(k .. ': "%s"', v)
       else -- number,  boolean, etc.
-        M.dbg_print(dbg_type, string.rep(' ', ind) .. k .. ': ' .. tostring(v))
+        pp(k .. ': %s', tostring(v))
       end
     end
   end
 
-  helper(table, indent)
+  helper(table, 2)
 end
 
 llmk.util = M
@@ -1091,7 +1092,7 @@ local function read_options()
     -- debug
     elseif (curr_arg == '-D') or
       (curr_arg == '--debug' and (v == 'all' or v == true)) then
-      for c, _ in pairs(debug) do
+      for c, _ in pairs(llmk.core.debug) do
         llmk.core.debug[c] = true
       end
     elseif (curr_arg == '-d') or (curr_arg == '--debug') then
