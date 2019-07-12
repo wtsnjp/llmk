@@ -86,7 +86,16 @@ function M.dbg_print_table(dbg_type, table)
   helper(table, indent)
 end
 
-function M.init_config()
+llmk.util = M
+end
+
+----------------------------------------
+
+do -- The "config" submodule
+local M = {}
+local config = {}  -- config is a local variable in this module
+
+local function init_config()
   -- basic config table
   config = {
     latex = 'lualatex',
@@ -132,12 +141,76 @@ function M.init_config()
   }
 end
 
-llmk.util = M
+-- copy command name from top level
+local function fetch_from_top_level(name)
+  if config.programs[name] then
+    if not config.programs[name].command and config[name] then
+      config.programs[name].command = config[name]
+    end
+  end
+end
+
+local function update_config(tab)
+  -- merge the table from TOML
+  local function merge_table(tab1, tab2)
+    for k, v in pairs(tab2) do
+      if type(tab1[k]) == 'table' then
+        tab1[k] = merge_table(tab1[k], v)
+      else
+        tab1[k] = v
+      end
+    end
+    return tab1
+  end
+  config = merge_table(config, tab)
+
+  -- set essential program names from top-level
+  local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf', 'dvips', 'ps2pdf'}
+  for _, name in pairs(prg_names) do
+    fetch_from_top_level(name)
+  end
+
+  -- show config table (for debug)
+  llmk.util.dbg_print('config', 'The final config table is as follows:')
+  llmk.util.dbg_print_table('config', config)
+end
+
+function M.fetch_from_latex_source(fn)
+  init_config()
+
+  local toml = llmk.parser.get_toml(fn)
+  if toml == '' then
+    llmk.util.err_print('warning',
+      'Neither TOML field nor shebang is found in "%s"; ' ..
+      'using default config.', fn)
+  end
+
+  update_config(llmk.parser.parse_toml(toml))
+end
+
+function M.fetch_from_llmk_toml()
+  init_config()
+
+  local f = io.open(llmk.core.llmk_toml)
+  if f ~= nil then
+    local toml = f:read('*all')
+    update_config(llmk.parser.parse_toml(toml))
+    f:close()
+  else
+    llmk.util.err_print('error', 'No target specified and no %s found.',
+      llmk.core.llmk_toml)
+    os.exit(llmk.core.exit_error)
+  end
+end
+
+function M.get_value(key) return config[key] end
+
+llmk.config = M
 end
 
 ----------------------------------------
 
-do -- The "parse" submodule
+do -- The "parser" submodule
 local M = {}
 
 local function parser_err(msg)
@@ -145,7 +218,7 @@ local function parser_err(msg)
   os.exit(llmk.core.exit_parser)
 end
 
-local function parse_toml(toml)
+function M.parse_toml(toml)
   -- basic local variables
   local ws = '[\009\032]'
   local nl = '[\10\13\10]'
@@ -229,9 +302,9 @@ local function parse_toml(toml)
     return tonumber(num)
   end
 
-  local parse_array, get_value
+  local get_value
 
-  function parse_array()
+  local function parse_array()
     step()
     skip_ws()
 
@@ -272,7 +345,7 @@ local function parse_toml(toml)
     return array
   end
 
-  function parse_boolean()
+  local function parse_boolean()
     local bool
 
     if toml:sub(cursor, cursor + 3) == 'true' then
@@ -296,7 +369,7 @@ local function parse_toml(toml)
   end
 
   -- judge the type and get the value
-  function get_value()
+  get_value = function()
     if (char() == '"' or char() == "'") then
       return parse_string()
     elseif char():match('[%+%-0-9]') then
@@ -327,7 +400,7 @@ local function parse_toml(toml)
       skip_ws()
 
       -- prepare the key
-      key = trim(buffer)
+      local key = trim(buffer)
       buffer = ''
 
       if key == '' then
@@ -441,7 +514,7 @@ local function parse_toml(toml)
   return res
 end
 
-local function get_toml(fn)
+function M.get_toml(fn)
   local toml = ''
   local toml_field = false
   local toml_source = fn
@@ -482,65 +555,7 @@ local function get_toml(fn)
   return toml
 end
 
--- copy command name from top level
-local function fetch_from_top_level(name)
-  if config.programs[name] then
-    if not config.programs[name].command and config[name] then
-      config.programs[name].command = config[name]
-    end
-  end
-end
-
-local function update_config(tab)
-  -- merge the table from TOML
-  local function merge_table(tab1, tab2)
-    for k, v in pairs(tab2) do
-      if type(tab1[k]) == 'table' then
-        tab1[k] = merge_table(tab1[k], v)
-      else
-        tab1[k] = v
-      end
-    end
-    return tab1
-  end
-  config = merge_table(config, tab)
-
-  -- set essential program names from top-level
-  local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf', 'dvips', 'ps2pdf'}
-  for _, name in pairs(prg_names) do
-    fetch_from_top_level(name)
-  end
-
-  -- show config table (for debug)
-  llmk.util.dbg_print('config', 'The final config table is as follows:')
-  llmk.util.dbg_print_table('config', config)
-end
-
-function M.fetch_config_from_latex_source(fn)
-  local toml = get_toml(fn)
-  if toml == '' then
-    llmk.util.err_print('warning',
-      'Neither TOML field nor shebang is found in "%s"; ' ..
-      'using default config.', fn)
-  end
-
-  update_config(parse_toml(toml))
-end
-
-function M.fetch_config_from_llmk_toml()
-  local f = io.open(llmk.core.llmk_toml)
-  if f ~= nil then
-    local toml = f:read('*all')
-    update_config(parse_toml(toml))
-    f:close()
-  else
-    llmk.util.err_print('error', 'No target specified and no %s found.',
-      llmk.core.llmk_toml)
-    os.exit(llmk.core.exit_error)
-  end
-end
-
-llmk.parse = M
+llmk.parser = M
 end
 
 ----------------------------------------
@@ -600,11 +615,12 @@ local function setup_programs(fn)
   ]]
   local prognames = {}
   local new_programs = {}
+  local programs = llmk.config.get_value('programs')
 
   -- collect related programs
   local function add_progname(name)
     -- is the program known?
-    if not config.programs[name] then
+    if not programs[name] then
       llmk.util.err_print('error', 'Unknown program "%s" is in the sequence.', name)
       os.exit(llmk.core.exit_error)
     end
@@ -620,12 +636,12 @@ local function setup_programs(fn)
     prognames[#prognames + 1] = name
   end
 
-  for _, name in pairs(config.sequence) do
+  for _, name in pairs(llmk.config.get_value('sequence')) do
     -- add the program name
     add_progname(name)
 
     -- add postprocess program if any
-    local postprocess = config.programs[name].postprocess
+    local postprocess = programs[name].postprocess
     if postprocess then
       add_progname(postprocess)
     end
@@ -633,7 +649,7 @@ local function setup_programs(fn)
 
   -- setup the programs
   for _, name in ipairs(prognames) do
-    local prog = table_copy(config.programs[name])
+    local prog = table_copy(programs[name])
 
     -- setup the `prog.target`
     local cur_target
@@ -727,7 +743,7 @@ local function init_file_database(programs, fn)
   }
 
   -- investigate current status
-  for _, v in ipairs(config.sequence) do
+  for _, v in ipairs(llmk.config.get_value('sequence')) do
     -- names
     local cur_target = programs[v].target
     local cur_aux = programs[v].auxiliary
@@ -896,7 +912,8 @@ local function process_program(programs, name, fn, fdb)
 
     -- if not neccesarry to rerun or reached to max_repeat, break the loop
     should_rerun, fdb = check_rerun(prog, fdb)
-    if not ((exe_count < config.max_repeat) and should_rerun) then
+    if not ((exe_count < llmk.config.get_value('max_repeat'))
+        and should_rerun) then
       break
     end
   end
@@ -921,7 +938,7 @@ local function run_sequence(fn)
   llmk.util.dbg_print('fdb', 'The initial file database is as follows:')
   llmk.util.dbg_print_table('fdb', fdb)
 
-  for _, name in ipairs(config.sequence) do
+  for _, name in ipairs(llmk.config.get_value('sequence')) do
     llmk.util.dbg_print('run', 'Preparing for program "%s".', name)
     process_program(programs, name, fn, fdb)
   end
@@ -950,10 +967,9 @@ end
 function M.make(fns)
   if #fns > 0 then
     for _, fn in ipairs(fns) do
-      llmk.util.init_config()
       local checked_fn = check_filename(fn)
       if checked_fn then
-        llmk.parse.fetch_config_from_latex_source(checked_fn)
+        llmk.config.fetch_from_latex_source(checked_fn)
         run_sequence(checked_fn)
       else
         llmk.util.err_print('error', 'No source file found for "%s".', fn)
@@ -961,12 +977,13 @@ function M.make(fns)
       end
     end
   else
-    llmk.util.init_config()
-    llmk.parse.fetch_config_from_llmk_toml()
-    if type(config.source) == 'string' then
-      run_sequence(config.source)
-    elseif type(config.source) == 'table' then
-      for _, fn in ipairs(config.source) do
+    llmk.config.fetch_from_llmk_toml()
+
+    local source = llmk.config.get_value('source')
+    if type(source) == 'string' then
+      run_sequence(source)
+    elseif type(source) == 'table' then
+      for _, fn in ipairs(source) do
         run_sequence(fn)
       end
     else
@@ -1057,7 +1074,7 @@ local function read_options()
     return tab
   end
 
-  opts = getopt(arg, 'd')
+  local opts = getopt(arg, 'd')
   for _, tp in pairs(opts) do
     k, v = tp[1], tp[2]
     if #k == 1 then
