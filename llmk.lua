@@ -17,13 +17,6 @@ local llmk = {} -- the module table
 do -- The "core" submodule
 local M = {}
 
--- program information
-M.prog_name = 'llmk'
-M.version = '0.1'
-M.author = 'Takuto ASAKURA (wtsnjp)'
-
-M.llmk_toml = 'llmk.toml'
-
 -- option flags (default)
 M.debug = {
   config = false,
@@ -34,13 +27,77 @@ M.debug = {
 }
 M.verbosity_level = 1
 
+llmk.core = M
+end
+
+----------------------------------------
+
+do -- The "const" submodule
+local M = {}
+
+-- program information
+M.prog_name = 'llmk'
+M.version = '0.1'
+M.author = 'Takuto ASAKURA (wtsnjp)'
+M.llmk_toml = 'llmk.toml'
+
 -- exit codes
 M.exit_ok = 0
 M.exit_error = 1
 M.exit_parser = 2
 M.exit_failure = 3
 
-llmk.core = M
+-- config item specification
+M.top_level_spec = {
+  latex = {'string', 'lualatex'},
+  bibtex = {'string', 'bibtex'},
+  makeindex = {'string', 'makeindex'},
+  dvipdf = {'string', 'dvipdfmx'},
+  dvips = {'string', 'dvips'},
+  ps2pdf = {'string', 'ps2pdf'},
+  sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
+  max_repeat = {'integer', 5},
+}
+
+M.program_spec = {
+  -- we treat "command" (string) as a special case
+  target = {'string', '"%S"'},
+  opts = {'*[string]', {}},
+  args = {'*[string]', {'"%T"'}},
+}
+
+M.default_programs = {
+  latex = {
+    opts = {
+      '-interaction=nonstopmode',
+      '-file-line-error',
+      '-synctex=1',
+    },
+    auxiliary = '%B.aux',
+  },
+  bibtex = {
+    target = '%B.bib',
+    args = '%B', -- "%B.bib" will result in an error
+    postprocess = 'latex',
+  },
+  makeindex = {
+    target = '%B.idx',
+    force = false,
+    postprocess = 'latex',
+  },
+  dvipdf = {
+    target = '%B.dvi',
+    force = false,
+  },
+  dvips = {
+    target = '%B.dvi',
+  },
+  ps2pdf = {
+    target = '%B.ps',
+  },
+}
+
+llmk.const = M
 end
 
 ----------------------------------------
@@ -49,7 +106,7 @@ do -- The "util" submodule
 local M = {}
 
 local function log(label, msg, ...)
-  local prefix = llmk.core.prog_name .. ' ' .. label .. ': '
+  local prefix = llmk.const.prog_name .. ' ' .. label .. ': '
   io.stderr:write(prefix .. msg:format(...) .. '\n')
 end
 
@@ -94,64 +151,29 @@ end
 
 do -- The "config" submodule
 local M = {}
-local config = {}  -- config is a local variable in this module
 
 local function init_config()
-  -- basic config table
-  config = {
-    latex = 'lualatex',
-    bibtex = 'bibtex',
-    makeindex = 'makeindex',
-    dvipdf = 'dvipdfmx',
-    dvips = 'dvips',
-    ps2pdf = 'ps2pdf',
-    sequence = {'latex', 'bibtex', 'makeindex', 'dvipdf'},
-    max_repeat = 3,
-  }
+  local config = {}
 
-  -- program presets
-  config.programs = {
-    latex = {
-      opts = {
-        '-interaction=nonstopmode',
-        '-file-line-error',
-        '-synctex=1',
-      },
-      auxiliary = '%B.aux',
-    },
-    bibtex = {
-      target = '%B.bib',
-      args = '%B', -- "%B.bib" will result in an error
-      postprocess = 'latex',
-    },
-    makeindex = {
-      target = '%B.idx',
-      force = false,
-      postprocess = 'latex',
-    },
-    dvipdf = {
-      target = '%B.dvi',
-      force = false,
-    },
-    dvips = {
-      target = '%B.dvi',
-    },
-    ps2pdf = {
-      target = '%B.ps',
-    },
-  }
+  for k, v in pairs(llmk.const.top_level_spec) do
+    config[k] = v[2]
+  end
+
+  config.programs = llmk.const.default_programs
+  return config
 end
 
 -- copy command name from top level
-local function fetch_from_top_level(name)
+local function fetch_from_top_level(config, name)
   if config.programs[name] then
     if not config.programs[name].command and config[name] then
       config.programs[name].command = config[name]
     end
   end
+  return config
 end
 
-local function update_config(tab)
+local function update_config(config, tab)
   -- merge the table from TOML
   local function merge_table(tab1, tab2)
     for k, v in pairs(tab2) do
@@ -163,21 +185,23 @@ local function update_config(tab)
     end
     return tab1
   end
-  config = merge_table(config, tab)
+  local config = merge_table(config, tab)
 
   -- set essential program names from top-level
   local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf', 'dvips', 'ps2pdf'}
   for _, name in pairs(prg_names) do
-    fetch_from_top_level(name)
+    config = fetch_from_top_level(config, name)
   end
 
   -- show config table (for debug)
   llmk.util.dbg_print('config', 'The final config table is as follows:')
   llmk.util.dbg_print_table('config', config)
+
+  return config
 end
 
 function M.fetch_from_latex_source(fn)
-  init_config()
+  local config = init_config()
 
   local toml = llmk.parser.get_toml(fn)
   if toml == '' then
@@ -186,25 +210,25 @@ function M.fetch_from_latex_source(fn)
       'using default config.', fn)
   end
 
-  update_config(llmk.parser.parse_toml(toml))
+  return update_config(config, llmk.parser.parse_toml(toml))
 end
 
 function M.fetch_from_llmk_toml()
-  init_config()
+  local config = init_config()
 
-  local f = io.open(llmk.core.llmk_toml)
+  local f = io.open(llmk.const.llmk_toml)
   if f ~= nil then
     local toml = f:read('*all')
-    update_config(llmk.parser.parse_toml(toml))
+    update_config(config, llmk.parser.parse_toml(toml))
     f:close()
   else
     llmk.util.err_print('error', 'No target specified and no %s found.',
-      llmk.core.llmk_toml)
-    os.exit(llmk.core.exit_error)
+      llmk.const.llmk_toml)
+    os.exit(llmk.const.exit_error)
   end
-end
 
-function M.get_value(key) return config[key] end
+  return config
+end
 
 llmk.config = M
 end
@@ -216,7 +240,7 @@ local M = {}
 
 local function parser_err(msg)
   llmk.util.err_print('error', 'parser: ' .. msg)
-  os.exit(llmk.core.exit_parser)
+  os.exit(llmk.const.exit_parser)
 end
 
 function M.parse_toml(toml)
@@ -602,7 +626,7 @@ local function replace_specifiers(str, source, target)
   return str
 end
 
-local function setup_programs(fn)
+local function setup_programs(fn, config)
   --[[Setup the programs table for each sequence.
 
   Collecting tables of only related programs, which appears in the
@@ -616,14 +640,14 @@ local function setup_programs(fn)
   ]]
   local prognames = {}
   local new_programs = {}
-  local programs = llmk.config.get_value('programs')
+  local programs = config.programs
 
   -- collect related programs
   local function add_progname(name)
     -- is the program known?
     if not programs[name] then
       llmk.util.err_print('error', 'Unknown program "%s" is in the sequence.', name)
-      os.exit(llmk.core.exit_error)
+      os.exit(llmk.const.exit_error)
     end
 
     -- if not new, no addition
@@ -637,7 +661,7 @@ local function setup_programs(fn)
     prognames[#prognames + 1] = name
   end
 
-  for _, name in pairs(llmk.config.get_value('sequence')) do
+  for _, name in pairs(config.sequence) do
     -- add the program name
     add_progname(name)
 
@@ -736,7 +760,7 @@ local function file_status(path)
   }
 end
 
-local function init_file_database(programs, fn)
+local function init_file_database(programs, fn, config)
   -- the template
   local fdb = {
     targets = {},
@@ -744,7 +768,7 @@ local function init_file_database(programs, fn)
   }
 
   -- investigate current status
-  for _, v in ipairs(llmk.config.get_value('sequence')) do
+  for _, v in ipairs(config.sequence) do
     -- names
     local cur_target = programs[v].target
     local cur_aux = programs[v].auxiliary
@@ -878,13 +902,13 @@ local function run_program(prog, fn, fdb)
   if status > 0 then
     llmk.util.err_print('error',
       'Fail running %s (exit code: %d)', cmd, status)
-    os.exit(llmk.core.exit_failure)
+    os.exit(llmk.const.exit_failure)
   end
 
   return true
 end
 
-local function process_program(programs, name, fn, fdb)
+local function process_program(programs, name, fn, fdb, config)
   local prog = programs[name]
   local should_rerun
 
@@ -892,13 +916,13 @@ local function process_program(programs, name, fn, fdb)
   -- TODO: move this to pre-checking process
   if type(prog.command) ~= 'string' then
     llmk.util.err_print('error', 'Command name for "%s" is not detected.', name)
-    os.exit(llmk.core.exit_error)
+    os.exit(llmk.const.exit_error)
   end
 
   -- TODO: move this to pre-checking process
   if type(prog.target) ~= 'string' then
     llmk.util.err_print('error', 'Target for "%s" is not valid.', name)
-    os.exit(llmk.core.exit_error)
+    os.exit(llmk.const.exit_error)
   end
 
   -- execute the command
@@ -913,8 +937,7 @@ local function process_program(programs, name, fn, fdb)
 
     -- if not neccesarry to rerun or reached to max_repeat, break the loop
     should_rerun, fdb = check_rerun(prog, fdb)
-    if not ((exe_count < llmk.config.get_value('max_repeat'))
-        and should_rerun) then
+    if not ((exe_count < config.max_repeat) and should_rerun) then
       break
     end
   end
@@ -922,26 +945,26 @@ local function process_program(programs, name, fn, fdb)
   -- go to the postprocess process
   if prog.postprocess and run then
     llmk.util.dbg_print('run', 'Going to postprocess "%s".', prog.postprocess)
-    process_program(programs, prog.postprocess, fn, fdb)
+    process_program(programs, prog.postprocess, fn, fdb, config)
   end
 end
 
-local function run_sequence(fn)
+local function run_sequence(fn, config)
   llmk.util.err_print('info', 'Beginning a sequence for "%s".', fn)
 
   -- setup the programs table
-  local programs = setup_programs(fn)
+  local programs = setup_programs(fn, config)
   llmk.util.dbg_print('programs', 'Current programs table:')
   llmk.util.dbg_print_table('programs', programs)
 
   -- create a file database
-  local fdb = init_file_database(programs, fn)
+  local fdb = init_file_database(programs, fn, config)
   llmk.util.dbg_print('fdb', 'The initial file database is as follows:')
   llmk.util.dbg_print_table('fdb', fdb)
 
-  for _, name in ipairs(llmk.config.get_value('sequence')) do
+  for _, name in ipairs(config.sequence) do
     llmk.util.dbg_print('run', 'Preparing for program "%s".', name)
-    process_program(programs, name, fn, fdb)
+    process_program(programs, name, fn, fdb, config)
   end
 end
 
@@ -966,30 +989,31 @@ local function check_filename(fn)
 end
 
 function M.make(fns)
+  local config
   if #fns > 0 then
     for _, fn in ipairs(fns) do
       local checked_fn = check_filename(fn)
       if checked_fn then
-        llmk.config.fetch_from_latex_source(checked_fn)
-        run_sequence(checked_fn)
+        config = llmk.config.fetch_from_latex_source(checked_fn)
+        run_sequence(checked_fn, config)
       else
         llmk.util.err_print('error', 'No source file found for "%s".', fn)
-        os.exit(llmk.core.exit_error)
+        os.exit(llmk.const.exit_error)
       end
     end
   else
-    llmk.config.fetch_from_llmk_toml()
+    config = llmk.config.fetch_from_llmk_toml()
 
-    local source = llmk.config.get_value('source')
+    local source = config.source
     if type(source) == 'string' then
-      run_sequence(source)
+      run_sequence(source, config)
     elseif type(source) == 'table' then
       for _, fn in ipairs(source) do
-        run_sequence(fn)
+        run_sequence(fn, config)
       end
     else
       llmk.util.err_print('error', 'No source detected.')
-      os.exit(llmk.core.exit_error)
+      os.exit(llmk.const.exit_error)
     end
   end
 end
@@ -1109,7 +1133,7 @@ local function read_options()
     -- problem
     else
       llmk.util.err_print('error', 'unknown option: ' .. curr_arg)
-      os.exit(llmk.core.exit_error)
+      os.exit(llmk.const.exit_error)
     end
   end
 
@@ -1121,7 +1145,7 @@ local function do_action(action)
     io.stdout:write(help_text)
   elseif action == 'version' then
     io.stdout:write(version_text:format(
-      llmk.core.prog_name, llmk.core.version, llmk.core.author))
+      llmk.const.prog_name, llmk.const.version, llmk.const.author))
   end
 end
 
@@ -1130,11 +1154,11 @@ function M.exec()
 
   if action then
     do_action(action)
-    os.exit(llmk.core.exit_ok)
+    os.exit(llmk.const.exit_ok)
   end
 
   llmk.runner.make(arg)
-  os.exit(llmk.core.exit_ok)
+  os.exit(llmk.const.exit_ok)
 end
 
 llmk.cli = M
