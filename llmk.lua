@@ -55,12 +55,16 @@ M.top_level_spec = {
   dvipdf = {'string', 'dvipdfmx'},
   dvips = {'string', 'dvips'},
   ps2pdf = {'string', 'ps2pdf'},
+  source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
+  clean_files ={'*[string]',{'%B.aux','%B.log', '%B.toc','%B.out', '%B.bbl', '%B.bcf', '%B.blg'}},
+  clobber_files ={'*[string]', {'%B.pdf', '%B.dvi', '%B.ps'}},
+  del_dir = {'string', nil},
 }
 
 M.program_spec = {
-  -- we treat "command" (string) as a special case
+  command = {'string', nil},
   target = {'string', '"%S"'},
   opts = {'*[string]', {}},
   args = {'*[string]', {'"%T"'}},
@@ -149,6 +153,92 @@ end
 
 ----------------------------------------
 
+do -- The "checker" submodule
+local M = {}
+
+local function checked_value(k, v, expected)
+  local function error_if_wrong_type(val, t)
+    if type(val) ~= t then
+      llmk.util.err_print('error',
+        'type: Key "%s" must have value of type %s.', k, expected)
+      os.exit(llmk.const.exit_error)
+    end
+  end
+
+  if expected == 'integer' then
+    error_if_wrong_type(v, 'number')
+  elseif expected == 'string' then
+    error_if_wrong_type(v, 'string')
+  elseif expected == '[string]' then
+    error_if_wrong_type(v, 'table')
+
+    if v[1] then -- it is not an empty array
+      error_if_wrong_type(v[1], 'string')
+    end
+  elseif expected == '*[string]' then
+    if type(v) == 'string' then
+      v = {v}
+    else
+      error_if_wrong_type(v, 'table')
+
+      if v[1] then -- it is not an empty array
+        error_if_wrong_type(v[1], 'string')
+      end
+    end
+  end
+
+  return v
+end
+
+function M.type_check(tab)
+  local new_top = {}
+
+  for k, v in pairs(tab) do
+    if k == 'programs' then
+      if type(v) ~= 'table' then
+        llmk.util.err_print('error', 'type: Key "programs" must be a table.')
+        os.exit(llmk.const.exit_error)
+      end
+
+      local new_prog = {}
+      for p_name, p_val in pairs(v) do
+        if type(p_val) ~= 'table' then
+          llmk.util.err_print('error',
+            'type: Key "programs.%s" must be a table.', p_name)
+          os.exit(llmk.const.exit_error)
+        else
+          new_prog[p_name] = {}
+          for ik, iv in pairs(p_val) do
+            if not llmk.const.program_spec[ik] then
+              llmk.util.err_print('warning',
+                'Program key "%s" is unknown. Will be ignored.', ik)
+            else
+              expected = llmk.const.program_spec[ik][1]
+              new_prog[p_name][ik] = checked_value(ik, iv, expected)
+            end
+          end
+        end
+      end
+      new_top[k] = new_prog
+    else
+      if not llmk.const.top_level_spec[k] then
+        llmk.util.err_print('warning',
+          'Top-level key "%s" is unknown. Will be ignored.', k)
+      else
+        expected = llmk.const.top_level_spec[k][1]
+        new_top[k] = checked_value(k, v, expected)
+      end
+    end
+  end
+
+  return new_top
+end
+
+llmk.checker = M
+end
+
+----------------------------------------
+
 do -- The "config" submodule
 local M = {}
 
@@ -201,31 +291,43 @@ local function update_config(config, tab)
 end
 
 function M.fetch_from_latex_source(fn)
+  local tab
   local config = init_config()
 
+  -- get TOML field and parse it
   local toml = llmk.parser.get_toml(fn)
   if toml == '' then
     llmk.util.err_print('warning',
       'Neither TOML field nor shebang is found in "%s"; ' ..
       'using default config.', fn)
   end
+  tab = llmk.parser.parse_toml(toml)
 
-  return update_config(config, llmk.parser.parse_toml(toml))
+  -- check input and merge it to the config
+  tab = llmk.checker.type_check(tab)
+  config = update_config(config, tab)
+
+  return config
 end
 
 function M.fetch_from_llmk_toml()
+  local tab
   local config = init_config()
 
   local f = io.open(llmk.const.llmk_toml)
   if f ~= nil then
     local toml = f:read('*all')
-    update_config(config, llmk.parser.parse_toml(toml))
+    tab = llmk.parser.parse_toml(toml)
     f:close()
   else
     llmk.util.err_print('error', 'No target specified and no %s found.',
       llmk.const.llmk_toml)
     os.exit(llmk.const.exit_error)
   end
+
+  -- check input and merge it to the config
+  tab = llmk.checker.type_check(tab)
+  config = update_config(config, tab)
 
   return config
 end
@@ -1021,6 +1123,94 @@ end
 llmk.runner = M
 end
 
+do -- The "cleaner" submodule
+
+local lfs = require("lfs")
+local M = {}
+--[[
+local function remove_or_move(file)
+
+  if llmk.const.del_dir == nil then
+    -- remove file
+    err = os.remove(file)
+    if err ~= nil then
+      llmk.dbg_print(err)
+    else
+      llmk.dbg_print(f "is removed.\n") 
+    end
+  else
+    -- move file into del_dir
+    if llmk.check_del_dir(llmk.const.del_dir) == false then
+      err = lfs.mkdir(llmk.const.del_dir)
+      if err ~= nil then 
+        llmk.dbg_print(err)
+        return
+      end
+    end
+    local filepath = (llmk.const.del_dir  .. f)
+    filepath = llmk.modify_path(filepath)
+    err = os.rename(f, filepath)
+    if err ~= nil then
+      llmk.dbg_print(err)
+    else
+      llmk.dbg_print(f "is removed.\n") 
+    end
+      
+  end
+end
+
+local function clean()
+  local table = llmk.config.clean_files
+  for _, v in ipairs(table) do
+    v = llmk.replace_specifiers(v, source, target)
+    if llmk.check_filename(v) ~= nil then 
+      llmk.remove_or_move(v)
+    else
+      llmk.dbg_print(v .. "is not exist\n")
+    end
+  end
+
+end
+
+local function clobber()
+  local table = table.concat(llmk.clean_files, llmk.clobber_files)
+  for _, v in ipairs(table) do
+    v = llmk.replace_specifiers(v, source, target)
+  end
+
+end
+
+local function check_del_dir(str) 
+  if lfs.isdir(str) == false then
+    lfs.mkdir(str)
+  end
+
+end
+
+local function modify_path(str)
+  local os_type = os.type
+  if (os_type == 'windows' or os_type == 'msdos') then
+    str = llmk.slash_to_backslash(str)
+  end
+  return str
+end
+
+local function slash_to_backslash(str)
+    str = str:gsub('/', '\\')  
+  return str
+end
+ ]] --
+function M.clean()
+  io.stdout:write("clean\n")
+end
+
+function M.clobber()
+  io.stdout:write("clobber\n")
+end
+
+
+llmk.cleaner = M
+end
 ----------------------------------------
 
 do -- The "cli" submodule
@@ -1038,7 +1228,10 @@ Options:
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -d CAT, --debug=CAT   Activate debug output restricted to CAT.
 
-Please report bugs to <tkt.asakura@gmail.com>.
+  -c, --clean           Remove or Move the files generated by latex commands.
+  -C, --clobber          Remove or Move the filed generated by latex commands including dvi, ps, pdf.
+
+  Please report bugs to <tkt.asakura@gmail.com>.
 ]]
 
 local version_text = [[
@@ -1113,6 +1306,10 @@ local function read_options()
       action = 'help'
     elseif (curr_arg == '-V') or (curr_arg == '--version') then
       action = 'version'
+    elseif (curr_arg == '-c') or (curr_arg == '--clean') then
+      action = 'clean'      
+    elseif (curr_arg == '-C') or (curr_arg == '--clobber') then
+      action = 'clobber'
     -- debug
     elseif (curr_arg == '-D') or
       (curr_arg == '--debug' and (v == 'all' or v == true)) then
@@ -1146,6 +1343,11 @@ local function do_action(action)
   elseif action == 'version' then
     io.stdout:write(version_text:format(
       llmk.const.prog_name, llmk.const.version, llmk.const.author))
+  elseif action == 'clean' then
+    llmk.cleaner.clean()
+    
+  elseif action == 'clobber' then
+    llmk.cleaner.clobber()
   end
 end
 
