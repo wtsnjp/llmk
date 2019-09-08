@@ -55,12 +55,13 @@ M.top_level_spec = {
   dvipdf = {'string', 'dvipdfmx'},
   dvips = {'string', 'dvips'},
   ps2pdf = {'string', 'ps2pdf'},
+  source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
 }
 
 M.program_spec = {
-  -- we treat "command" (string) as a special case
+  command = {'string', nil},
   target = {'string', '"%S"'},
   opts = {'*[string]', {}},
   args = {'*[string]', {'"%T"'}},
@@ -149,6 +150,92 @@ end
 
 ----------------------------------------
 
+do -- The "checker" submodule
+local M = {}
+
+local function checked_value(k, v, expected)
+  local function error_if_wrong_type(val, t)
+    if type(val) ~= t then
+      llmk.util.err_print('error',
+        'type: Key "%s" must have value of type %s.', k, expected)
+      os.exit(llmk.const.exit_error)
+    end
+  end
+
+  if expected == 'integer' then
+    error_if_wrong_type(v, 'number')
+  elseif expected == 'string' then
+    error_if_wrong_type(v, 'string')
+  elseif expected == '[string]' then
+    error_if_wrong_type(v, 'table')
+
+    if v[1] then -- it is not an empty array
+      error_if_wrong_type(v[1], 'string')
+    end
+  elseif expected == '*[string]' then
+    if type(v) == 'string' then
+      v = {v}
+    else
+      error_if_wrong_type(v, 'table')
+
+      if v[1] then -- it is not an empty array
+        error_if_wrong_type(v[1], 'string')
+      end
+    end
+  end
+
+  return v
+end
+
+function M.type_check(tab)
+  local new_top = {}
+
+  for k, v in pairs(tab) do
+    if k == 'programs' then
+      if type(v) ~= 'table' then
+        llmk.util.err_print('error', 'type: Key "programs" must be a table.')
+        os.exit(llmk.const.exit_error)
+      end
+
+      local new_prog = {}
+      for p_name, p_val in pairs(v) do
+        if type(p_val) ~= 'table' then
+          llmk.util.err_print('error',
+            'type: Key "programs.%s" must be a table.', p_name)
+          os.exit(llmk.const.exit_error)
+        else
+          new_prog[p_name] = {}
+          for ik, iv in pairs(p_val) do
+            if not llmk.const.program_spec[ik] then
+              llmk.util.err_print('warning',
+                'Program key "%s" is unknown. Will be ignored.', ik)
+            else
+              expected = llmk.const.program_spec[ik][1]
+              new_prog[p_name][ik] = checked_value(ik, iv, expected)
+            end
+          end
+        end
+      end
+      new_top[k] = new_prog
+    else
+      if not llmk.const.top_level_spec[k] then
+        llmk.util.err_print('warning',
+          'Top-level key "%s" is unknown. Will be ignored.', k)
+      else
+        expected = llmk.const.top_level_spec[k][1]
+        new_top[k] = checked_value(k, v, expected)
+      end
+    end
+  end
+
+  return new_top
+end
+
+llmk.checker = M
+end
+
+----------------------------------------
+
 do -- The "config" submodule
 local M = {}
 
@@ -201,31 +288,43 @@ local function update_config(config, tab)
 end
 
 function M.fetch_from_latex_source(fn)
+  local tab
   local config = init_config()
 
+  -- get TOML field and parse it
   local toml = llmk.parser.get_toml(fn)
   if toml == '' then
     llmk.util.err_print('warning',
       'Neither TOML field nor shebang is found in "%s"; ' ..
       'using default config.', fn)
   end
+  tab = llmk.parser.parse_toml(toml)
 
-  return update_config(config, llmk.parser.parse_toml(toml))
+  -- check input and merge it to the config
+  tab = llmk.checker.type_check(tab)
+  config = update_config(config, tab)
+
+  return config
 end
 
 function M.fetch_from_llmk_toml()
+  local tab
   local config = init_config()
 
   local f = io.open(llmk.const.llmk_toml)
   if f ~= nil then
     local toml = f:read('*all')
-    update_config(config, llmk.parser.parse_toml(toml))
+    tab = llmk.parser.parse_toml(toml)
     f:close()
   else
     llmk.util.err_print('error', 'No target specified and no %s found.',
       llmk.const.llmk_toml)
     os.exit(llmk.const.exit_error)
   end
+
+  -- check input and merge it to the config
+  tab = llmk.checker.type_check(tab)
+  config = update_config(config, tab)
 
   return config
 end
