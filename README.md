@@ -60,6 +60,24 @@ If you run llmk without any argument, llmk will load `llmk.toml` in the working 
 $ llmk
 ```
 
+### Supports for shebang-like magic comments
+
+Some existing tools such as [Emacs/YaTeX](https://www.yatex.org/) support shebang-like magic comments. llmk also supports the magic comments. E.g.,
+
+```
+%#!pdflatex
+```
+
+is equivalent to:
+
+```
+% +++
+% latex = "pdflatex"
+% +++
+```
+
+Note that this magic comment is effective **only on the first line** of a LaTeX source file. Note also that if a TOML field exist in the file, the TOML field has higher priority and the shebang-like magic comment is simply ignored.
+
 ### Custom compile sequence
 
 You can setup custom sequence for processing LaTeX documents; use `sequence` key to specify the order of programs to process the documents and specify the detailed settings for each program.
@@ -78,12 +96,12 @@ dvipdf = "dvipdfmx"
 # detailed settings for each program
 [programs.latex]
 command = "uplatex"
-opts = "-halt-on-error"
-args = "%T"
+opts = ["-halt-on-error"]
+args = ["%T"]
 
 [programs.bibtex]
 command = "biber"
-args = "%B"
+args = ["%B"]
 ```
 
 In the `args` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
