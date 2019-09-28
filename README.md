@@ -45,16 +45,16 @@ You can find other example LaTeX document files in the [examples](./examples) di
 
 Like latexmk, `-c` (`--clean`) and `-C` (`--clobber`) options are available.
 
-* `llmk -c` removes temporary files. In default, .aux, .log, .toc, .out, .bbl, .blg , .bcf and .idx.
-* `llmk -C` removes all output files. In default, temporary files and .pdf, .dvi and .ps. 
+* `llmk -c` removes temporary files. Remove targets are set in `clean_files` array.
+* `llmk -C` removes all output files. Remove targets are set in `clean_files` and `clobber_files` arrays.
 
 ```
-$ llmk -c 
+$ llmk -c [FILE]
 ```
 
 Customize remove targets, edit settings these two.
 
-* `-c` : `clean_files` is string array. format is like `%B.aux`.
+* `-c` : `clean_files` is a string array. format is like `[%B.aux]`.
 * `-C` : `clobber_files`.
 
 and
@@ -80,6 +80,24 @@ If you run llmk without any argument, llmk will load `llmk.toml` in the working 
 $ llmk
 ```
 
+### Supports for shebang-like magic comments
+
+Some existing tools such as [Emacs/YaTeX](https://www.yatex.org/) support shebang-like magic comments. llmk also supports the magic comments. E.g.,
+
+```
+%#!pdflatex
+```
+
+is equivalent to:
+
+```
+% +++
+% latex = "pdflatex"
+% +++
+```
+
+Note that this magic comment is effective **only on the first line** of a LaTeX source file. Note also that if a TOML field exist in the file, the TOML field has higher priority and the shebang-like magic comment is simply ignored.
+
 ### Custom compile sequence
 
 You can setup custom sequence for processing LaTeX documents; use `sequence` key to specify the order of programs to process the documents and specify the detailed settings for each program.
@@ -98,12 +116,12 @@ dvipdf = "dvipdfmx"
 # detailed settings for each program
 [programs.latex]
 command = "uplatex"
-opts = "-halt-on-error"
-args = "%T"
+opts = ["-halt-on-error"]
+args = ["%T"]
 
 [programs.bibtex]
 command = "biber"
-args = "%B"
+args = ["%B"]
 ```
 
 In the `args` keys in each program, some format specifiers are available. Those specifiers will be replaced to appropriate strings before executing the programs:
@@ -132,6 +150,9 @@ This is the list of currently available TOML keys.
 		* `postprocess` (type: *string*)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 * `max_repeat` (type: *int*, default: 3)
+* `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.log", "%B.toc", "%B.out", "%B.bbl", "%B.bcf", "%B.blg", "%B.idx", "%B.synctex.gz"]`)
+* `clbber_files` (type: **string) or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps"]`)
+* `del_dir` (type: *string*)
 
 ### Default settings for each program
 

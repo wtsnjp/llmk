@@ -58,7 +58,7 @@ M.top_level_spec = {
   source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
-  clean_files ={'*[string]',{'%B.aux','%B.log', '%B.toc','%B.out', '%B.bbl', '%B.bcf', '%B.blg'}},
+  clean_files ={'*[string]',{'%B.aux','%B.log', '%B.toc','%B.fls','%B.synctex.gz','%B.out', '%B.bbl', '%B.bcf', '%B.blg'}},
   clobber_files ={'*[string]', {'%B.pdf', '%B.dvi', '%B.ps'}},
   del_dir = {'string', nil},
 }
@@ -1127,65 +1127,38 @@ do -- The "cleaner" submodule
 
 local lfs = require("lfs")
 local M = {}
---[[
-local function remove_or_move(file)
 
-  if llmk.const.del_dir == nil then
+local function remove_or_move(tmp, del_dir)
+
+  if del_dir == nil then
     -- remove file
-    err = os.remove(file)
+    err = os.remove(tmp)
     if err ~= nil then
-      llmk.dbg_print(err)
+      llmk.util.dbg_print('cleaner', err)
     else
-      llmk.dbg_print(f "is removed.\n") 
+      llmk.util.dbg_print('cleaner',tmp .. "is removed.\n") 
     end
   else
     -- move file into del_dir
-    if llmk.check_del_dir(llmk.const.del_dir) == false then
-      err = lfs.mkdir(llmk.const.del_dir)
+    if lfs.isfle(del_dir) == false then
+      err = lfs.mkdir(del_dir)
       if err ~= nil then 
-        llmk.dbg_print(err)
+        llmk.util.dbg_print('cleaner',err)
         return
       end
     end
-    local filepath = (llmk.const.del_dir  .. f)
+    local filepath = (del_dir  .. tmp)
     filepath = llmk.modify_path(filepath)
-    err = os.rename(f, filepath)
+    err = os.rename(tmp, filepath)
     if err ~= nil then
       llmk.dbg_print(err)
     else
-      llmk.dbg_print(f "is removed.\n") 
+      llmk.dbg_print(tmp "is moved to ".. del_dir .. ".\n") 
     end
       
   end
 end
 
-local function clean()
-  local table = llmk.config.clean_files
-  for _, v in ipairs(table) do
-    v = llmk.replace_specifiers(v, source, target)
-    if llmk.check_filename(v) ~= nil then 
-      llmk.remove_or_move(v)
-    else
-      llmk.dbg_print(v .. "is not exist\n")
-    end
-  end
-
-end
-
-local function clobber()
-  local table = table.concat(llmk.clean_files, llmk.clobber_files)
-  for _, v in ipairs(table) do
-    v = llmk.replace_specifiers(v, source, target)
-  end
-
-end
-
-local function check_del_dir(str) 
-  if lfs.isdir(str) == false then
-    lfs.mkdir(str)
-  end
-
-end
 
 local function modify_path(str)
   local os_type = os.type
@@ -1199,13 +1172,97 @@ local function slash_to_backslash(str)
     str = str:gsub('/', '\\')  
   return str
 end
- ]] --
+
+ local function replace_specifiers(str, source)
+  local tmp = '/' .. source
+  local basename = tmp:match('^.*/(.*)%..*$')
+
+  str = str:gsub('%%S', source)
+  --str = str:gsub('%%T', target)
+
+  if basename then
+    str = str:gsub('%%B', basename)
+  else
+    str = str:gsub('%%B', source)
+  end
+
+  return str
+end
+local function check_filename(fn)
+  if lfs.isfile(fn) then
+    return fn -- ok
+  end
+
+  local ext = fn:match('%.(.-)$')
+  if ext ~= nil then
+    return nil
+  end
+
+  local new_fn = fn .. '.tex'
+  if lfs.isfile(new_fn) then
+    return new_fn
+  else
+    return nil
+  end
+end
+
 function M.clean()
-  io.stdout:write("clean\n")
+  local config = {}
+
+  local fns = {}
+  for _, fn in ipairs(arg) do
+    local checked_fn = check_filename(fn)
+    if checked_fn ~= nil then  
+      fns[#fns + 1] = checked_fn
+    end
+  end
+  if #fns > 0 then
+    for _, fn in ipairs(fns) do
+        config = llmk.config.fetch_from_latex_source(fn)
+        local clean_files = config['clean_files']
+        for _, tmp in ipairs(clean_files) do
+          local replaced_fn = replace_specifiers(tmp, fn)
+          remove_or_move(replaced_fn, config['del_dir'])
+        end
+    end
+  else 
+    config = llmk.config.fetch_from_llmk_toml()
+    local clean_files = config['clean_files']
+        for _, tmp in ipairs(clean_files) do
+          local replaced_fn = replace_specifiers(tmp, fn)
+          remove_or_move(replaced_fn, config['del_dir'])
+        end
+  end
 end
 
 function M.clobber()
-  io.stdout:write("clobber\n")
+  M.clean()
+  local config = {}
+
+  local fns = {}
+  for _, fn in ipairs(arg) do
+    local checked_fn = check_filename(fn)
+    if checked_fn ~= nil then  
+      fns[#fns + 1] = checked_fn
+    end
+  end
+  if #fns > 0 then
+    for _, fn in ipairs(fns) do
+        config = llmk.config.fetch_from_latex_source(fn)
+        local c_files = config['clobber_files']
+        for _, tmp in ipairs(c_files) do
+          local replaced_fn = replace_specifiers(tmp, fn)
+          remove_or_move(replaced_fn, config['del_dir'])
+        end
+    end
+  else 
+    config = llmk.config.fetch_from_llmk_toml()
+    local c_files = config['clobber_files']
+        for _, tmp in ipairs(c_files) do
+          local replaced_fn = replace_specifiers(tmp, fn)
+          remove_or_move(replaced_fn, config['del_dir'])
+        end
+  end
 end
 
 
