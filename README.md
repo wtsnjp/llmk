@@ -150,9 +150,9 @@ This is the list of currently available TOML keys.
 		* `postprocess` (type: *string*)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 * `max_repeat` (type: *int*, default: 3)
-* `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.log", "%B.toc", "%B.out", "%B.bbl", "%B.bcf", "%B.blg", "%B.idx", "%B.synctex.gz"]`)
-* `clbber_files` (type: **string) or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps"]`)
-* `del_dir` (type: *string*)
+* `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.log", "%B.toc", "%B.out", "%B.bbl", "%B.bcf", "%B.blg", "%B.idx", "%B.fls"]`)
+* `clbber_files` (type: *string or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps", "%B.synctex.gz"]`)
+
 
 ### Default settings for each program
 
