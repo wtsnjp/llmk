@@ -58,7 +58,7 @@ M.top_level_spec = {
   source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
-  clean_files ={'*[string]',{'%B.aux','%B.log', '%B.toc','%B.fls','%B.out', '%B.bbl', '%B.bcf', '%B.blg'}},
+  clean_files ={'*[string]',{'%B.aux','%B.log', '%B.toc','%B.fls','%B.out', '%B.bbl', '%B.bcf', '%B.blg','%B-blx.bib', '%B.idx', '%B.ilg', '%B.run.xml'}},
   clobber_files ={'*[string]', {'%B.pdf', '%B.dvi', '%B.ps', '%B.synctex.gz'}},
 }
 
