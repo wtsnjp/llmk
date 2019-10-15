@@ -1140,7 +1140,7 @@ local function remove(fn)
   if ok ~= true then
     llmk.util.err_print('error', 'failed to remove ' .. fn .. '.')
   else
-    llmk.util.err_print('info', fn .. ' is removed successfully.')
+    llmk.util.err_print('info', fn .. ' has been removed successfully.')
   end
 end
 
