@@ -58,6 +58,8 @@ M.top_level_spec = {
   source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
+  clean_files = {'*[string]', {'%B.aux', '%B.log', '%B.toc', '%B.fls', '%B.out', '%B.bbl', '%B.bcf', '%B.blg', '%B-blx.bib', '%B.idx', '%B.ilg', '%B.run.xml'}},
+  clobber_files = {'*[string]', {'%B.pdf', '%B.dvi', '%B.ps', '%B.synctex.gz'}},
 }
 
 M.program_spec = {
@@ -144,6 +146,47 @@ function M.dbg_print_table(dbg_type, table)
 
   helper(table, 2)
 end
+
+
+-- return the filename if exits, even if the ".tex" extension is omitted
+-- otherwise return nil
+local lfs = require("lfs")
+
+function M.check_filename(fn)
+  if lfs.isfile(fn) then
+    return fn -- ok
+  end
+
+  local ext = fn:match('%.(.-)$')
+  if ext ~= nil then
+    return nil
+  end
+
+  local new_fn = fn .. '.tex'
+  if lfs.isfile(new_fn) then
+    return new_fn
+  else
+    return nil
+  end
+end
+
+-- Replace config param to filename
+function M.replace_specifiers(str, source, target)
+  local tmp = '/' .. source
+  local basename = tmp:match('^.*/(.*)%..*$')
+
+  str = str:gsub('%%S', source)
+  str = str:gsub('%%T', target)
+
+  if basename then
+    str = str:gsub('%%B', basename)
+  else
+    str = str:gsub('%%B', source)
+  end
+
+  return str
+end
+
 
 llmk.util = M
 end
@@ -709,22 +752,6 @@ local function table_copy(org)
   return copy
 end
 
-local function replace_specifiers(str, source, target)
-  local tmp = '/' .. source
-  local basename = tmp:match('^.*/(.*)%..*$')
-
-  str = str:gsub('%%S', source)
-  str = str:gsub('%%T', target)
-
-  if basename then
-    str = str:gsub('%%B', basename)
-  else
-    str = str:gsub('%%B', source)
-  end
-
-  return str
-end
-
 local function setup_programs(fn, config)
   --[[Setup the programs table for each sequence.
 
@@ -783,7 +810,7 @@ local function setup_programs(fn, config)
       cur_target = fn
     else
       -- here, %T should be replaced by `fn`
-      cur_target = replace_specifiers(prog.target, fn, fn)
+      cur_target = llmk.util.replace_specifiers(prog.target, fn, fn)
     end
 
     prog.target = cur_target
@@ -797,7 +824,7 @@ local function setup_programs(fn, config)
 
       -- replace specifiers as usual
       for idx, opt in ipairs(prog.opts) do
-        prog.opts[idx] = replace_specifiers(opt, fn, cur_target)
+        prog.opts[idx] = llmk.util.replace_specifiers(opt, fn, cur_target)
       end
     end
 
@@ -813,14 +840,14 @@ local function setup_programs(fn, config)
 
       -- replace specifiers as usual
       for idx, arg in ipairs(prog.args) do
-        prog.args[idx] = replace_specifiers(arg, fn, cur_target)
+        prog.args[idx] = llmk.util.replace_specifiers(arg, fn, cur_target)
       end
     end
 
     -- setup the `prog.auxiliary`
     if prog.auxiliary then -- `prog.auxiliary` is optional
       -- replace specifiers as usual
-      prog.auxiliary = replace_specifiers(prog.auxiliary, fn, cur_target)
+      prog.auxiliary = llmk.util.replace_specifiers(prog.auxiliary, fn, cur_target)
     end
 
     -- setup the `prog.force`
@@ -1067,31 +1094,12 @@ local function run_sequence(fn, config)
   end
 end
 
--- return the filename if exits, even if the ".tex" extension is omitted
--- otherwise return nil
-local function check_filename(fn)
-  if lfs.isfile(fn) then
-    return fn -- ok
-  end
-
-  local ext = fn:match('%.(.-)$')
-  if ext ~= nil then
-    return nil
-  end
-
-  local new_fn = fn .. '.tex'
-  if lfs.isfile(new_fn) then
-    return new_fn
-  else
-    return nil
-  end
-end
 
 function M.make(fns)
   local config
   if #fns > 0 then
     for _, fn in ipairs(fns) do
-      local checked_fn = check_filename(fn)
+      local checked_fn = llmk.util.check_filename(fn)
       if checked_fn then
         config = llmk.config.fetch_from_latex_source(checked_fn)
         run_sequence(checked_fn, config)
@@ -1120,6 +1128,115 @@ end
 llmk.runner = M
 end
 
+do -- The "cleaner" submodule
+
+local lfs = require("lfs")
+local M = {}
+
+-- fn is filepath of target to remove.
+local function remove(fn)
+  local ok = os.remove(fn)
+  
+  if ok ~= true then
+    llmk.util.err_print('error', 'failed to remove ' .. fn .. '.')
+  else
+    llmk.util.err_print('info', fn .. ' has been removed successfully.')
+  end
+end
+
+local function replace_spec_and_remove_files(fns, source)
+  for _, fn in ipairs(fns) do
+    local replaced_fn = llmk.util.replace_specifiers(fn, source, source)
+    if lfs.isfile(replaced_fn) then
+      remove(replaced_fn)
+    end
+  end
+
+end
+
+
+local function exist_tex_files(arg_fns)
+  local fns = {}
+  for _, fn in ipairs(arg_fns) do
+    
+    local checked_fn = llmk.util.check_filename(fn)
+    if checked_fn ~= nil then  
+      fns[#fns + 1] = checked_fn
+    end
+  end
+
+  return fns
+end
+-- function for "llmk -c"
+function M.clean()
+  local config = {}
+
+  local fns = exist_tex_files(arg)
+  if #fns > 0 then
+    for _, fn in ipairs(fns) do
+        config = llmk.config.fetch_from_latex_source(fn)
+        local clean_files = config['clean_files']
+        replace_spec_and_remove_files(clean_files, fn)
+    end
+  else 
+    config = llmk.config.fetch_from_llmk_toml()
+    local clean_files = config['clean_files']
+    local config_sources = config['source']
+    local sources = {}
+    for _, fn in ipairs(config_sources) do
+      local checked_fn = llmk.util.check_filename(fn)
+      if checked_fn ~= nil then
+        sources[#sources + 1] = fn
+      end
+    end
+
+    if sources == {} then
+      llmk.util.err_print('error', "In llmk.toml, 'source' is not set.")
+      return
+    else
+      for _, source in ipairs(sources) do
+        replace_spec_and_remove_files(clean_files, source)
+      end
+    end 
+  end
+end
+-- function for "llmk -C" 
+function M.clobber()
+  local config = {}
+  local clean_files = {}
+  local clobber_files = {}
+
+  local fns = exist_tex_files(arg)
+  if #fns > 0 then
+    for _, fn in ipairs(fns) do
+        
+        config = llmk.config.fetch_from_latex_source(fn)
+        clean_files = config['clean_files']
+        clobber_files = config['clobber_files']
+        replace_spec_and_remove_files(clean_files, fn)
+        replace_spec_and_remove_files(clobber_files, fn)
+    end
+  else
+    config = llmk.config.fetch_from_llmk_toml()
+    clean_files = config['clean_files']
+    clobber_files = config['clobber_files']
+   
+    local sources = exist_tex_files(config.source)
+    if sources == nil then
+      llmk.util.err_print('error', "In llmk.toml, 'source' is not set.\n")
+      return
+    end
+    for _, source in ipairs(sources) do
+      
+      replace_spec_and_remove_files(clean_files, source)
+      replace_spec_and_remove_files(clobber_files, source)
+    end
+  end
+end
+
+
+llmk.cleaner = M
+end
 ----------------------------------------
 
 do -- The "cli" submodule
@@ -1136,6 +1253,9 @@ Options:
   -v, --verbose         Print additional information.
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -d CAT, --debug=CAT   Activate debug output restricted to CAT.
+
+  -c, --clean           Remove the files generated by latex commands.
+  -C, --clobber         Remove all the files generated by latex commands including dvi, ps, pdf.
 
 Please report bugs to <tkt.asakura@gmail.com>.
 ]]
@@ -1212,6 +1332,10 @@ local function read_options()
       action = 'help'
     elseif (curr_arg == '-V') or (curr_arg == '--version') then
       action = 'version'
+    elseif (curr_arg == '-c') or (curr_arg == '--clean') then
+      action = 'clean'      
+    elseif (curr_arg == '-C') or (curr_arg == '--clobber') then
+      action = 'clobber'
     -- debug
     elseif (curr_arg == '-D') or
       (curr_arg == '--debug' and (v == 'all' or v == true)) then
@@ -1245,6 +1369,11 @@ local function do_action(action)
   elseif action == 'version' then
     io.stdout:write(version_text:format(
       llmk.const.prog_name, llmk.const.version, llmk.const.author))
+  elseif action == 'clean' then
+    llmk.cleaner.clean()
+    
+  elseif action == 'clobber' then
+    llmk.cleaner.clobber()
   end
 end
 
