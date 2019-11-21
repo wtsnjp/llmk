@@ -67,6 +67,8 @@ M.program_spec = {
   target = {'string', '"%S"'},
   opts = {'*[string]', {}},
   args = {'*[string]', {'"%T"'}},
+  auxiliary = {'string', nil},
+  postprocess = {'string', nil},
 }
 
 M.default_programs = {
