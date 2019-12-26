@@ -309,8 +309,19 @@ local function update_config(config, tab)
   -- merge the table from TOML
   local function merge_table(tab1, tab2)
     for k, v in pairs(tab2) do
-      if type(tab1[k]) == 'table' then
-        tab1[k] = merge_table(tab1[k], v)
+      if k == 'programs' then
+        local programs1 = tab1[k]
+        local programs2 = tab2[k]
+
+        for i_k, i_v in pairs(programs2) do
+          if type(programs1[i_k]) == 'table' then
+            for ii_k, ii_v in pairs(programs2[i_k]) do
+              programs1[i_k][ii_k] = ii_v
+            end
+          else
+            programs1[i_k] = i_v
+          end
+        end
       else
         tab1[k] = v
       end
