@@ -84,6 +84,11 @@ task :setup_travis do
   if not system("which texlua > #{File::NULL} 2> #{File::NULL}")
     puts "* Installing TeX Live"
 
+    # install dependencies for the installer
+    if platform == "osx"
+      sh "brew install lz4 xz ghostscript"
+    end
+
     # prepare the install dir
     HOME = ENV["HOME"]
     INSTALL_DIR = TMP_DIR + Time.now.strftime("%F")

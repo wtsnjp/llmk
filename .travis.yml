@@ -20,7 +20,6 @@ cache:
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
-      brew install lz4 xz ghostscript;
       export PATH=$PATH:$HOME/texlive/bin/x86_64-darwin;
     else
       export PATH=$PATH:$HOME/texlive/bin/x86_64-linux;
