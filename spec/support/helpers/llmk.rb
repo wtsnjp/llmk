@@ -15,9 +15,9 @@ module SpecHelplers
     # running the target llmk
     def run_llmk(*args)
       if args.size > 0
-        run "texlua #{PWD}/llmk.lua #{args.join(' ')}"
+        run_command "texlua #{PWD}/llmk.lua #{args.join(' ')}"
       else
-        run "texlua #{PWD}/llmk.lua"
+        run_command "texlua #{PWD}/llmk.lua"
       end
     end
 
