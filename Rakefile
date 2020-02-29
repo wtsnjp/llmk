@@ -115,13 +115,13 @@ task :setup_travis do
     EOF
 
     if platform == "osx"
-      File.open("texdoc.profile", "w") {|f| f.puts(profile + "binary_x86_64-darwin 1")}
+      File.open("llmk.profile", "w") {|f| f.puts(profile + "binary_x86_64-darwin 1")}
     else
-      File.open("texdoc.profile", "w") {|f| f.puts(profile + "binary_x86_64-linux 1")}
+      File.open("llmk.profile", "w") {|f| f.puts(profile + "binary_x86_64-linux 1")}
     end
 
     # run install script
-    opt_profile = "-profile ./texdoc.profile"
+    opt_profile = "-profile ./llmk.profile"
     opt_repo = "-repository http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
     sh "./install-tl #{opt_profile} #{opt_repo}"
     sh "tlmgr init-usertree"
@@ -167,10 +167,10 @@ task :setup_appveyor do
       option_src 0
     EOF
 
-    File.open("texdoc.profile", "w") {|f| f.puts(profile)}
+    File.open("llmk.profile", "w") {|f| f.puts(profile)}
 
     # run install script
-    opt_profile = "-profile ./texdoc.profile"
+    opt_profile = "-profile ./llmk.profile"
     opt_repo = "-repository http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
     sh "echo y | install-tl-windows.bat #{opt_profile} #{opt_repo}"
     sh "tlmgr.bat init-usertree"
