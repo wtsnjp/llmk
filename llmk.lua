@@ -202,7 +202,7 @@ local function checked_value(k, v, expected)
   local function error_if_wrong_type(val, t)
     if type(val) ~= t then
       llmk.util.err_print('error',
-        'type: Key "%s" must have value of type %s.', k, expected)
+        '[Type Error] Key "%s" must have value of type %s.', k, expected)
       os.exit(llmk.const.exit_error)
     end
   end
@@ -238,7 +238,7 @@ function M.type_check(tab)
   for k, v in pairs(tab) do
     if k == 'programs' then
       if type(v) ~= 'table' then
-        llmk.util.err_print('error', 'type: Key "programs" must be a table.')
+        llmk.util.err_print('error', '[Type Error] Key "programs" must be a table.')
         os.exit(llmk.const.exit_error)
       end
 
@@ -246,7 +246,7 @@ function M.type_check(tab)
       for p_name, p_val in pairs(v) do
         if type(p_val) ~= 'table' then
           llmk.util.err_print('error',
-            'type: Key "programs.%s" must be a table.', p_name)
+            '[Type Error] Key "programs.%s" must be a table.', p_name)
           os.exit(llmk.const.exit_error)
         else
           new_prog[p_name] = {}
@@ -348,13 +348,13 @@ function M.fetch_from_latex_source(fn)
   local config = init_config()
 
   -- get TOML field and parse it
-  local toml = llmk.parser.get_toml(fn)
+  local toml, line = llmk.parser.get_toml(fn)
   if toml == '' then
     llmk.util.err_print('warning',
       'Neither TOML field nor shebang is found in "%s"; ' ..
       'using default config.', fn)
   end
-  tab = llmk.parser.parse_toml(toml)
+  tab = llmk.parser.parse_toml(toml, {fn, line})
 
   -- check input and merge it to the config
   tab = llmk.checker.type_check(tab)
@@ -370,7 +370,7 @@ function M.fetch_from_llmk_toml()
   local f = io.open(llmk.const.llmk_toml)
   if f ~= nil then
     local toml = f:read('*all')
-    tab = llmk.parser.parse_toml(toml)
+    tab = llmk.parser.parse_toml(toml, {llmk.const.llmk_toml, 1})
     f:close()
   else
     llmk.util.err_print('error', 'No target specified and no %s found.',
@@ -393,12 +393,7 @@ end
 do -- The "parser" submodule
 local M = {}
 
-local function parser_err(msg)
-  llmk.util.err_print('error', 'parser: ' .. msg)
-  os.exit(llmk.const.exit_parser)
-end
-
-function M.parse_toml(toml)
+function M.parse_toml(toml, file_info)
   -- basic local variables
   local ws = '[\009\032]'
   local nl = '[\10\13\10]'
@@ -406,10 +401,30 @@ function M.parse_toml(toml)
   local buffer = ''
   local cursor = 1
 
+  local line = 0
+
   local res = {}
   local obj = res
 
   -- basic local functions
+  local function parser_err(msg)
+    local function get_toml_str(nol)
+      local pattern = string.format('([^%s]*)%s', nl:sub(2, -2), nl)
+      local l = 0
+      for cur_line in toml:gmatch(pattern) do
+        if l == nol then
+          return cur_line
+        end
+        l = l + 1
+      end
+    end
+
+    llmk.util.err_print('error', '[Parser Error] %s', msg)
+    llmk.util.err_print('error', '--> %s:%d: %s',
+      file_info[1], file_info[2] + line, get_toml_str(line))
+    os.exit(llmk.const.exit_parser)
+  end
+
   local function char(n)
     n = n or 0
     return toml:sub(cursor + n, cursor + n)
@@ -471,7 +486,10 @@ function M.parse_toml(toml)
         if char() ~= '_' then
           num = num .. char()
         end
-      elseif char():match(ws) or char() == '#' or char():match(nl) then
+      elseif char():match(nl) then
+        line = line + 1
+        break
+      elseif char():match(ws) or char() == '#' then
         break
       else
         parser_err('Invalid number')
@@ -493,8 +511,10 @@ function M.parse_toml(toml)
 
     while(bounds()) do
       if char() == ']' then
+        line = line + 1
         break
       elseif char():match(nl) then
+        line = line + 1
         step()
         skip_ws()
       elseif char() == '#' then
@@ -572,7 +592,7 @@ function M.parse_toml(toml)
     end
 
     if char():match(nl) then
-      -- do nothing; skip
+      line = line + 1
     end
 
     if char() == '=' then
@@ -585,14 +605,13 @@ function M.parse_toml(toml)
 
       if key == '' then
         parser_err('Empty key name')
+      elseif obj[key] then
+        -- duplicate keys are not allowed
+        parser_err('Cannot redefine key "' .. key .. '"')
       end
 
       local value = get_value()
       if value then
-        -- duplicate keys are not allowed
-        if obj[key] then
-          parser_err('Cannot redefine key "' .. key .. '"')
-        end
         obj[key] = value
         --dbg_print('parser', 'Entry "' .. key .. ' = ' .. value .. '"')
       end
@@ -706,12 +725,21 @@ function M.get_toml(fn)
   local first_line = true
   local shebang
 
+  local line = 0
+  local start_pos = -1
+
   for l in f:lines() do
+    line = line + 1
+
     -- 1. llmk-style TOML field
     if string.match(l, '^%s*%%%s*%+%+%++%s*$') then
       -- NOTE: only topmost field is valid
-      if not toml_field then toml_field = true
-      else break end
+      if not toml_field then
+        toml_field = true
+        start_pos = line + 1
+      else
+        break
+      end
     else
       if toml_field then
         toml = toml .. string.match(l, '^%s*%%%s*(.*)%s*$') .. '\n'
@@ -732,7 +760,7 @@ function M.get_toml(fn)
     toml = 'latex = "' .. shebang .. '"\n'
   end
 
-  return toml
+  return toml, start_pos
 end
 
 llmk.parser = M
