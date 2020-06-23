@@ -30,3 +30,4 @@ llmk-*.zip
 
 # local
 .vimrc
+.ruby-version
