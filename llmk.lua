@@ -49,6 +49,7 @@ M.exit_failure = 3
 
 -- config item specification
 M.top_level_spec = {
+  -- <program> = {<type>, <default value>}
   latex = {'string', 'lualatex'},
   bibtex = {'string', 'bibtex'},
   makeindex = {'string', 'makeindex'},
@@ -63,8 +64,10 @@ M.top_level_spec = {
 }
 
 M.program_spec = {
+  -- <item> = {<type>, <default value>}
   command = {'string', nil},
   target = {'string', '"%S"'},
+  generated_target = {'bool', false},
   opts = {'*[string]', {}},
   args = {'*[string]', {'"%T"'}},
   auxiliary = {'string', nil},
@@ -87,12 +90,12 @@ M.default_programs = {
   },
   makeindex = {
     target = '%B.idx',
-    force = false,
+    generated_target = true,
     postprocess = 'latex',
   },
   dvipdf = {
     target = '%B.dvi',
-    force = false,
+    generated_target = true,
   },
   dvips = {
     target = '%B.dvi',
@@ -209,6 +212,8 @@ local function checked_value(k, v, expected)
 
   if expected == 'integer' then
     error_if_wrong_type(v, 'number')
+  elseif expected == 'bool' then
+    error_if_wrong_type(v, 'boolean')
   elseif expected == 'string' then
     error_if_wrong_type(v, 'string')
   elseif expected == '[string]' then
@@ -419,7 +424,7 @@ function M.parse_toml(toml, file_info)
       end
     end
 
-    llmk.util.err_print('error', '[Parser Error] %s', msg)
+    llmk.util.err_print('error', '[Parse Error] %s', msg)
     llmk.util.err_print('error', '--> %s:%d: %s',
       file_info[1], file_info[2] + line, get_toml_str(line))
     os.exit(llmk.const.exit_parser)
@@ -891,10 +896,10 @@ local function setup_programs(fn, config)
       prog.auxiliary = llmk.util.replace_specifiers(prog.auxiliary, fn, cur_target)
     end
 
-    -- setup the `prog.force`
-    if prog.force == nil then
-      -- the default value of `prog.force` is true
-      prog.force = true
+    -- setup the `prog.generated_target`
+    if prog.generated_target == nil then
+      -- the default value of `prog.generated_target` is false
+      prog.generated_target = true
     end
 
     -- register the program
@@ -1055,7 +1060,7 @@ local function run_program(prog, fn, fdb)
   end
 
   -- is the target modified?
-  if not prog.force and file_mtime(prog.target) < start_time then
+  if prog.generated_target and file_mtime(prog.target) < start_time then
     llmk.util.dbg_print('run',
       'Skiping "%s" because target (%s) is not updated.',
       prog.command, prog.target)
