@@ -3,7 +3,7 @@
 --
 -- This is file `llmk.lua'.
 --
--- Copyright 2018 Takuto ASAKURA (wtsnjp)
+-- Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
@@ -59,19 +59,23 @@ M.top_level_spec = {
   source = {'*[string]', nil},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
-  clean_files = {'*[string]', {'%B.aux', '%B.log', '%B.toc', '%B.fls', '%B.out', '%B.bbl', '%B.bcf', '%B.blg', '%B-blx.bib', '%B.idx', '%B.ilg', '%B.run.xml'}},
+  llmk_version = {'string', nil},
+  clean_files = {'*[string]', {
+    '%B.aux', '%B.log', '%B.toc', '%B.fls', '%B.out', '%B.bbl', '%B.bcf',
+    '%B.blg', '%B-blx.bib', '%B.idx', '%B.ilg', '%B.run.xml'
+  }},
   clobber_files = {'*[string]', {'%B.pdf', '%B.dvi', '%B.ps', '%B.synctex.gz'}},
 }
 
 M.program_spec = {
-  -- <item> = {<type>, <default value>}
-  command = {'string', nil},
-  target = {'string', '"%S"'},
-  generated_target = {'bool', false},
-  opts = {'*[string]', {}},
-  args = {'*[string]', {'"%T"'}},
-  auxiliary = {'string', nil},
-  postprocess = {'string', nil},
+  -- <item> = {<type>, {<specifiers allowed>, <default value>}}
+  command = {'string', {false, nil}},
+  target = {'string', {true, '%S'}},
+  generated_target = {'bool', {false, false}},
+  opts = {'*[string]', {true, {}}},
+  args = {'*[string]', {true, {'%T'}}},
+  auxiliary = {'string', {true, nil}},
+  postprocess = {'string', {false, nil}},
 }
 
 M.default_programs = {
@@ -119,9 +123,14 @@ local function log(label, msg, ...)
 end
 
 function M.err_print(err_type, msg, ...)
-  if (llmk.core.verbosity_level > 1) or (err_type == 'error') then
-    log(err_type, msg, ...)
+  if err_type == 'error' then
+    -- error must be reported
+  elseif err_type == 'info' then
+    if llmk.core.verbosity_level < 2 then return end
+  elseif err_type == 'warning' then
+    if llmk.core.verbosity_level < 1 then return end
   end
+  log(err_type, msg, ...)
 end
 
 function M.dbg_print(dbg_type, msg, ...)
@@ -237,7 +246,7 @@ local function checked_value(k, v, expected)
   return v
 end
 
-function M.type_check(tab)
+local function type_check(tab)
   local new_top = {}
 
   for k, v in pairs(tab) do
@@ -279,6 +288,31 @@ function M.type_check(tab)
   end
 
   return new_top
+end
+
+local function version_check(given_version)
+  if given_version then
+    local given_major, given_minor = given_version:match('^(%d+)%.(%d+)')
+    if not given_major or not given_minor then
+      llmk.util.err_print('warning', 'In valid llmk_version: ' .. given_version)
+      return
+    else
+      given_major, given_minor = tonumber(given_major), tonumber(given_minor)
+    end
+
+    local major, minor = llmk.const.version:match('^(%d+)%.(%d+)')
+    major, minor = tonumber(major), tonumber(minor)
+    if major < given_major or (major == given_major and minor < given_minor) then
+      llmk.util.err_print('warning',
+        'This program is older than specified llmk_version.')
+    end
+  end
+end
+
+function M.check(tab)
+  local new_tab = type_check(tab)
+  version_check(new_tab.llmk_version)
+  return new_tab
 end
 
 llmk.checker = M
@@ -362,7 +396,7 @@ function M.fetch_from_latex_source(fn)
   tab = llmk.parser.parse_toml(toml, {fn, line})
 
   -- check input and merge it to the config
-  tab = llmk.checker.type_check(tab)
+  tab = llmk.checker.check(tab)
   config = update_config(config, tab)
 
   return config
@@ -384,7 +418,7 @@ function M.fetch_from_llmk_toml()
   end
 
   -- check input and merge it to the config
-  tab = llmk.checker.type_check(tab)
+  tab = llmk.checker.check(tab)
   config = update_config(config, tab)
 
   return config
@@ -784,16 +818,15 @@ local md5 = require 'md5'
 local start_time = os.time()
 
 local function table_copy(org)
-  local org_type = type(org)
   local copy
-  if org_type == 'table' then
+  if type(org) == 'table' then
     copy = {}
     for org_key, org_value in next, org, nil do
       copy[table_copy(org_key)] = table_copy(org_value)
     end
     setmetatable(copy, table_copy(getmetatable(org)))
   else -- number, string, boolean, etc.
-      copy = org
+    copy = org
   end
   return copy
 end
@@ -861,45 +894,26 @@ local function setup_programs(fn, config)
 
     prog.target = cur_target
 
-    -- setup the `prog.opts`
-    if prog.opts then -- `prog.opts` is optional
-      -- normalize to a table
-      if type(prog.opts) ~= 'table' then
-        prog.opts = {prog.opts}
+    -- initialize other items
+    local prog_spec = table_copy(llmk.const.program_spec)
+    for k, v in pairs(prog_spec) do
+      if k ~= 'target' then -- target is a special case: already treated
+        if not prog[k] then
+          prog[k] = v[2][2]
+        end
+
+        if v[2][1] then -- need to replace specifiers
+          if v[1] == '*[string]' then
+            for ik, iv in ipairs(prog[k]) do
+              if type(prog[k][ik]) == 'string' then
+                prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target)
+              end
+            end
+          elseif type(prog[k]) == 'string' then
+            prog[k] = llmk.util.replace_specifiers(prog[k], fn, cur_target)
+          end
+        end
       end
-
-      -- replace specifiers as usual
-      for idx, opt in ipairs(prog.opts) do
-        prog.opts[idx] = llmk.util.replace_specifiers(opt, fn, cur_target)
-      end
-    end
-
-    -- setup the `prog.args`
-    if not prog.args then
-      -- the default value of `prog.args` is [`cur_target`]
-      prog.args = {cur_target}
-    else
-      -- normalize to a table
-      if type(prog.args) ~= 'table' then
-        prog.args = {prog.args}
-      end
-
-      -- replace specifiers as usual
-      for idx, arg in ipairs(prog.args) do
-        prog.args[idx] = llmk.util.replace_specifiers(arg, fn, cur_target)
-      end
-    end
-
-    -- setup the `prog.auxiliary`
-    if prog.auxiliary then -- `prog.auxiliary` is optional
-      -- replace specifiers as usual
-      prog.auxiliary = llmk.util.replace_specifiers(prog.auxiliary, fn, cur_target)
-    end
-
-    -- setup the `prog.generated_target`
-    if prog.generated_target == nil then
-      -- the default value of `prog.generated_target` is false
-      prog.generated_target = true
     end
 
     -- register the program
@@ -1197,9 +1211,7 @@ local function replace_spec_and_remove_files(fns, source)
       remove(replaced_fn)
     end
   end
-
 end
-
 
 local function exist_tex_files(arg_fns)
   local fns = {}
@@ -1213,6 +1225,7 @@ local function exist_tex_files(arg_fns)
 
   return fns
 end
+
 -- function for "llmk -c"
 function M.clean()
   local config = {}
@@ -1246,6 +1259,7 @@ function M.clean()
     end 
   end
 end
+
 -- function for "llmk -C" 
 function M.clobber()
   local config = {}
@@ -1255,7 +1269,6 @@ function M.clobber()
   local fns = exist_tex_files(arg)
   if #fns > 0 then
     for _, fn in ipairs(fns) do
-        
         config = llmk.config.fetch_from_latex_source(fn)
         clean_files = config['clean_files']
         clobber_files = config['clobber_files']
@@ -1268,18 +1281,18 @@ function M.clobber()
     clobber_files = config['clobber_files']
    
     local sources = exist_tex_files(config.source)
+
     if sources == nil then
       llmk.util.err_print('error', "In llmk.toml, 'source' is not set.\n")
       return
     end
+
     for _, source in ipairs(sources) do
-      
       replace_spec_and_remove_files(clean_files, source)
       replace_spec_and_remove_files(clobber_files, source)
     end
   end
 end
-
 
 llmk.cleaner = M
 end
@@ -1309,7 +1322,7 @@ Please report bugs to <tkt.asakura@gmail.com>.
 local version_text = [[
 %s %s
 
-Copyright 2018 %s.
+Copyright 2018-2020 %s.
 License: The MIT License <https://opensource.org/licenses/mit-license>.
 This is free software: you are free to change and redistribute it.
 ]]
