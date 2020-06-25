@@ -23,7 +23,7 @@
 
 ## COPYRIGHT
 
-Copyright 2018 Takuto ASAKURA (wtsnjp).  
+Copyright 2018-2020 Takuto ASAKURA (wtsnjp).  
 License: The MIT License <https://opensource.org/licenses/mit-license>.  
 This is free software: you are free to change and redistribute it.
 
