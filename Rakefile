@@ -86,7 +86,7 @@ task :setup_travis do
 
     # install dependencies for the installer
     if platform == "osx"
-      sh "brew install lz4 xz ghostscript"
+      sh "brew install lz4 ghostscript"
     end
 
     # prepare the install dir

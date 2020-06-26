@@ -16,6 +16,7 @@ cache:
     - vendor/bundle
     - $HOME/texlive
     - $HOME/.texlive
+    - $HOME/Library/Caches/Homebrew
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then
