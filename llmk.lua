@@ -903,7 +903,7 @@ local function setup_programs(fn, config)
         end
 
         if v[2][1] then -- need to replace specifiers
-          if v[1] == '*[string]' then
+          if type(prog[k]) == 'table' then
             for ik, iv in ipairs(prog[k]) do
               if type(prog[k][ik]) == 'string' then
                 prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target)
