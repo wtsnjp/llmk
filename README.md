@@ -138,8 +138,8 @@ This is the list of currently available TOML keys.
 * `programs` (type: *table*)
 	* \<program name\>
 		* `command` (type: *string*, **required**)
-    * `target` (type: *string*, default: the input FILE)
-    * `generated_target` (type: *bool*, default: false)
+		* `target` (type: *string*, default: the input FILE)
+		* `generated_target` (type: *bool*, default: false)
 		* `opts` (type: *string* or *array of strings*)
 		* `args` (type: *string* or *array of strings*, default: `["%T"]`)
 		* `auxiliary` (type: *string*)
