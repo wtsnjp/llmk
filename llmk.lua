@@ -69,7 +69,7 @@ M.top_level_spec = {
 
 M.program_spec = {
   -- <item> = {<type>, {<specifiers allowed>, <default value>}}
-  command = {'string', {false, nil}},
+  command = {'string', {false, ''}}, -- '' default because it must be string
   target = {'string', {true, '%S'}},
   generated_target = {'bool', {false, false}},
   opts = {'*[string]', {true, {}}},
@@ -161,7 +161,6 @@ function M.dbg_print_table(dbg_type, table)
   helper(table, 2)
 end
 
-
 -- return the filename if exits, even if the ".tex" extension is omitted
 -- otherwise return nil
 local lfs = require("lfs")
@@ -200,7 +199,6 @@ function M.replace_specifiers(str, source, target)
 
   return str
 end
-
 
 llmk.util = M
 end
@@ -650,7 +648,7 @@ function M.parse_toml(toml, file_info)
       end
 
       local value = get_value()
-      if value then
+      if value ~= nil then
         obj[key] = value
         --dbg_print('parser', 'Entry "' .. key .. ' = ' .. value .. '"')
       end
@@ -884,7 +882,7 @@ local function setup_programs(fn, config)
     -- setup the `prog.target`
     local cur_target
 
-    if not prog.target then
+    if prog.target == nil then
       -- the default value of `prog.target` is `fn`
       cur_target = fn
     else
@@ -895,11 +893,14 @@ local function setup_programs(fn, config)
     prog.target = cur_target
 
     -- initialize other items
-    local prog_spec = table_copy(llmk.const.program_spec)
-    for k, v in pairs(prog_spec) do
+    for k, v in pairs(llmk.const.program_spec) do
       if k ~= 'target' then -- target is a special case: already treated
-        if not prog[k] then
-          prog[k] = v[2][2]
+        if prog[k] == nil then
+          if type(v[2][2]) == 'table' then
+            prog[k] = table_copy(v[2][2])
+          else
+            prog[k] = v[2][2]
+          end
         end
 
         if v[2][1] then -- need to replace specifiers
@@ -1057,11 +1058,11 @@ local function check_rerun(prog, fdb)
   return true, fdb
 end
 
-local function run_program(prog, fn, fdb)
+local function run_program(name, prog, fn, fdb)
   -- does command specified?
   if #prog.command < 1 then
-    llmk.util.dbg_print('run',
-      'Skiping "%s" because command does not exist.', prog.command)
+    llmk.util.err_print('warning',
+      'The "command" key is not set for program "%s"; skipping.', name)
     return false
   end
 
@@ -1098,25 +1099,12 @@ local function process_program(programs, name, fn, fdb, config)
   local prog = programs[name]
   local should_rerun
 
-  -- check prog.command
-  -- TODO: move this to pre-checking process
-  if type(prog.command) ~= 'string' then
-    llmk.util.err_print('error', 'Command name for "%s" is not detected.', name)
-    os.exit(llmk.const.exit_error)
-  end
-
-  -- TODO: move this to pre-checking process
-  if type(prog.target) ~= 'string' then
-    llmk.util.err_print('error', 'Target for "%s" is not valid.', name)
-    os.exit(llmk.const.exit_error)
-  end
-
   -- execute the command
   local run = false
   local exe_count = 0
   while true do
     exe_count = exe_count + 1
-    run = run_program(prog, fn, fdb)
+    run = run_program(name, prog, fn, fdb)
 
     -- if the run is skipped, break immediately
     if not run then break end
@@ -1153,7 +1141,6 @@ local function run_sequence(fn, config)
     process_program(programs, name, fn, fdb, config)
   end
 end
-
 
 function M.make(fns)
   local config
