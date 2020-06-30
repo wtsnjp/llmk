@@ -89,7 +89,7 @@ M.default_programs = {
   },
   bibtex = {
     target = '%B.bib',
-    args = '%B', -- "%B.bib" will result in an error
+    args = {'%B'}, -- "%B.bib" will result in an error
     postprocess = 'latex',
   },
   makeindex = {
