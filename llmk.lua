@@ -103,9 +103,11 @@ M.default_programs = {
   },
   dvips = {
     target = '%B.dvi',
+    generated_target = true,
   },
   ps2pdf = {
     target = '%B.ps',
+    generated_target = true,
   },
 }
 
