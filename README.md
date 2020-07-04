@@ -171,21 +171,25 @@ Other from above, there are no default values (i.e., null).
 * `bibtex`
 	* `command = "bibtex"`
 	* `target = "%B.bib"`
-	* `args = "%B"`
+	* `args = ["%B"]`
 	* `postprocess = "latex"`
 * `makeindex`
 	* `command = "makeindex"`
 	* `target = "%B.idx"`
+	* `generated_target = true`
 	* `postprocess = "latex"`
 * `dvipdf`
 	* `command = "dvipdfmx"`
 	* `target = "%B.dvi"`
+	* `generated_target = true`
 * `dvips`
 	* `command = "dvips"`
 	* `target = "%B.dvi"`
+	* `generated_target = true`
 * `ps2pdf`
 	* `command = "ps2pdf"`
 	* `target = "%B.ps"`
+	* `generated_target = true`
 
 ## Acknowledgements
 
