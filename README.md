@@ -12,7 +12,7 @@ This is yet another build tool for LaTeX documents. The features of **llmk** are
 
 ## Basic Usage
 
-The easiest way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as [TOML](https://github.com/toml-lang/toml) format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` characters (at least three).
+The easiest way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as [TOML](https://toml.io) format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` characters (at least three).
 
 Here's a very simple example:
 
