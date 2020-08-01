@@ -430,6 +430,12 @@ end
 ----------------------------------------
 
 do -- The "parser" submodule
+--[[
+This TOML parser is modified version of toml.lua
+- Copyright 2017 Jonathan Stoler
+- Licensed under MIT
+  https://github.com/jonstoler/lua-toml/blob/master/LICENSE
+]]
 local M = {}
 
 function M.parse_toml(toml, file_info)
