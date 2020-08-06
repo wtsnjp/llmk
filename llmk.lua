@@ -26,6 +26,7 @@ M.debug = {
   programs = false,
 }
 M.verbosity_level = 1
+M.silent = false
 
 llmk.core = M
 end
@@ -1066,6 +1067,17 @@ local function check_rerun(prog, fdb)
   return true, fdb
 end
 
+local function silencer(cmd)
+  local redirect_code
+  if os.type == 'windows' then
+    redirect_code = ' >NUL 2>&1'
+  else
+    redirect_code = ' >/dev/null 2>&1'
+  end
+  silencer = function() return cmd .. redirect_code end
+  return cmd .. redirect_code
+end
+
 local function run_program(name, prog, fn, fdb)
   -- does command specified?
   if #prog.command < 1 then
@@ -1092,8 +1104,14 @@ local function run_program(name, prog, fn, fdb)
 
   local cmd = construct_cmd(prog, fn, prog.target)
   llmk.util.err_print('info', 'Running command: ' .. cmd)
-  local status = os.execute(cmd)
 
+  -- redirect stdout and stderr to NULL in silent mode
+  if llmk.core.silent then
+    cmd = silencer(cmd)
+  end
+
+  -- call and check the status
+  local status = os.execute(cmd)
   if status > 0 then
     llmk.util.err_print('error',
       'Fail running %s (exit code: %d)', cmd, status)
@@ -1303,6 +1321,7 @@ Options:
   -h, --help            Print this help message.
   -V, --version         Print the version number.
 
+  -s, --silent          Silence messages from called programs.
   -q, --quiet           Suppress warnings and most error messages.
   -v, --verbose         Print additional information.
   -D, --debug           Activate all debug output (equal to "--debug=all").
@@ -1407,6 +1426,8 @@ local function read_options()
       llmk.core.verbosity_level = 0
     elseif (curr_arg == '-v') or (curr_arg == '--verbose') then
       llmk.core.verbosity_level = 2
+    elseif (curr_arg == '-s') or (curr_arg == '--silent') then
+      llmk.core.silent = true
     -- problem
     else
       llmk.util.err_print('error', 'unknown option: ' .. curr_arg)

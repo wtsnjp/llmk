@@ -11,6 +11,7 @@ RSpec.describe "Showing help", :type => :aruba do
         -h, --help            Print this help message.
         -V, --version         Print the version number.
 
+        -s, --silent          Silence messages from called programs.
         -q, --quiet           Suppress warnings and most error messages.
         -v, --verbose         Print additional information.
         -D, --debug           Activate all debug output (equal to "--debug=all").
