@@ -168,24 +168,6 @@ end
 -- otherwise return nil
 local lfs = require("lfs")
 
-function M.check_filename(fn)
-  if lfs.isfile(fn) then
-    return fn -- ok
-  end
-
-  local ext = fn:match('%.(.-)$')
-  if ext ~= nil then
-    return nil
-  end
-
-  local new_fn = fn .. '.tex'
-  if lfs.isfile(new_fn) then
-    return new_fn
-  else
-    return nil
-  end
-end
-
 -- Replace config param to filename
 function M.replace_specifiers(str, source, target)
   local tmp = '/' .. source
@@ -1149,7 +1131,7 @@ local function process_program(programs, name, fn, fdb, config)
   end
 end
 
-local function run_sequence(fn, config)
+function M.run_sequence(fn, config)
   llmk.util.err_print('info', 'Beginning a sequence for "%s".', fn)
 
   -- setup the programs table
@@ -1168,52 +1150,23 @@ local function run_sequence(fn, config)
   end
 end
 
-function M.make(fns)
-  local config
-  if #fns > 0 then
-    for _, fn in ipairs(fns) do
-      local checked_fn = llmk.util.check_filename(fn)
-      if checked_fn then
-        config = llmk.config.fetch_from_latex_source(checked_fn)
-        run_sequence(checked_fn, config)
-      else
-        llmk.util.err_print('error', 'No source file found for "%s".', fn)
-        os.exit(llmk.const.exit_error)
-      end
-    end
-  else
-    config = llmk.config.fetch_from_llmk_toml()
-
-    local source = config.source
-    if type(source) == 'string' then
-      run_sequence(source, config)
-    elseif type(source) == 'table' then
-      for _, fn in ipairs(source) do
-        run_sequence(fn, config)
-      end
-    else
-      llmk.util.err_print('error', 'No source detected.')
-      os.exit(llmk.const.exit_error)
-    end
-  end
-end
-
 llmk.runner = M
 end
 
 do -- The "cleaner" submodule
-
-local lfs = require("lfs")
 local M = {}
+
+-- dependencies
+local lfs = require("lfs")
 
 -- fn is filepath of target to remove.
 local function remove(fn)
   local ok = os.remove(fn)
   
   if ok ~= true then
-    llmk.util.err_print('error', 'failed to remove ' .. fn .. '.')
+    llmk.util.err_print('error', 'Failed to remove "%s".', fn)
   else
-    llmk.util.err_print('info', fn .. ' has been removed successfully.')
+    llmk.util.err_print('info', 'Removed File "%s".', fn)
   end
 end
 
@@ -1226,89 +1179,22 @@ local function replace_spec_and_remove_files(fns, source)
   end
 end
 
-local function exist_tex_files(arg_fns)
-  local fns = {}
-  for _, fn in ipairs(arg_fns) do
-    
-    local checked_fn = llmk.util.check_filename(fn)
-    if checked_fn ~= nil then  
-      fns[#fns + 1] = checked_fn
-    end
-  end
-
-  return fns
+-- the actual process for the --clean action
+function M.clean(fn, config)
+  llmk.util.err_print('info', 'Begining cleaning for "%s".', fn)
+  replace_spec_and_remove_files(config.clean_files, fn)
 end
 
--- function for "llmk -c"
-function M.clean()
-  local config = {}
-
-  local fns = exist_tex_files(arg)
-  if #fns > 0 then
-    for _, fn in ipairs(fns) do
-        config = llmk.config.fetch_from_latex_source(fn)
-        local clean_files = config['clean_files']
-        replace_spec_and_remove_files(clean_files, fn)
-    end
-  else 
-    config = llmk.config.fetch_from_llmk_toml()
-    local clean_files = config['clean_files']
-    local config_sources = config['source']
-    local sources = {}
-    for _, fn in ipairs(config_sources) do
-      local checked_fn = llmk.util.check_filename(fn)
-      if checked_fn ~= nil then
-        sources[#sources + 1] = fn
-      end
-    end
-
-    if sources == {} then
-      llmk.util.err_print('error', "In llmk.toml, 'source' is not set.")
-      return
-    else
-      for _, source in ipairs(sources) do
-        replace_spec_and_remove_files(clean_files, source)
-      end
-    end 
-  end
-end
-
--- function for "llmk -C" 
-function M.clobber()
-  local config = {}
-  local clean_files = {}
-  local clobber_files = {}
-
-  local fns = exist_tex_files(arg)
-  if #fns > 0 then
-    for _, fn in ipairs(fns) do
-        config = llmk.config.fetch_from_latex_source(fn)
-        clean_files = config['clean_files']
-        clobber_files = config['clobber_files']
-        replace_spec_and_remove_files(clean_files, fn)
-        replace_spec_and_remove_files(clobber_files, fn)
-    end
-  else
-    config = llmk.config.fetch_from_llmk_toml()
-    clean_files = config['clean_files']
-    clobber_files = config['clobber_files']
-   
-    local sources = exist_tex_files(config.source)
-
-    if sources == nil then
-      llmk.util.err_print('error', "In llmk.toml, 'source' is not set.\n")
-      return
-    end
-
-    for _, source in ipairs(sources) do
-      replace_spec_and_remove_files(clean_files, source)
-      replace_spec_and_remove_files(clobber_files, source)
-    end
-  end
+-- the actual process for the --clobber action
+function M.clobber(fn, config)
+  llmk.util.err_print('info', 'Begining clobbering for "%s".', fn)
+  replace_spec_and_remove_files(config.clean_files, fn)
+  replace_spec_and_remove_files(config.clobber_files, fn)
 end
 
 llmk.cleaner = M
 end
+
 ----------------------------------------
 
 do -- The "cli" submodule
@@ -1438,6 +1324,52 @@ local function read_options()
   return action
 end
 
+local function check_filename(fn)
+  if lfs.isfile(fn) then
+    return fn -- ok
+  end
+
+  local ext = fn:match('%.(.-)$')
+  if ext ~= nil then
+    return nil
+  end
+
+  local new_fn = fn .. '.tex'
+  if lfs.isfile(new_fn) then
+    return new_fn
+  else
+    return nil
+  end
+end
+
+local function make(fns, func)
+  local config
+  if #fns > 0 then
+    for _, fn in ipairs(fns) do
+      local checked_fn = check_filename(fn)
+      if checked_fn then
+        config = llmk.config.fetch_from_latex_source(checked_fn)
+        func(checked_fn, config)
+      else
+        llmk.util.err_print('error', 'No source file found for "%s".', fn)
+        os.exit(llmk.const.exit_error)
+      end
+    end
+  else
+    config = llmk.config.fetch_from_llmk_toml()
+
+    local source = config.source
+    if source ~= nil then
+      for _, fn in ipairs(source) do
+        func(fn, config)
+      end
+    else
+      llmk.util.err_print('error', 'No source detected.')
+      os.exit(llmk.const.exit_error)
+    end
+  end
+end
+
 local function do_action(action)
   if action == 'help' then
     io.stdout:write(help_text)
@@ -1445,10 +1377,9 @@ local function do_action(action)
     io.stdout:write(version_text:format(
       llmk.const.prog_name, llmk.const.version, llmk.const.author))
   elseif action == 'clean' then
-    llmk.cleaner.clean()
-    
+    make(arg, llmk.cleaner.clean)
   elseif action == 'clobber' then
-    llmk.cleaner.clobber()
+    make(arg, llmk.cleaner.clobber)
   end
 end
 
@@ -1460,7 +1391,7 @@ function M.exec()
     os.exit(llmk.const.exit_ok)
   end
 
-  llmk.runner.make(arg)
+  make(arg, llmk.runner.run_sequence)
   os.exit(llmk.const.exit_ok)
 end
 
