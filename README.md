@@ -132,8 +132,11 @@ This way is a bit complicated but strong enough allowing you to use any kind of 
 This is the list of currently available TOML keys.
 
 * `latex` (type: *string*, default: `"lualatex"`)
+* `bibtex` (type: *string*, default: `"bibtex"`)
+* `makeindex` (type: *string*, default: `"makeindex"`)
 * `dvipdf` (type: *string*, default: `"dvipdfmx"`)
-* `bibtex` (type: *string*, default: `""`)
+* `dvips` (type: *string*, default: `"dvips"`)
+* `ps2pdf` (type: *string*, default: `"ps2pdf"`)
 * `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "dvipdf"]`)
 * `programs` (type: *table*)
 	* \<program name\>
