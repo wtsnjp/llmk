@@ -28,6 +28,11 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
 * `-d`CAT, `--debug`=CAT:
   Activate debug output restricted to CAT.
 
+* `-c`, `--clean`:
+  Remove the temporary files such as `*.aux` and `*.log`.
+* `-C`, `--clobber`:
+  Remove all generated files including final PDFs.
+
 ## EXIT STATUS
 
 * 0:
