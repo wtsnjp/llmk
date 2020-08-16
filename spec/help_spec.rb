@@ -5,7 +5,7 @@ RSpec.describe "Showing help", :type => :aruba do
 
   let(:help_text) do
     <<~EXPECTED
-      Usage: llmk[.lua] [OPTION...] [FILE...]
+      Usage: llmk[.lua] [OPTION]... [FILE]...
 
       Options:
         -h, --help            Print this help message.

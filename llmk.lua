@@ -1201,7 +1201,7 @@ do -- The "cli" submodule
 local M = {}
 
 local help_text = [[
-Usage: llmk[.lua] [OPTION...] [FILE...]
+Usage: llmk[.lua] [OPTION]... [FILE]...
 
 Options:
   -h, --help            Print this help message.
