@@ -197,7 +197,7 @@ local function checked_value(k, v, expected)
   local function error_if_wrong_type(val, t)
     if type(val) ~= t then
       llmk.util.err_print('error',
-        '[Type Error] Key "%s" must have value of type %s.', k, expected)
+        '[Type Error] Key "%s" must have value of type %s', k, expected)
       os.exit(llmk.const.exit_error)
     end
   end
@@ -235,7 +235,7 @@ local function type_check(tab)
   for k, v in pairs(tab) do
     if k == 'programs' then
       if type(v) ~= 'table' then
-        llmk.util.err_print('error', '[Type Error] Key "programs" must be a table.')
+        llmk.util.err_print('error', '[Type Error] Key "programs" must be a table')
         os.exit(llmk.const.exit_error)
       end
 
@@ -243,14 +243,14 @@ local function type_check(tab)
       for p_name, p_val in pairs(v) do
         if type(p_val) ~= 'table' then
           llmk.util.err_print('error',
-            '[Type Error] Key "programs.%s" must be a table.', p_name)
+            '[Type Error] Key "programs.%s" must be a table', p_name)
           os.exit(llmk.const.exit_error)
         else
           new_prog[p_name] = {}
           for ik, iv in pairs(p_val) do
             if not llmk.const.program_spec[ik] then
               llmk.util.err_print('warning',
-                'Program key "%s" is unknown. Will be ignored.', ik)
+                'Program key "%s" is unknown; ignoring it', ik)
             else
               expected = llmk.const.program_spec[ik][1]
               new_prog[p_name][ik] = checked_value(ik, iv, expected)
@@ -262,7 +262,7 @@ local function type_check(tab)
     else
       if not llmk.const.top_level_spec[k] then
         llmk.util.err_print('warning',
-          'Top-level key "%s" is unknown. Will be ignored.', k)
+          'Top-level key "%s" is unknown; ignoring it', k)
       else
         expected = llmk.const.top_level_spec[k][1]
         new_top[k] = checked_value(k, v, expected)
@@ -287,7 +287,7 @@ local function version_check(given_version)
     major, minor = tonumber(major), tonumber(minor)
     if major < given_major or (major == given_major and minor < given_minor) then
       llmk.util.err_print('warning',
-        'This program is older than specified llmk_version.')
+        'This program is older than specified "llmk_version"')
     end
   end
 end
@@ -374,7 +374,7 @@ function M.fetch_from_latex_source(fn)
   if toml == '' then
     llmk.util.err_print('warning',
       'Neither TOML field nor shebang is found in "%s"; ' ..
-      'using default config.', fn)
+      'using default config', fn)
   end
   tab = llmk.parser.parse_toml(toml, {fn, line})
 
@@ -395,7 +395,7 @@ function M.fetch_from_llmk_toml()
     tab = llmk.parser.parse_toml(toml, {llmk.const.llmk_toml, 1})
     f:close()
   else
-    llmk.util.err_print('error', 'No target specified and no %s found.',
+    llmk.util.err_print('error', 'No target specified and no %s found',
       llmk.const.llmk_toml)
     os.exit(llmk.const.exit_error)
   end
@@ -840,7 +840,7 @@ local function setup_programs(fn, config)
   local function add_progname(name)
     -- is the program known?
     if not programs[name] then
-      llmk.util.err_print('error', 'Unknown program "%s" is in the sequence.', name)
+      llmk.util.err_print('error', 'Unknown program "%s" is in the sequence', name)
       os.exit(llmk.const.exit_error)
     end
 
@@ -1064,7 +1064,7 @@ local function run_program(name, prog, fn, fdb)
   -- does command specified?
   if #prog.command < 1 then
     llmk.util.err_print('warning',
-      'The "command" key is not set for program "%s"; skipping.', name)
+      'The "command" key is not set for program "%s"; skipping', name)
     return false
   end
 
@@ -1132,7 +1132,7 @@ local function process_program(programs, name, fn, fdb, config)
 end
 
 function M.run_sequence(fn, config)
-  llmk.util.err_print('info', 'Beginning a sequence for "%s".', fn)
+  llmk.util.err_print('info', 'Beginning a sequence for "%s"', fn)
 
   -- setup the programs table
   local programs = setup_programs(fn, config)
@@ -1164,9 +1164,9 @@ local function remove(fn)
   local ok = os.remove(fn)
   
   if ok ~= true then
-    llmk.util.err_print('error', 'Failed to remove "%s".', fn)
+    llmk.util.err_print('error', 'Failed to remove "%s"', fn)
   else
-    llmk.util.err_print('info', 'Removed File "%s".', fn)
+    llmk.util.err_print('info', 'Removed "%s"', fn)
   end
 end
 
@@ -1181,13 +1181,13 @@ end
 
 -- the actual process for the --clean action
 function M.clean(fn, config)
-  llmk.util.err_print('info', 'Begining cleaning for "%s".', fn)
+  llmk.util.err_print('info', 'Begining cleaning for "%s"', fn)
   replace_spec_and_remove_files(config.clean_files, fn)
 end
 
 -- the actual process for the --clobber action
 function M.clobber(fn, config)
-  llmk.util.err_print('info', 'Begining clobbering for "%s".', fn)
+  llmk.util.err_print('info', 'Begining clobbering for "%s"', fn)
   replace_spec_and_remove_files(config.clean_files, fn)
   replace_spec_and_remove_files(config.clobber_files, fn)
 end

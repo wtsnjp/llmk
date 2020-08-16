@@ -5,7 +5,7 @@ RSpec.describe "Processing example", :type => :aruba do
   include_context "messages"
 
   def info_line_seq file
-    info_line "Beginning a sequence for \"#{file}\"."
+    info_line "Beginning a sequence for \"#{file}\""
   end
 
   def info_line_runcmd cmd, file
