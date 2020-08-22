@@ -1,4 +1,4 @@
-![llmk: The Light LaTeX Make](./doc/logo.png)
+![llmk: The Light LaTeX Make](./doc/llmk-logo.png)
 
 [![Build Status](https://travis-ci.org/wtsnjp/llmk.svg?branch=master)](https://travis-ci.org/wtsnjp/llmk)
 [![Build status](https://ci.appveyor.com/api/projects/status/1papc7m85kl9iph1?svg=true)](https://ci.appveyor.com/project/wtsnjp/llmk)
@@ -39,7 +39,7 @@ $ llmk hello.tex
 
 will produce a PDF document (`hello.pdf`) with XeLaTeX, since it is specified in the TOML line of the source.
 
-You can find other example LaTeX document files in the [examples](./examples) directory.
+You can find other example LaTeX document files in the [examples](https://github.com/wtsnjp/llmk/tree/master/examples) directory.
 
 ### Action Clean/Clobber
 
@@ -97,7 +97,7 @@ Note that this magic comment is effective **only on the first line** of a LaTeX 
 
 You can setup custom sequence for processing LaTeX documents; use `sequence` key to specify the order of programs to process the documents and specify the detailed settings for each program.
 
-For the simple use, you can specify the command name in the top-level just like `latex = "lualatex"`, which is already shown in the former examples (only available for `latex`, `dvipdf`, and `bibtex`).
+For the simple use, you can specify the command name in the top-level just like `latex = "lualatex"`, which is already shown in the former examples.
 
 However, it is impossible to specify more detailed settings (e.g., command line options) with this simple manner. If you want to change those settings as well, you have to use tables of TOML; write `[programs.<name>]` and then write the each setting following to that:
 
@@ -161,7 +161,7 @@ If following keys are omitted, these default values will be used instead.
 * `command` is **required** (no default)
 * `target = "%S"`
 * `opts = []`
-* `args = "%T"`
+* `args = ["%T"]`
 
 Other from above, there are no default values (i.e., null).
 

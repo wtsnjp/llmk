@@ -1,0 +1,50 @@
+% Logo producer (wrapper) for llmk
+% Copyright 2020 Takuto Asakura (wtsnjp)
+% distributed under the MIT licence
+
+% +++
+% sequence = ["tex2img"]
+%
+% [programs.tex2img]
+% command = "tex2img"
+% opts = [
+%   "--latex=lualatex --resolution=60",
+%   '--margins "500 50"',                 # for title
+%   #"--keep-page-size --no-transparent",  # for icon (square)
+% ]
+% args = ["%T", "%B.png"]
+% +++
+\documentclass{article}
+
+% packages
+\usepackage[paperheight=5.5cm, paperwidth=5.5cm]{geometry}
+\usepackage{fontspec}
+\usepackage{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{shapes, positioning}
+
+% fonts
+\newcommand{\logomainfont}{\fontspec{Helvetica Neue}}
+\newcommand{\logosubfont}{\fontspec{Helvetica Neue Thin}}
+
+% load the code
+\input{llmk-logo-code}
+
+\begin{document}
+
+\thispagestyle{empty}
+
+\centering
+\null\vfill
+
+\llmkLogo
+
+\vspace{0.25cm}
+
+\sffamily
+{\Huge\logomainfont llmk} \\
+{\scriptsize\logosubfont The Light {\LaTeX} Make}
+
+\vfill
+
+\end{document}

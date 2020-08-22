@@ -1,0 +1,44 @@
+%
+% This is LaTeX source for the llmk logo.
+%
+% Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
+%   GitHub:   https://github.com/wtsnjp
+%   Twitter:  @wtsnjp
+%
+% The llmk package is distributed under the MIT License.
+%
+
+\newlength{\llmkLogoUnit}
+\setlength{\llmkLogoUnit}{0.2cm}
+\newcommand{\llmkLogo}[1][1]{\bgroup
+  % scale
+  \setlength{\llmkLogoUnit}{#1\llmkLogoUnit}%
+  % colors
+  % - paleturquoise (RGB: 143, 229, 216; CMYK: 38, 0, 6, 10)
+  \definecolor{color1}{RGB}{143, 229, 216}%
+  % - symphony blue (RGB: 24, 87, 227; CMYK: 92, 63, 0, 0)
+  \definecolor{color2}{RGB}{24, 87, 227}%
+  % - obaku (RGB: 255, 242, 127; CMYK: 1, 5, 62, 0)
+  \definecolor{color3}{RGB}{255, 242, 127}%
+  % shapes
+  \pgfdeclarelayer{bg}%
+  \pgfsetlayers{bg,main}%
+  \tikzstyle{octagon} = [
+    shape = regular polygon,
+    regular polygon sides = 8
+  ]%
+  \tikzstyle{star} = [
+    shape = star,
+    star point ratio = 1.3,
+    star points = 8
+  ]%
+  \begin{tikzpicture}[scale=#1, every node/.style={scale=#1}]
+  \node [circle, minimum width = {5\llmkLogoUnit}, fill = color1] (n1) {};
+  \node [octagon, minimum width = {5\llmkLogoUnit}, fill = color2, right = {2\llmkLogoUnit of n1}] (n2) {};
+  \node [star, minimum width = {5\llmkLogoUnit}, fill = color3, right = {2\llmkLogoUnit of n2}] (n3) {};
+  \begin{pgfonlayer}{bg}
+  \draw [line width=.25\llmkLogoUnit, shorten <= -\llmkLogoUnit, shorten >= -\llmkLogoUnit] (n1) -- (n3);
+  \end{pgfonlayer}%
+  \end{tikzpicture}\egroup}
+
+% EOF

@@ -1,143 +1,24 @@
-% llmk user manual
+% llmk: the reference manual
 % Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
 
 % +++
 % latex = "xelatex"
 % +++
+\documentclass{llmk-doc}
 
-\setlength\overfullrule{5pt}
-
-\documentclass[a4paper,oneside]{scrartcl}
-\usepackage{fontspec}
-\usepackage{xunicode}
-
-\defaultfontfeatures{Ligatures=TeX}
-\setmainfont{DejaVuSerif}
-\setsansfont{DejaVuSans}
-\setmonofont{DejaVuSansMono}
-\renewcommand\familydefault{\sfdefault} \normalfont
-\newcommand\mylangle{$\langle$}
-\newcommand\myrangle{$\rangle$}
-
-\usepackage{xargs,xspace,fancyvrb,xcolor,pifont,calc,ifmtarg,mathstyle}
-
-\usepackage[sf,bf]{titlesec}
-\titlelabel{\makebox[0pt][r]{\thetitle\kern1pc}}
-\titleformat{\subsubsection}[runin]{\itshape}{%
-  \makebox[0pt][r]{\thetitle\kern1pc}}{%
-  0pt}{}[\maybedot\space --- \kern0pt]
-\titlespacing{\subsubsection}{0pt}{0.5\baselineskip}{0pt}
-
-\usepackage{enumitem}
-\newlength\lssep \setlength\lssep{\smallskipamount}
-\setlist{noitemsep,topsep=\lssep,partopsep=\lssep}
-
-\usepackage[british]{babel}
-\usepackage[bookmarks=true]{hyperref}
-\usepackage{bookmark}
-\hypersetup{
-  bookmarksnumbered=true, bookmarksopen=true, bookmarksopenlevel=2,
-  pdftitle={llmk: The Light LaTeX Make},
-  pdfauthor={Takuto Asakura},
-  pdfsubject={llmk's user manual},
-  pdfkeywords={llmk, TeX, LaTeX, build tool, toml, lua, luatex}}
-
-\usepackage[yyyymmdd]{datetime}
-\renewcommand{\dateseparator}{-}
-
-\setlength\parindent{\baselineskip}
-
-\lastlinefit=500 % e-TeX powered
-
-\definecolor{links}{named}{violet}
-\definecolor{special}{rgb}{0,0.5,0}
-\definecolor{code}{rgb}{0,0,0.6}
-\hypersetup{colorlinks=true, linkcolor=links, urlcolor=links, citecolor=links}
-
-\newcommand\cofont{% code
-  \color{code}\normalfont\ttfamily}
-\newcommand\meta[1]{% meta elements
-  {\normalfont\color{special}\mylangle\textit{#1}\myrangle}}
-
-% take care of non-breakable spaces
-\catcode`\ 10\relax
-
-\fvset{
-  formatcom=\cofont,
-  defineactive=\makeallfancy,
-  codes=\fancyactives}
-\newcommand{\fancyactives}{\catcode`\«\active}
-\newcommand{\makeallfancy}{\makefancyog}{%
-  \catcode`\«\active
-  \global\def\makefancyog{%
-  \def«##1»{\meta{##1}}}}
-
-\newif\ifframed
-\newlength\dec
-\setlength\dec{\heightof{\cofont{texdoc \meta{name}}}}
-
-\makeatletter
-\newenvironment{commandes}[3]{%
-  \def\thecmd{\noexpand#1}%
-  \def\bmtext{#2}%
-  \def\thelabel{#3}%
-  \SaveVerbatim[samepage, gobble=2]{verbmat}%
-}{%
-  \endSaveVerbatim
-  \xdef\sectioncmd{\noexpand\nodotthistime
-    \thecmd[\bmtext]{%
-      \ifframed
-        \unexpanded{\normalsize\normalfont
-          \fbox{\raisebox{\dec}{\BUseVerbatim[baseline=t]{verbmat}}}}%
-      \else
-        \unexpanded{\normalsize\normalfont
-          \BUseVerbatim{verbmat}}%
-      \fi
-      \noexpand\label{\thelabel}}}%
-  \aftergroup\sectioncmd}
-\makeatother
-
-\newcommand\maybedot{.}
-\newcommand\nodotthistime{%
-  \renewcommand\maybedot{%
-    \global\def\maybedot{.}}}
-
-\newenvironment{cmdsubsec}[2]{%
-  \framedtrue \commandes\subsection{#1}{#2}%
-}{%
-  \endcommandes}
-
-\newenvironment{cmdsubsub}[2]{%
-  \framedfalse \commandes\subsubsection{#1}{#2}%
-}{%
-  \endcommandes}
-
-\makeatletter
-\newenvironment{htcode}{% code en hors-texte
-  \SaveVerbatim[samepage, gobble=2]{verbmat}%
-}{%
-  \endSaveVerbatim
-  \par\medskip\noindent\hspace*{\parindent}%
-  \BUseVerbatim{verbmat}%
-  \par\medskip\@endpetrue}
-\makeatother
-\DefineShortVerb{\|}
-
-\setkomafont{title}{}
-\setkomafont{subtitle}{\Large}
-\deffootnote[1.5em]{1.5em}{1em}{\textsuperscript{\thefootnotemark}\thinspace}
-
-\title{llmk}
-\subtitle{The Light {\LaTeX} Make \\
-  \href{https://github.com/wtsnjp/llmk}{https://github.com/wtsnjp/llmk}}
-\author{Takuto Asakura}
-\date{v0.0.0\quad\today}
+% Metadata
+\title{llmk: Light {\LaTeX} Make}
+\author{Takuto Asakura (wtsnjp)}
+\subtitle{Reference Manual}
+\date{v0.1.0\quad\today}
+\keywords{llmk, build-tool, toml, lua, luatex}
 
 \begin{document}
-\VerbatimFootnotes
 
 \maketitle
 
-\section{Quick guide}
+\section{Introduction}
+
+\code{llmk}
 
 \end{document}
