@@ -154,7 +154,9 @@
 }
 
 % some macros
-\DeclareRobustCommand{\TL}{\texorpdfstring{\TeX\,\,Live}{TeX Live}}
+\newcommand*{\prog}[1]{\textsf{#1}}
+\newcommand*{\Dash}{\thinspace---\thinspace}
+\newcommand*{\email}[1]{\href{mailto:#1}{\code{#1}}}
 \newcommand*{\ie}{i.e.,\,}
 \newcommand*{\eg}{e.g.,\,}
 \newcommand*{\hyph}{-}
@@ -167,7 +169,7 @@
   \@for\@item:=#1\do{\@delim\@item}%
   \egroup}
 \newcommand*{\code}[1]{\bgroup
-  \chardef\_=`\_\ttfamily #1\egroup}
+  \chardef\_=`\_\code@font #1\egroup}
 \newcommand*{\sopt}[1]{\hyperlink{cl:#1}{\code{\hyph#1}}}
 \newcommand*{\lopt}[1]{\hyperlink{cl:#1}{\code{\hyph{}\hyph#1}}}
 \newcommand*{\ci}[1]{\bgroup
@@ -175,6 +177,15 @@
   \edef\x{\noexpand\def\noexpand\@tmp@hyname{cf:#1}}%
   \expandafter\egroup\x
   \hyperlink{\@tmp@hyname}{\code{#1}}}
+
+% verbatim
+\def\code@font{% code
+  \color{code}\normalfont\ttfamily}
+\fvset{%
+  formatcom=\code@font,
+  defineactive=\makeallfancy,
+  commandchars=\\\{\},
+  codes=\fancyactives}
 
 % manual entries
 \newenvironment{manual@entry}{\begin{list}{}{%

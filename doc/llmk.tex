@@ -4,7 +4,7 @@
 % +++
 % latex = "xelatex"
 % +++
-\documentclass{llmk-doc}
+\documentclass[draft]{llmk-doc}
 
 % Metadata
 \title{llmk: Light {\LaTeX} Make}
@@ -17,8 +17,108 @@
 
 \maketitle
 
-\section{Introduction}
+\section{Overview}
 
-\code{llmk}
+The \prog{llmk} program is yet another build tool specific for {\LaTeX}
+documents. Its aim is to provide a simple way to specify a workflow of
+processing {\LaTeX} documents and encourage people to always explicitly show
+the right workflow for each document.
+
+The main features of \prog{llmk} are all about the above purpose. First, you
+can write the workflows either in an external file \code{llmk.toml} or in a
+{\LaTeX} document source in a form of magic comments. Further, multiple magic
+comment formats can be used. Second, it is fully cross-platform. The only
+requirement of the program is the \code{texlua} command; \prog{llmk} makes a
+uniform way to describe the workflows available for nearly all {\TeX}
+environments. Third, it behaves exactly the same in any environment. At this
+point, \prog{llmk} intentionally does not provide any method for user
+configuration. Therefore, one can guarantee that a {\LaTeX} document with an
+\prog{llmk} setup, the process of typesetting the document must be reproduced
+in the all environment with the program.
+
+% TODO: explain that llmk is included in TeX Live and MiKTeX when ready
+
+\subsection{Learning \prog{llmk}}
+
+The bundled \href{https://github.com/wtsnjp/llmk/blob/master/README.md}
+{\code{README.md}} has a general introduction for the program. If you are new
+to \prog{llmk} and looking for a quick guidance, you are recommended to read it
+first. Conversely, this document can be regarded as a reference manual: it
+contains detailed descriptions for every feature of \prog{llmk} as much as
+possible, but unsuitable for getting general ideas of its basic usage.
+
+\begin{samepage}
+All official resources are available from the repository on GitHub:
+%
+\begin{quote}
+\url{https://github.com/wtsnjp/llmk}
+\end{quote}
+%
+Notably, you can find some example {\LaTeX} documents with \prog{llmk} setups
+in the \href{https://github.com/wtsnjp/llmk/tree/master/examples}
+{\code{examples}} directory.
+% TODO: mention wiki on github when some contents are gathered?
+\end{samepage}
+
+The design concept of \prog{llmk} is described in a separate TUGboat
+article~\cite{asakura2020}. It will not give you practical tips, but if you are
+interested in the underlying ideas of the program, it should be worth reading.
+The differences from other similar tools, \eg\prog{latexmk}~\cite{latexmk} and
+\prog{arara}~\cite{arara}, are also discussed in the article.
+
+\subsection{Reporting bugs and requesting features}
+
+If you get trouble with \prog{llmk} or think you have found a bug, please
+report it by creating either an issue or a pull request on the GitHub
+repository:
+%
+\begin{quote}
+\url{https://github.com/wtsnjp/llmk/issues}
+\end{quote}
+%
+If you do not want to use GitHub for some reasons, it is also fine to directly
+send an email to the author (\email{tkt.asakura@gmail.com}).
+
+The \prog{llmk} program is currently version \code{0.x} and still growing in
+any aspect. At this moment, requests for new features are also welcome; the
+author cannot promise to implement the requested features, but will happy to
+take them into account. Before making a request, it is strongly recommended to
+read the article about the design concept~\cite{asakura2020}.
+
+One more thing: as you can see, the author of the program is not a native
+English speaker. Thus, there should be plenty of grammatical errors and
+unnatural sentences in the documentation, including this manual itself.
+Correction for such writing issues is particularly welcome.
+
+\section{Command-line interface}
+
+\section{Writing workflows in TOML format}
+
+\section{Other supported formats}
+
+\section{Acknowledgements}
+
+This project has been supported by the {\TeX} Development Fund created by the {\TeX}
+Users Group (No.~29). I would like to thank all contributors and the people who
+gave me advice and suggestions for new features for the \prog{llmk} project.
+
+\begin{thebibliography}{9}
+\bibitem{asakura2020}
+  Takuto Asakura. \textit{The design concept for \prog{llmk}\Dash Light {\LaTeX}
+  Make}. TUGboat, Volume~41, No.~2. (2020)
+
+\bibitem{arara}
+  Paulo Cereda, et al. \textit{arara\Dash The cool {\TeX} automation
+  tool}. \url{https://ctan.org/pkg/arara}
+
+\bibitem{latexmk}
+  John Collins. \textit{latexmk\Dash generate {\LaTeX} document}.
+  \url{https://ctan.org/pkg/latexmk}
+
+\bibitem{toml}
+  Tom Preston-Werner. \textit{TOML: Tom's Obvious Minimal Language}.
+  \url{https://toml.io/}
+\end{thebibliography}
 
 \end{document}
+% vim: set spell:

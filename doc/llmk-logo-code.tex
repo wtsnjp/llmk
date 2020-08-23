@@ -9,10 +9,9 @@
 %
 
 \newlength{\llmkLogoUnit}
-\setlength{\llmkLogoUnit}{0.2cm}
 \newcommand{\llmkLogo}[1][1]{\bgroup
   % scale
-  \setlength{\llmkLogoUnit}{#1\llmkLogoUnit}%
+  \pgfmathsetlength{\llmkLogoUnit}{0.2cm * (#1)}%
   % colors
   % - paleturquoise (RGB: 143, 229, 216; CMYK: 38, 0, 6, 10)
   \definecolor{color1}{RGB}{143, 229, 216}%
