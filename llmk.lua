@@ -39,14 +39,16 @@ local M = {}
 -- program information
 M.prog_name = 'llmk'
 M.version = '0.1'
+M.copyright = 'Copyright 2018-2020'
 M.author = 'Takuto ASAKURA (wtsnjp)'
 M.llmk_toml = 'llmk.toml'
 
 -- exit codes
 M.exit_ok = 0
 M.exit_error = 1
-M.exit_parser = 2
-M.exit_failure = 3
+M.exit_failure = 2
+M.exit_parser = 3
+M.exit_type = 4
 
 -- config item specification
 M.top_level_spec = {
@@ -198,7 +200,7 @@ local function checked_value(k, v, expected)
     if type(val) ~= t then
       llmk.util.err_print('error',
         '[Type Error] Key "%s" must have value of type %s', k, expected)
-      os.exit(llmk.const.exit_error)
+      os.exit(llmk.const.exit_type)
     end
   end
 
@@ -236,7 +238,7 @@ local function type_check(tab)
     if k == 'programs' then
       if type(v) ~= 'table' then
         llmk.util.err_print('error', '[Type Error] Key "programs" must be a table')
-        os.exit(llmk.const.exit_error)
+        os.exit(llmk.const.exit_type)
       end
 
       local new_prog = {}
@@ -244,7 +246,7 @@ local function type_check(tab)
         if type(p_val) ~= 'table' then
           llmk.util.err_print('error',
             '[Type Error] Key "programs.%s" must be a table', p_name)
-          os.exit(llmk.const.exit_error)
+          os.exit(llmk.const.exit_type)
         else
           new_prog[p_name] = {}
           for ik, iv in pairs(p_val) do
@@ -1199,6 +1201,7 @@ end
 
 do -- The "cli" submodule
 local M = {}
+local C = llmk.const
 
 local help_text = [[
 Usage: llmk[.lua] [OPTION]... [FILE]...
@@ -1222,7 +1225,7 @@ Please report bugs to <tkt.asakura@gmail.com>.
 local version_text = [[
 %s %s
 
-Copyright 2018-2020 %s.
+%s %s.
 License: The MIT License <https://opensource.org/licenses/mit-license>.
 This is free software: you are free to change and redistribute it.
 ]]
@@ -1317,7 +1320,7 @@ local function read_options()
     -- problem
     else
       llmk.util.err_print('error', 'unknown option: ' .. curr_arg)
-      os.exit(llmk.const.exit_error)
+      os.exit(C.exit_error)
     end
   end
 
@@ -1352,7 +1355,7 @@ local function make(fns, func)
         func(checked_fn, config)
       else
         llmk.util.err_print('error', 'No source file found for "%s".', fn)
-        os.exit(llmk.const.exit_error)
+        os.exit(C.exit_error)
       end
     end
   else
@@ -1365,7 +1368,7 @@ local function make(fns, func)
       end
     else
       llmk.util.err_print('error', 'No source detected.')
-      os.exit(llmk.const.exit_error)
+      os.exit(C.exit_error)
     end
   end
 end
@@ -1375,7 +1378,7 @@ local function do_action(action)
     io.stdout:write(help_text)
   elseif action == 'version' then
     io.stdout:write(version_text:format(
-      llmk.const.prog_name, llmk.const.version, llmk.const.author))
+      C.prog_name, C.version, C.copyright, C.author))
   elseif action == 'clean' then
     make(arg, llmk.cleaner.clean)
   elseif action == 'clobber' then
@@ -1388,11 +1391,11 @@ function M.exec()
 
   if action then
     do_action(action)
-    os.exit(llmk.const.exit_ok)
+    os.exit(C.exit_ok)
   end
 
   make(arg, llmk.runner.run_sequence)
-  os.exit(llmk.const.exit_ok)
+  os.exit(C.exit_ok)
 end
 
 llmk.cli = M
