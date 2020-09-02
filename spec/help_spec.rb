@@ -5,21 +5,19 @@ RSpec.describe "Showing help", :type => :aruba do
 
   let(:help_text) do
     <<~EXPECTED
-      Usage: llmk[.lua] [OPTION]... [FILE]...
+      Usage: llmk [OPTION]... [FILE]...
 
       Options:
+        -c, --clean           Remove the temporary files such as aux and log files.
+        -C, --clobber         Remove all generated files including final PDFs.
+        -d CAT, --debug=CAT   Activate debug output restricted to CAT.
+        -D, --debug           Activate all debug output (equal to "--debug=all").
         -h, --help            Print this help message.
+        -q, --quiet           Suppress most messages.
+        -s, --silent          Silence messages from called programs.
+        -v, --verbose         Print additional information.
         -V, --version         Print the version number.
 
-        -s, --silent          Silence messages from called programs.
-        -q, --quiet           Suppress warnings and most error messages.
-        -v, --verbose         Print additional information.
-        -D, --debug           Activate all debug output (equal to "--debug=all").
-        -d CAT, --debug=CAT   Activate debug output restricted to CAT.
-
-        -c, --clean           Remove the temproray files such as aux and log files.
-        -C, --clobber         Remove all generated files including final PDFs.
-      
       Please report bugs to <tkt.asakura@gmail.com>.
     EXPECTED
   end

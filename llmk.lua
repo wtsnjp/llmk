@@ -1204,20 +1204,18 @@ local M = {}
 local C = llmk.const
 
 local help_text = [[
-Usage: llmk[.lua] [OPTION]... [FILE]...
+Usage: llmk [OPTION]... [FILE]...
 
 Options:
-  -h, --help            Print this help message.
-  -V, --version         Print the version number.
-
-  -s, --silent          Silence messages from called programs.
-  -q, --quiet           Suppress warnings and most error messages.
-  -v, --verbose         Print additional information.
-  -D, --debug           Activate all debug output (equal to "--debug=all").
-  -d CAT, --debug=CAT   Activate debug output restricted to CAT.
-
-  -c, --clean           Remove the temproray files such as aux and log files.
+  -c, --clean           Remove the temporary files such as aux and log files.
   -C, --clobber         Remove all generated files including final PDFs.
+  -d CAT, --debug=CAT   Activate debug output restricted to CAT.
+  -D, --debug           Activate all debug output (equal to "--debug=all").
+  -h, --help            Print this help message.
+  -q, --quiet           Suppress most messages.
+  -s, --silent          Silence messages from called programs.
+  -v, --verbose         Print additional information.
+  -V, --version         Print the version number.
 
 Please report bugs to <tkt.asakura@gmail.com>.
 ]]
@@ -1291,9 +1289,9 @@ local function read_options()
 
     -- action
     if (curr_arg == '-h') or (curr_arg == '--help') then
-      action = 'help'
+      return 'help' -- immediately show help
     elseif (curr_arg == '-V') or (curr_arg == '--version') then
-      action = 'version'
+      return 'version' -- immediately show version
     elseif (curr_arg == '-c') or (curr_arg == '--clean') then
       action = 'clean'      
     elseif (curr_arg == '-C') or (curr_arg == '--clobber') then
