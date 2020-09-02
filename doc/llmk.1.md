@@ -12,26 +12,24 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
 
 ## OPTIONS
 
-* `-h`, `--help`:
-  Print this help message.
-* `-V`, `--version`:
-  Print the version number.
-
-* `-s`, `--silent`:
-  Silence messages from called programs.
-* `-q`, `--quiet`:
-  Suppress warnings and most error messages.
-* `-v`, `--verbose`:
-  Print additional information (e.g., viewer command).
-* `-D`, `--debug`:
-  Activate all debug output (equal to "--debug=all").
-* `-d`CAT, `--debug`=CAT:
-  Activate debug output restricted to CAT.
-
 * `-c`, `--clean`:
   Remove the temporary files such as `*.aux` and `*.log`.
 * `-C`, `--clobber`:
   Remove all generated files including final PDFs.
+* `-d`CAT, `--debug`=CAT:
+  Activate debug output restricted to CAT.
+* `-D`, `--debug`:
+  Activate all debug output (equal to "--debug=all").
+* `-h`, `--help`:
+  Print this help message.
+* `-q`, `--quiet`:
+  Suppress warnings and most error messages.
+* `-s`, `--silent`:
+  Silence messages from called programs.
+* `-v`, `--verbose`:
+  Print additional information (e.g., viewer command).
+* `-V`, `--version`:
+  Print the version number.
 
 ## EXIT STATUS
 
@@ -40,9 +38,11 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
 * 1:
   General error.
 * 2:
-  Parser error.
-* 3:
   Failure executing the workflow. The exit status of the external program is reported in an error message.
+* 3:
+  Parser error.
+* 4:
+  Type error.
 
 ## REPORTING BUGS
 

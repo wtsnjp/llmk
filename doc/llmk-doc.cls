@@ -170,11 +170,11 @@
   \egroup}
 \newcommand*{\code}[1]{\bgroup
   \chardef\_=`\_\code@font #1\egroup}
-\newcommand*{\sopt}[1]{\hyperlink{cl:#1}{\code{\hyph#1}}}
-\newcommand*{\lopt}[1]{\hyperlink{cl:#1}{\code{\hyph{}\hyph#1}}}
-\newcommand*{\ci}[1]{\bgroup
+\newcommand*{\sopt}[1]{\hyperlink{clo:#1}{\code{\hyph#1}}}
+\newcommand*{\lopt}[1]{\hyperlink{clo:#1}{\code{\hyph{}\hyph#1}}}
+\newcommand*{\ckey}[1]{\bgroup
   \def\_{-}\def\meta##1{##1}%
-  \edef\x{\noexpand\def\noexpand\@tmp@hyname{cf:#1}}%
+  \edef\x{\noexpand\def\noexpand\@tmp@hyname{ckey:#1}}%
   \expandafter\egroup\x
   \hyperlink{\@tmp@hyname}{\code{#1}}}
 
@@ -183,9 +183,7 @@
   \color{code}\normalfont\ttfamily}
 \fvset{%
   formatcom=\code@font,
-  defineactive=\makeallfancy,
-  commandchars=\\\{\},
-  codes=\fancyactives}
+  commandchars=\\\{\}}
 
 % manual entries
 \newenvironment{manual@entry}{\begin{list}{}{%
@@ -198,22 +196,22 @@
 
 \NewDocumentEnvironment{clopt}{ m o }
   {%
-    \par\vskip\baselineskip
+    \par\vskip.5\baselineskip
     \bgroup
-    \def\sopt##1{\hypertarget{cl:##1}{\code{\hyph##1}}}%
-    \def\lopt##1{\hypertarget{cl:##1}{\code{\hyph{}\hyph##1}}}%
-    \needspace{3ex}\noindent #1\egroup
+    \def\sopt##1{\hypertarget{clo:##1}{\code{\hyph##1}}}%
+    \def\lopt##1{\hypertarget{clo:##1}{\code{\hyph{}\hyph##1}}}%
+    \needspace{3\baselineskip}\noindent #1\egroup
     \IfNoValueF{#2}{\hfill (#2)}%
     \begin{manual@entry}%
   }
   {\ifvmode\else\unskip\fi\end{manual@entry}}
 
-\NewDocumentEnvironment{confitem}{ m m o }
+\NewDocumentEnvironment{confkey}{ m m o }
   {%
     \par\vskip\baselineskip
     \bgroup
     \def\_{-}\def\meta##1{##1}%
-    \edef\x{\noexpand\def\noexpand\@tmp@hyname{cf:#1}}%
+    \edef\x{\noexpand\def\noexpand\@tmp@hyname{ckey:#1}}%
     \expandafter\egroup\x
     \needspace{3ex}\noindent
     \hypertarget{\@tmp@hyname}{\code{#1 = #2}}%
@@ -221,6 +219,16 @@
     \begin{manual@entry}%
   }
   {\ifvmode\else\unskip\fi\end{manual@entry}}
+
+% code in hors-text
+\newenvironment{htcode}
+  {\SaveVerbatim[samepage]{verbmat}}
+  {%
+    \endSaveVerbatim
+    \par\medskip\noindent\hspace*{2em}%
+    \BUseVerbatim{verbmat}%
+    \par\medskip\@endpetrue
+  }
 
 \DefineShortVerb{\|}
 % EOF

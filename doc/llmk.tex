@@ -34,7 +34,7 @@ environments. Third, it behaves exactly the same in any environment. At this
 point, \prog{llmk} intentionally does not provide any method for user
 configuration. Therefore, one can guarantee that a {\LaTeX} document with an
 \prog{llmk} setup, the process of typesetting the document must be reproduced
-in the all environment with the program.
+in any {\TeX} environment with the program.
 
 % TODO: explain that llmk is included in TeX Live and MiKTeX when ready
 
@@ -92,9 +92,137 @@ Correction for such writing issues is particularly welcome.
 
 \section{Command-line interface}
 
+\subsection{Command usage}
+
+The full usage of \prog{llmk} can be summarized as follows:
+%
+\begin{htcode}
+llmk \meta{options} \meta{files}
+\end{htcode}
+
+Herein, \meta{options} are the command-line options, that start with the hyphen
+letter |-|, and \meta{files} are the arguments for the |llmk| command.
+
+\subsubsection*{Arguments \meta{files}}
+
+You can specify the filenames of the source {\TeX} files, normally the files
+with \code{.tex} or \code{.ltx} extensions, as the arguments for the \code{llmk}
+command. When one or more \meta{files} are specified, \prog{llmk} will read
+either the TOML field (Section~\ref{sec:toml}) or another supported magic
+comment (Section~\ref{sec:magic-comment}) in each of the source files and
+process it with the specified workflow in the given order.
+
+As well as the \code{tex} command, you can omit the \code{.tex} extensions and
+just give the basenames of the files for the argument; when a \meta{basename},
+which must not contain any dot letter, is given and the file that exactly
+matches to the name does not exist, \prog{llmk} will automatically add the
+\code{.tex} extension and process it like any other if the file
+|\meta{basename}.tex| exists.
+
+Note that \prog{llmk} naively pass the given filenames to invoked commands.
+Filenames that contains special characters of {\TeX}, \eg |#| and |%|, are very
+likely to be causes of troubles. Moreover, at this point \prog{llmk} does not
+any specific features to take care of multi-byte characters: filenames
+including multi-byte characters may work in some cases but can be cause of
+problems\footnote{The author admits that \prog{llmk} needs to be enhanced in
+this aspect: it should have better features to treat various filenames with
+multi-byte characters, though the author is negative to support special
+characters of {\TeX}. Suggestions and patches in this direction are especially
+welcome.}. Using filenames that contain only the characters in the range of the
+ASCII code, except special characters of {\TeX}, is the safest way to go at any
+rate.
+
+Alternatively, if the argument is not specified, \prog{llmk} will read the
+special TOML file \code{llmk.toml} in the working directory and execute the
+workflow specified in the file (see Section~\ref{sec:toml}).
+
+\subsubsection*{Command-line options \meta{options}}
+
+We have tried to implement a GNU-compatible option parser. Short options, each of
+which consists of a single letter, must start with a single hyphen |-|.
+Multiple short options can be specified with a single hyphen, \eg |-vs| is
+equivalent to |-v -s|. Long options have to be following double hyphens |--|.
+All options must be specified before the first argument. A string beginning
+with a hyphen after the first argument will be treated as an argument starting
+with a hyphen.
+
+When two or more options are specified, \prog{llmk} applies them in the given
+order. If conflicting options are specified, \eg \sopt{q} v.s.\ \sopt{v}, the
+option in the latter position wins over the former one.
+
+The following is the full list of available command-line options:
+
+\begin{clopt}{\sopt{c}, \lopt{clean}}
+Removes temporary files such as \code{aux} and \code{log} files. The files
+removed with this action can be customized with the key \ckey{clean\_files}.
+\end{clopt}
+
+\begin{clopt}{\sopt{C}, \lopt{clobber}}
+Removes all generated files including final PDFs. The files removed with this
+action can be customized with the key \ckey{clobber\_files}.
+\end{clopt}
+
+\begin{clopt}{%
+  \code{\sopt{d} \meta{category}}, \code{\lopt{debug}=\meta{category}},
+  \sopt{D}, \lopt{debug}}
+Activates the specified debug category; debugging messages related to the
+activated category will be shown. Herein, available debug categories are:
+|config|, |parser|, |run|, |fdb|, |programs|, and |all| to activate all of
+these. You can repeat this option more than once to activate multiple
+categories. If you specify |-D| or |--debug| without the argument
+\meta{category}, it activates all available debug categories.
+\end{clopt}
+
+\begin{clopt}{\sopt{h}, \lopt{help}}
+Shows a quick help message (namely a list of command-line options) and exit
+successfully. When this is specified, all other options and arguments are
+ignored.
+\end{clopt}
+
+\begin{clopt}{\sopt{q}, \lopt{quiet}}
+This suppress most of the messages from the program.
+\end{clopt}
+
+\begin{clopt}{\sopt{s}, \lopt{silent}}
+Silence messages from invoked programs. To be more specific, this redirects
+both standard output and standard error streams to the null device.
+\end{clopt}
+
+\begin{clopt}{\sopt{v}, \lopt{verbose}}
+Make \prog{llmk} to print additional information such as invoked commands
+with options and arguments by the program.
+\end{clopt}
+
+\begin{clopt}{\sopt{V}, \lopt{version}}
+Shows the current version of the program and exit successfully. When this is
+specified, all other options and arguments are ignored.
+\end{clopt}
+
+\subsection{Exit codes}
+
+You can grasp whether \prog{llmk} successfully executed or not by seeing its
+status code. Note that the exit codes of invoked programs are not directly
+transferred as the exit code of \prog{llmk}; instead, the statuses of external
+programs that failed, if any, are reported in the error messages.
+%
+\begin{description}[left=2em]
+\item[\code{0}]
+  Success.
+\item[\code{1}]
+  General error.
+\item[\code{2}]
+  Invoked program failed.
+\item[\code{3}]
+  Parser error.
+\item[\code{4}]
+  Type error.
+\end{description}
+
 \section{Writing workflows in TOML format}
+\label{sec:toml}
 
 \section{Other supported formats}
+\label{sec:magic-comment}
 
 \section{Acknowledgements}
 
