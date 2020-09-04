@@ -23,8 +23,8 @@ CLEAN.include([
   "**/*.log", "**/*.synctex.gz", "**/*.dvi",
   "**/*.ps", "**/*.pdf", "**/*.aux"
 ])
-CLEAN.exclude(["doc/*.md", "doc/*.tex", "doc/*.pdf"])
-CLEAN.exclude(["doc/logo.png"])
+CLEAN.exclude(["doc/*.md", "doc/*.cls", "doc/*.tex", "doc/*.pdf"])
+CLEAN.exclude(["doc/llmk-logo.png"])
 CLOBBER.include(["doc/*.pdf", "*.zip"])
 
 desc "Run tests [options available]"
