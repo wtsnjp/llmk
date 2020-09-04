@@ -221,6 +221,57 @@ programs that failed, if any, are reported in the error messages.
 \section{Writing workflows in TOML format}
 \label{sec:toml}
 
+The primary configuration format for \prog{llmk} is TOML\Dash Tom's Obvious
+Minimal Language~\cite{toml}. You can specify the workflows to process your
+{\LaTeX} documents in the format either in the special configuration file
+(\code{llmk.toml}) or in the TOML field (Section~\ref{sec:toml-where}). You
+have full access to the \prog{llmk} configuration with this primary format,
+while other supported magic comment formats (Section~\ref{sec:magic-comment})
+have only partial access. You can read the entire TOML specification at
+\href{https://toml.io/}{its website}.
+
+\subsection{TOML in \prog{llmk}}
+
+The configuration for \prog{llmk} written in the TOML format is read by our
+built-in parser. At this point, the built-in parser supports subset of the TOML
+specification; only the data-types that necessary for the configuration keys
+(Section~\ref{sec:top-level-keys}~\&~\ref{sec:programs-table}) are supported:
+%
+\par
+%
+\begin{center}
+\let\ok\checkmark
+\begin{tabular}{llc}
+\toprule
+Type & Example & Supported \\ \midrule
+Bare keys & \code{key} & \ok \\
+Quoted keys & \code{"key"} & \\
+Dotted keys & \code{tex.latex} & \ok \\ \midrule
+Basic strings & \code{"str"} & \ok \\
+Multi-line basic strings & & \\
+Literal strings & \code{'str'} & \ok \\
+Multi-line literal strings & & \\ \midrule
+Integer & \code{123} & \ok \\ \midrule
+Boolean & \code{true} & \ok \\ \midrule
+Float & \code{3.14} & \\ \midrule
+Date \& Time & \code{1979-05-27} & \\ \midrule
+Array & \code{[1, 2, 3]} & \ok \\ \midrule
+Table & \code{[table]} & \ok \\
+Inline table & & \\
+Array of table & \code{[[fruit]]} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Where to write and how it works}
+\label{sec:toml-where}
+
+\subsection{Top-level keys}
+\label{sec:top-level-keys}
+
+\subsection{The \code{programs} table}
+\label{sec:programs-table}
+
 \section{Other supported formats}
 \label{sec:magic-comment}
 

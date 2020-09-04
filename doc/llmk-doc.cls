@@ -29,6 +29,7 @@
 % basic dependency
 \LoadClass[a4paper,oneside,parskip=half-]{scrartcl}
 \RequirePackage{graphicx}
+\RequirePackage{booktabs}
 \RequirePackage{bxtexlogo}
 \RequirePackage[british]{babel}
 \RequirePackage{needspace}
