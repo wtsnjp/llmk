@@ -484,6 +484,35 @@ function M.parse_toml(toml, file_info)
     -- TODO: multiline
     local del = char() -- ' or "
     local str = ''
+    -- all available escape characters
+    local escape = {
+      b = "\b",
+      t = "\t",
+      n = "\n",
+      f = "\f",
+      r = "\r",
+      ['"'] = '"',
+      ["\\"] = "\\",
+    }
+    -- utf function from http://stackoverflow.com/a/26071044
+    -- converts \uXXX into actual unicode
+    local function utf(char)
+      local bytemarkers = {{0x7ff, 192}, {0xffff, 224}, {0x1fffff, 240}}
+      if char < 128 then return string.char(char) end
+      local charbytes = {}
+      for bytes, vals in pairs(bytemarkers) do
+        if char <= vals[1] then
+          for b = bytes + 1, 2, -1 do
+            local mod = char % 64
+            char = (char - mod) / 64
+            charbytes[b] = string.char(128 + mod)
+          end
+          charbytes[1] = string.char(vals[2] + char)
+          break
+        end
+      end
+      return table.concat(charbytes)
+    end
 
     -- skip the quotes
     step()
@@ -499,9 +528,41 @@ function M.parse_toml(toml, file_info)
         parser_err('Single-line string cannot contain line break')
       end
 
-      -- TODO: process escape characters
-      str = str .. char()
-      step()
+      if del == '"' and char() == '\\' then -- process escape characters
+        if escape[char(1)] then
+          -- normal escape
+          str = str .. escape[char(1)]
+          step(2) -- go past backslash and the character
+        elseif char(1) == 'u' then
+          -- utf-16
+          step()
+          local uni = char(1) .. char(2) .. char(3) .. char(4)
+          step(5)
+          uni = tonumber(uni, 16)
+          if (uni >= 0 and uni <= 0xd7ff) and not (uni >= 0xe000 and uni <= 0x10ffff) then
+            str = str .. utf(uni)
+          else
+            parser_err('Unicode escape is not a Unicode scalar')
+          end
+        elseif char(1) == 'U' then
+          -- utf-32
+          step()
+          local uni = char(1) .. char(2) .. char(3) .. char(4) ..
+                      char(5) .. char(6) .. char(7) .. char(8)
+          step(9)
+          uni = tonumber(uni, 16)
+          if (uni >= 0 and uni <= 0xd7ff) and not (uni >= 0xe000 and uni <= 0x10ffff) then
+            str = str .. utf(uni)
+          else
+            parser_err('Unicode escape is not a Unicode scalar')
+          end
+        else
+          parser_err('Invalid escape')
+        end
+      else -- literal string; leave as it is
+        str = str .. char()
+        step()
+      end
     end
 
     return str
@@ -750,7 +811,7 @@ function M.get_toml(fn)
 
   local f = io.open(toml_source)
 
-  llmk.util.dbg_print('config', 'Fetching TOML from the file "%s".', toml_source)
+  llmk.util.dbg_print('config', 'Fetching TOML from the file "%s"', toml_source)
 
   local first_line = true
   local shebang
@@ -995,7 +1056,7 @@ local function construct_cmd(prog, fn, target)
 end
 
 local function check_rerun(prog, fdb)
-  llmk.util.dbg_print('run', 'Checking the neccessity of rerun.')
+  llmk.util.dbg_print('run', 'Checking the neccessity of rerun')
 
   local aux = prog.auxiliary
   local old_aux_exist = false
@@ -1003,13 +1064,13 @@ local function check_rerun(prog, fdb)
 
   -- if aux file does not exist, no chance of rerun
   if not aux then
-    llmk.util.dbg_print('run', 'No auxiliary file specified.')
+    llmk.util.dbg_print('run', 'No auxiliary file specified')
     return false, fdb
   end
 
   -- if aux file does not exist, no chance of rerun
   if not lfs.isfile(aux) then
-    llmk.util.dbg_print('run', 'The auxiliary file "%s" does not exist.', aux)
+    llmk.util.dbg_print('run', 'The auxiliary file "%s" does not exist', aux)
     return false, fdb
   end
 
@@ -1028,20 +1089,20 @@ local function check_rerun(prog, fdb)
   end
 
   if not new then
-    llmk.util.dbg_print('run', 'No rerun because the aux file is not new.')
+    llmk.util.dbg_print('run', 'No rerun because the aux file is not new')
     return false, fdb
   end
 
   -- if aux file is empty (or almost), no rerun
   if aux_status.size < 9 then -- aux file contains "\\relax \n" by default
-    llmk.util.dbg_print('run', 'No rerun because the aux file is (almost) empty.')
+    llmk.util.dbg_print('run', 'No rerun because the aux file is (almost) empty')
     return false, fdb
   end
 
   -- if new aux is not different from older one, no rerun
   if old_aux_exist then
     if aux_status.md5sum == old_status.md5sum then
-      llmk.util.dbg_print('run', 'No rerun because the aux file has not been changed.')
+      llmk.util.dbg_print('run', 'No rerun because the aux file has not been changed')
       return false, fdb
     end
   end
@@ -1073,7 +1134,7 @@ local function run_program(name, prog, fn, fdb)
   -- does target exist?
   if not lfs.isfile(prog.target) then
     llmk.util.dbg_print('run',
-      'Skiping "%s" because target (%s) does not exist.',
+      'Skiping "%s" because target (%s) does not exist',
       prog.command, prog.target)
     return false
   end
@@ -1081,7 +1142,7 @@ local function run_program(name, prog, fn, fdb)
   -- is the target modified?
   if prog.generated_target and file_mtime(prog.target) < start_time then
     llmk.util.dbg_print('run',
-      'Skiping "%s" because target (%s) is not updated.',
+      'Skiping "%s" because target (%s) is not updated',
       prog.command, prog.target)
     return false
   end
@@ -1128,7 +1189,7 @@ local function process_program(programs, name, fn, fdb, config)
 
   -- go to the postprocess process
   if prog.postprocess and run then
-    llmk.util.dbg_print('run', 'Going to postprocess "%s".', prog.postprocess)
+    llmk.util.dbg_print('run', 'Going to postprocess "%s"', prog.postprocess)
     process_program(programs, prog.postprocess, fn, fdb, config)
   end
 end
@@ -1147,7 +1208,7 @@ function M.run_sequence(fn, config)
   llmk.util.dbg_print_table('fdb', fdb)
 
   for _, name in ipairs(config.sequence) do
-    llmk.util.dbg_print('run', 'Preparing for program "%s".', name)
+    llmk.util.dbg_print('run', 'Preparing for program "%s"', name)
     process_program(programs, name, fn, fdb, config)
   end
 end
@@ -1352,7 +1413,7 @@ local function make(fns, func)
         config = llmk.config.fetch_from_latex_source(checked_fn)
         func(checked_fn, config)
       else
-        llmk.util.err_print('error', 'No source file found for "%s".', fn)
+        llmk.util.err_print('error', 'Source file "%s" does not exist', fn)
         os.exit(C.exit_error)
       end
     end
@@ -1362,10 +1423,16 @@ local function make(fns, func)
     local source = config.source
     if source ~= nil then
       for _, fn in ipairs(source) do
-        func(fn, config)
+        local checked_fn = check_filename(fn)
+        if checked_fn then
+          func(checked_fn, config)
+        else
+          llmk.util.err_print('error', 'Source file "%s" does not exist', fn)
+          os.exit(C.exit_error)
+        end
       end
     else
-      llmk.util.err_print('error', 'No source detected.')
+      llmk.util.err_print('error', 'No source detected')
       os.exit(C.exit_error)
     end
   end
@@ -1401,7 +1468,7 @@ end
 
 ----------------------------------------
 
-assert(llmk.cli, 'Internal error: llmk is not installed properly.')
+assert(llmk.cli, 'Internal error: llmk is not installed properly')
 llmk.cli.exec()
 
 -- EOF
