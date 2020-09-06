@@ -63,11 +63,11 @@ M.top_level_spec = {
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
   max_repeat = {'integer', 5},
   llmk_version = {'string', nil},
-  clean_files = {'*[string]', {
-    '%B.aux', '%B.log', '%B.toc', '%B.fls', '%B.out', '%B.bbl', '%B.bcf',
-    '%B.blg', '%B-blx.bib', '%B.idx', '%B.ilg', '%B.run.xml'
+  clean_files = {'[string]', {
+    '%B.aux', '%B.bbl', '%B.bcf', '%B-blx.bib', '%B.blg', '%B.fls',
+    '%B.idx', '%B.ilg', '%B.log', '%B.out', '%B.run.xml', '%B.toc'
   }},
-  clobber_files = {'*[string]', {'%B.pdf', '%B.dvi', '%B.ps', '%B.synctex.gz'}},
+  clobber_files = {'[string]', {'%B.dvi', '%B.pdf', '%B.ps', '%B.synctex.gz'}},
 }
 
 M.program_spec = {
