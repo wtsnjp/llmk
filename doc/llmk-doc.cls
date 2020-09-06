@@ -27,7 +27,8 @@
 \@clearglobaloption{draft}
 
 % basic dependency
-\LoadClass[a4paper,oneside,parskip=half-]{scrartcl}
+\LoadClass[a4paper,oneside,fleqn,parskip=half-]{scrartcl}
+\RequirePackage[fleqn]{amsmath}
 \RequirePackage{graphicx}
 \RequirePackage{booktabs}
 \RequirePackage{bxtexlogo}
@@ -35,6 +36,7 @@
 \RequirePackage{needspace}
 \RequirePackage{xunicode}
 \RequirePackage{fancyvrb}
+\RequirePackage{listings}
 \RequirePackage{xparse}
 
 % logo
@@ -185,6 +187,41 @@
 \fvset{%
   formatcom=\code@font,
   commandchars=\\\{\}}
+
+% listings
+\lstdefinelanguage{toml}{
+  columns=fullflexible,
+  morecomment=[l]{\#},
+  commentstyle=\color{darkgray}\ttfamily,
+  morekeywords={},
+  otherkeywords={=}}
+\lstdefinestyle{toml}{
+  language={toml},
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  breaklines=true,
+  frame=l,
+  xleftmargin=15pt,
+  xrightmargin=15pt,
+  basicstyle=\ttfamily\small,
+  stepnumber=1,
+  keywordstyle={\bfseries\color{code}},
+  commentstyle=\color{darkgray}}
+\lstdefinestyle{latex}{
+  columns=fullflexible,
+  language=[LaTeX]{TeX},
+  numbers=left,
+  numberstyle=\tiny,
+  numbersep=5pt,
+  breaklines=true,
+  frame=l,
+  xleftmargin=15pt,
+  xrightmargin=15pt,
+  basicstyle=\ttfamily\small,
+  stepnumber=1,
+  texcsstyle=*{\color{code}},
+  commentstyle=\color{darkgray}}
 
 % manual entries
 \newenvironment{manual@entry}{\begin{list}{}{%

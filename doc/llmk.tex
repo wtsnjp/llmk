@@ -93,6 +93,7 @@ Correction for such writing issues is particularly welcome.
 \section{Command-line interface}
 
 \subsection{Command usage}
+\label{sec:command}
 
 The full usage of \prog{llmk} can be summarized as follows:
 %
@@ -101,7 +102,7 @@ llmk \meta{options} \meta{files}
 \end{htcode}
 
 Herein, \meta{options} are the command-line options, that start with the hyphen
-letter |-|, and \meta{files} are the arguments for the |llmk| command.
+character |-|, and \meta{files} are the arguments for the |llmk| command.
 
 \subsubsection*{Arguments \meta{files}}
 
@@ -114,7 +115,7 @@ process it with the specified workflow in the given order.
 
 As well as the \code{tex} command, you can omit the \code{.tex} extensions and
 just give the basenames of the files for the argument; when a \meta{basename},
-which must not contain any dot letter, is given and the file that exactly
+which must not contain any dot character, is given and the file that exactly
 matches to the name does not exist, \prog{llmk} will automatically add the
 \code{.tex} extension and process it like any other if the file
 |\meta{basename}.tex| exists.
@@ -134,7 +135,9 @@ rate.
 
 Alternatively, if the argument is not specified, \prog{llmk} will read the
 special TOML file \code{llmk.toml} in the working directory and execute the
-workflow specified in the file (see Section~\ref{sec:toml}).
+workflow specified in the file (see Section~\ref{sec:toml}). In case the
+argument is not specified and the \code{llmk.toml} does not exist, it will
+result in an error.
 
 \subsubsection*{Command-line options \meta{options}}
 
@@ -233,14 +236,13 @@ have only partial access. You can read the entire TOML specification at
 \subsection{TOML in \prog{llmk}}
 
 The configuration for \prog{llmk} written in the TOML format is read by our
-built-in parser. At this point, the built-in parser supports subset of the TOML
-specification; only the data-types that necessary for the configuration keys
-(Section~\ref{sec:top-level-keys}~\&~\ref{sec:programs-table}) are supported:
-%
-\par
-%
+built-in parser. At this point, the built-in parser supports a subset of the
+TOML specification; only the data-types that necessary for the configuration
+keys (Section~\ref{sec:top-level-keys}~\&~\ref{sec:keys-in-programs}) are
+supported.
+
 \begin{center}
-\let\ok\checkmark
+\newcommand{\ok}{{\color{special}\checkmark}}
 \begin{tabular}{llc}
 \toprule
 Type & Example & Supported \\ \midrule
@@ -263,14 +265,85 @@ Array of table & \code{[[fruit]]} & \\
 \end{tabular}
 \end{center}
 
-\subsection{Where to write and how it works}
+\subsection{Where to write}
 \label{sec:toml-where}
 
-\subsection{Top-level keys}
+You have two options to write the configuration for \prog{llmk} in TOML format:
+(1)~creating a special file \code{llmk.toml} and (2)~writing a TOML field in
+your {\LaTeX} source file. Either way, you have full access to the \prog{llmk}
+configuration and specify the same workflows in (almost) the same manner.
+
+\subsubsection*{Special file: \code{llmk.toml}}
+
+When the \code{llmk} command is executed without any argument, the special file
+\code{llmk.toml} is loaded automatically (Section~\ref{sec:command}). This
+filename is fixed and cannot be customized at this point. The entire content of
+the file must be a valid TOML; you can include supplemental information in the
+form of TOML comment that starts with the \code{\#} character. The file must
+be encoded in UTF-8 because it is required by the TOML specification~\cite{toml}.
+
+\subsubsection*{TOML field}
+
+The other way to pass the configuration in TOML format to \prog{llmk} is using
+\emph{TOML fields}\Dash special comment areas in {\LaTeX} source files that are
+given by comment lines containing only three or more consecutive \code{+}
+characters. The following is a simple example.
+%
+\begin{lstlisting}[style=latex]
+% +++
+% # This is a sample TOML field!
+% latex = "xelatex"
+% +++
+\documentclass{article}
+\end{lstlisting}
+
+The formal syntax of opening and closing for TOML fields is:
+%
+\begin{htcode}
+\meta{optional spaces}%\meta{optional spaces}+++\meta{optional pluses}\meta{optional spaces}
+\end{htcode}
+%
+where the definitions of \meta{optional spaces} and \meta{optional pluses} are
+given as follows (herein, \meta{whitespace} denotes tab \texttt{0x09} or space
+\texttt{0x20}).
+%
+\begin{align*}
+&\text{\meta{optional spaces}}
+  \longrightarrow \text{\meta{empty}}
+  \mid\text{\meta{whitespace}\meta{optional spaces}} \\
+&\text{\meta{optional pluses}}
+  \longrightarrow \text{\meta{empty}}
+  \mid\text{\code{+}\meta{optional pluses}}
+\end{align*}
+
+The line of opening and closing for TOML fields must include only the
+characters specified in the above. In a TOML filed, you can write TOML code for
+\prog{llmk} configuration in the form of {\LaTeX} comment lines.
+%
+\begin{htcode}
+\meta{optional spaces}%\meta{optional spaces}\meta{TOML line}\meta{optional spaces}
+\end{htcode}
+
+If one or more arguments are given for the \code{llmk} command, it first looks
+for a TOML field from the beginning of each file. Only the topmost field in a
+file is the valid TOML field, \ie you cannot have multiple TOML fields in a
+file. TOML fields have the highest priority for \prog{llmk} configuration; if a
+TOML field is found in a file, other supported magic comments described in
+Section~\ref{sec:magic-comment} are ignored.
+
+Though the author recommend you to always encode your {\LaTeX} source file in
+UTF-8, you can use other encodings. In any case, the TOML lines in the fields
+must be consist of valid UTF-8 encoded strings. Therefore, it is recommended to
+use only the characters in the range of ASCII code in your TOML field if you
+chose the other encodings for some reasons.
+
+\subsection{Available top-level keys}
 \label{sec:top-level-keys}
 
-\subsection{The \code{programs} table}
-\label{sec:programs-table}
+\subsection{Available keys in \code{programs} table}
+\label{sec:keys-in-programs}
+
+\subsection{Default \code{sequence} and \code{programs}}
 
 \section{Other supported formats}
 \label{sec:magic-comment}
