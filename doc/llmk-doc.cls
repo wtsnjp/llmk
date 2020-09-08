@@ -165,12 +165,6 @@
 \newcommand*{\hyph}{-}
 \newcommand*{\meta}[1]{\bgroup
   \normalfont\color{special}$\langle$\textit{#1}$\rangle$\egroup}
-\newcommand*{\metatab}{\code{\char`\\t}}
-\newcommand*{\choice}[1]{\bgroup
-  \def\@delim{\def\@delim{\space\char`\|\space}}%
-  \normalfont\color{special}%
-  \@for\@item:=#1\do{\@delim\@item}%
-  \egroup}
 \newcommand*{\code}[1]{\bgroup
   \chardef\_=`\_\code@font #1\egroup}
 \newcommand*{\sopt}[1]{\hyperlink{clo:#1}{\code{\hyph#1}}}
@@ -180,6 +174,12 @@
   \edef\x{\noexpand\def\noexpand\@tmp@hyname{ckey:#1}}%
   \expandafter\egroup\x
   \hyperlink{\@tmp@hyname}{\code{#1}}}
+\newcommand*{\progname}[1]{\bgroup
+  \def\_{-}\def\meta##1{##1}%
+  \edef\x{\noexpand\def\noexpand\@tmp@hyname{prog:#1}}%
+  \expandafter\egroup\x
+  \hyperlink{\@tmp@hyname}{\code{#1}}}
+\newcommand*{\type}[1]{\textcolor{special}{#1}}
 
 % verbatim
 \def\code@font{% code
@@ -252,7 +252,7 @@
     \edef\x{\noexpand\def\noexpand\@tmp@hyname{ckey:#1}}%
     \expandafter\egroup\x
     \needspace{3ex}\noindent
-    \hypertarget{\@tmp@hyname}{\code{#1 = #2}}%
+    \hypertarget{\@tmp@hyname}{\code{#1} [#2]}%
     \IfNoValueF{#3}{\hfill (#3)}%
     \begin{manual@entry}%
   }

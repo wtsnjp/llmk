@@ -260,7 +260,7 @@ Date \& Time & \code{1979-05-27} & \\ \midrule
 Array & \code{[1, 2, 3]} & \ok \\ \midrule
 Table & \code{[table]} & \ok \\
 Inline table & & \\
-Array of table & \code{[[fruit]]} & \\
+Array of tables & \code{[[fruit]]} & \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -340,10 +340,152 @@ chose the other encodings for some reasons.
 \subsection{Available top-level keys}
 \label{sec:top-level-keys}
 
+Now we are going to look over all available TOML keys for \prog{llmk}
+configuration. This section includes the full list of available top-level keys,
+that are effective for an entire workflow. The detailed specification for each
+program in your workflow can be given by the keys in the \ckey{programs} table,
+which will be described in the next section. Only the keys shown in these two
+sections are effective for \prog{llmk}; if other key names are specified, they
+will be ignored. Each key requests a value of specified type; if a value of
+which is not the expected type, it will result in a type error.
+
+In the string values for some specific keys, a few \emph{format specifiers} are
+available. These specifiers will be replaced to appropriate strings before
+executing actions by \prog{llmk}:
+%
+\begin{itemize}
+\item |%S|
+  is replaced by the filename given to the \code{llmk} as a command-line
+  argument or as an element of the \ckey{source} array.
+\item |%T|
+  is replaced by the target for each program.
+\item |%B|
+  is replaced by the basename of |%S|.
+\end{itemize}
+
+Some keys have default values; the default configuration of \prog{llmk} should
+work well for typical and simple {\LaTeX} documents. Only the keys you
+explicitly specify in the TOML format override the default configuration. If
+you do not write a key in your configuration, the default value will be used.
+In other words, you only need to write the differences from the default
+configuration.
+
+\begin{confkey}{bibtex}{type: \type{string}}
+The command to use for the \progname{bibtex} program. Internally, this key is
+an alias for the \ckey{command} key in the \progname{bibtex} entry (default:
+\code{"bibtex"}). If the \ckey{command} key is specified in the \ckey{programs}
+table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{clean\_files}{type: \type{array of strings}}[default: see bellow]
+The files to be removed with the cleaning action (\lopt{clean}). The format
+specifiers are available for this key. The default value is:
+%
+\begin{htcode}
+[
+  "%B.aux", "%B.bbl", "%B.bcf", "%B-blx.bib", "%B.blg", "%B.fls",
+  "%B.idx", "%B.ilg", "%B.log", "%B.out", "%B.run.xml", "%B.toc"
+]
+\end{htcode}
+\end{confkey}
+
+\begin{confkey}{clobber\_files}{type: \type{array of strings}}
+  [default: see bellow]
+The files to be removed with the clobbering action (\lopt{clobber}). The format
+specifiers are available for this key. The default value is:
+%
+\begin{htcode}
+["%B.dvi", "%B.pdf", "%B.ps", "%B.synctex.gz"]
+\end{htcode}
+\end{confkey}
+
+\begin{confkey}{dvipdf}{type: \type{string}}
+The command to use for the \progname{dvipdf} program. Internally, this key is
+an alias for the \ckey{command} key in the \progname{dvipdf} entry (default:
+\code{"dvipdfmx"}). If the \ckey{command} key is specified in the \ckey{programs}
+table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{dvips}{type: \type{string}}
+The command to use for the \progname{dvips} program. Internally, this key is
+an alias for the \ckey{command} key in the \progname{dvips} entry (default:
+\code{"dvips"}). If the \ckey{command} key is specified in the \ckey{programs}
+table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{latex}{type: \type{string}}
+The command to use for the \progname{latex} program. Internally, this key is an
+alias for the \ckey{command} key in the \progname{latex} entry (default:
+\code{"lualatex"}). If the \ckey{command} key is specified in the
+\ckey{programs} table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{llmk\_version}{type: \type{string}}
+You can declare the \prog{llmk} version to use with this key. This is
+especially useful in consideration of compatibility. In case breaking changes
+are made in the future updates and an incompatible version is declared with the
+key, \prog{llmk} will fallback to the previous behavior or at least show you a
+warning message. The versioning of \prog{llmk} will try to follow the semantic
+versioning~\cite{semvar} and you can specify one of the versions in the
+following syntax:
+%
+\begin{htcode}
+\meta{major}.\meta{minor}.\meta{patch}
+\end{htcode}
+%
+Optionally, you can ommit the tailing \code{.\meta{patch}} part.
+\end{confkey}
+
+\begin{confkey}{makeindex}{type: \type{string}}
+The command to use for the \progname{makeindex} program. Internally, this key
+is an alias for the \ckey{command} key in the \progname{makeindex} entry
+(default: \code{"makeindex"}). If the \ckey{command} key is specified in the
+\ckey{programs} table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{max\_repeat}{type: \type{integer}}[default: \code{5}]
+You can specify the maximum number of execution repetitions for each command in
+your \ckey{sequence}. When processing your \ckey{sequence}, \prog{llmk} repeats
+a command until \ckey{aux\_file} becomes unchanged from the former execution if
+the key is specified and the corresponding auxiliary file exists. This key is to
+prevent the potential infinite loop of repetition.
+\end{confkey}
+
+\begin{confkey}{programs}{type: \type{table}}
+  [default: see Section~\ref{sec:default-config}]
+The table that contains the detailed configuration for each program. See
+Section~\ref{sec:keys-in-programs} for the details.
+\end{confkey}
+
+\begin{confkey}{ps2pdf}{type: \type{string}}
+The command to use for the \progname{ps2pdf} program. Internally, this key is
+an alias for the \ckey{command} key in the \progname{ps2pdf} entry (default:
+\code{"ps2pdf"}). If the \ckey{command} key is specified in the \ckey{programs}
+table, this alias is ineffective.
+\end{confkey}
+
+\begin{confkey}{sequence}{type: \type{array of strings}}
+  [default: \code{["latex", "bibtex", "makeindex", "dvipdf"]}]
+The array that contains the names of programs that will be executed by
+\prog{llmk}. The programs specified in this array are processed in the given
+order with the setups specified in the \ckey{programs} table. Further
+information about the default behavior can be found in
+Section~\ref{sec:default-config}.
+\end{confkey}
+
+\begin{confkey}{source}{type: \type{string} or \type{array of strings}}
+You can specify a {\LaTeX} source file as a \type{string} value or one or more
+files as an \type{array of strings}. This key is only effective and
+\emph{required} in \code{llmk.toml}. Conversely, ineffective in TOML fields.
+The given filenames will be treated as well as those specified as command-line
+arguments.
+\end{confkey}
+
 \subsection{Available keys in \code{programs} table}
 \label{sec:keys-in-programs}
 
 \subsection{Default \code{sequence} and \code{programs}}
+\label{sec:default-config}
 
 \section{Other supported formats}
 \label{sec:magic-comment}
@@ -366,6 +508,10 @@ gave me advice and suggestions for new features for the \prog{llmk} project.
 \bibitem{latexmk}
   John Collins. \textit{latexmk\Dash generate {\LaTeX} document}.
   \url{https://ctan.org/pkg/latexmk}
+
+\bibitem{semvar}
+  Tom Preston-Werner. \textit{Semantic Versioning 2.0.0}.
+  \url{https://semver.org/}
 
 \bibitem{toml}
   Tom Preston-Werner. \textit{TOML: Tom's Obvious Minimal Language}.
