@@ -72,13 +72,14 @@ M.top_level_spec = {
 
 M.program_spec = {
   -- <item> = {<type>, {<specifiers allowed>, <default value>}}
-  command = {'string', {false, ''}}, -- '' default because it must be string
-  target = {'string', {true, '%S'}},
-  generated_target = {'bool', {false, false}},
-  opts = {'*[string]', {true, {}}},
   args = {'*[string]', {true, {'%T'}}},
-  auxiliary = {'string', {true, nil}},
+  aux_file = {'string', {true, nil}},
+  aux_empty_size = {'integer', {false, nil}},
+  command = {'string', {false, ''}}, -- '' default because it must be string
+  generated_target = {'bool', {false, false}},
+  opts = {'*[string]', {true, nil}},
   postprocess = {'string', {false, nil}},
+  target = {'string', {true, '%S'}},
 }
 
 M.default_programs = {
@@ -88,7 +89,8 @@ M.default_programs = {
       '-file-line-error',
       '-synctex=1',
     },
-    auxiliary = '%B.aux',
+    aux_file = '%B.aux',
+    aux_empty_size = 9, -- "\\relax \n" is empty
   },
   bibtex = {
     target = '%B.bib',
@@ -1005,24 +1007,24 @@ local function init_file_database(programs, fn, config)
   -- the template
   local fdb = {
     targets = {},
-    auxiliary = {},
+    aux_files = {},
   }
 
   -- investigate current status
   for _, v in ipairs(config.sequence) do
     -- names
     local cur_target = programs[v].target
-    local cur_aux = programs[v].auxiliary
+    local cur_aux = programs[v].aux_file
 
     -- target
     if lfs.isfile(cur_target) and not fdb.targets[cur_target] then
       fdb.targets[cur_target] = file_status(cur_target)
     end
 
-    -- auxiliary
-    if cur_aux then -- `prog.auxiliary` is optional
-      if lfs.isfile(cur_aux) and not fdb.auxiliary[cur_aux] then
-        fdb.auxiliary[cur_aux] = file_status(cur_aux)
+    -- aux_file
+    if cur_aux then -- `prog.aux_file` is optional
+      if lfs.isfile(cur_aux) and not fdb.aux_files[cur_aux] then
+        fdb.aux_files[cur_aux] = file_status(cur_aux)
       end
     end
   end
@@ -1058,7 +1060,7 @@ end
 local function check_rerun(prog, fdb)
   llmk.util.dbg_print('run', 'Checking the neccessity of rerun')
 
-  local aux = prog.auxiliary
+  local aux = prog.aux_file
   local old_aux_exist = false
   local old_status
 
@@ -1075,12 +1077,12 @@ local function check_rerun(prog, fdb)
   end
 
   -- copy old information and update fdb
-  if fdb.auxiliary[aux] then
+  if fdb.aux_files[aux] then
     old_aux_exist = true
-    old_status = table_copy(fdb.auxiliary[aux])
+    old_status = table_copy(fdb.aux_files[aux])
   end
   local aux_status = file_status(aux)
-  fdb.auxiliary[aux] = aux_status
+  fdb.aux_files[aux] = aux_status
 
   -- if aux file is not new, no rerun
   local new = aux_status.mtime >= start_time
@@ -1094,7 +1096,7 @@ local function check_rerun(prog, fdb)
   end
 
   -- if aux file is empty (or almost), no rerun
-  if aux_status.size < 9 then -- aux file contains "\\relax \n" by default
+  if aux_status.size < prog.aux_empty_size then
     llmk.util.dbg_print('run', 'No rerun because the aux file is (almost) empty')
     return false, fdb
   end
