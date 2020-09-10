@@ -208,7 +208,19 @@
   xrightmargin=15pt,
   basicstyle=\ttfamily\small,
   stepnumber=1,
-  keywordstyle={\bfseries\color{code}},
+  keywords={
+    args,aux_file,aux_empty_size,command,generated_target,opts,
+    postprocess,target,sequence
+  },
+  keywordstyle={\color{code}},
+  alsoletter={=},
+  keywords=[2]{=},
+  keywordstyle=[2]{\color{black}},
+  %keywords=[3]{true,false},
+  %keywordstyle=[3]{\color{special}},
+  %string=[b]",
+  %stringstyle={\color{special}},
+  comment=[l]\#,
   commentstyle=\color{darkgray}}
 \lstdefinestyle{latex}{
   columns=fullflexible,
@@ -259,6 +271,15 @@
     \begin{manual@entry}%
   }
   {\ifvmode\else\unskip\fi\end{manual@entry}}
+
+\NewDocumentCommand{\Program}{ m }
+  {%
+    \bgroup
+    \def\_{-}\def\meta##1{##1}%
+    \edef\x{\noexpand\def\noexpand\@tmp@hyname{prog:#1}}%
+    \expandafter\egroup\x
+    \hypertarget{\@tmp@hyname}{\paragraph{Program \code{#1}}}%
+  }
 
 % code in hors-text
 \newenvironment{htcode}

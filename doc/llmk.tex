@@ -1,5 +1,5 @@
 % llmk: the reference manual
-% Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
+% Copyright 2020 Takuto ASAKURA (wtsnjp)
 
 % +++
 % latex = "xelatex"
@@ -455,7 +455,7 @@ prevent the potential infinite loop of repetition.
 \end{confkey}
 
 \begin{confkey}{programs}{type: \type{table}}
-  [default: see Section~\ref{sec:default-config}]
+  [default: see Section~\ref{sec:default-programs}]
 The table that contains the detailed configuration for each program. See
 Section~\ref{sec:keys-in-programs} for the details.
 \end{confkey}
@@ -468,12 +468,12 @@ ineffective.
 \end{confkey}
 
 \begin{confkey}{sequence}{type: \type{array of strings}}
-  [default: \code{["latex", "bibtex", "makeindex", "dvipdf"]}]
+  [default: see Section~\ref{sec:default-sequence}]
 The array that contains the names of programs that will be executed by
 \prog{llmk}. The programs specified in this array are processed in the given
 order with the setups specified in the \ckey{programs} table. Further
 information about the default behavior can be found in
-Section~\ref{sec:default-config}.
+Section~\ref{sec:default-sequence}.
 \end{confkey}
 
 \begin{confkey}{source}{type: \type{string} or \type{array of strings}}
@@ -492,12 +492,12 @@ the \ckey{sequence} array in the given order. You can control each program
 execution by specifying the detailed configuration in the \ckey{programs}
 table.
 
-The \ckey{programs} table is a table of table; each of the entries (\aka
+The \ckey{programs} table is a table of tables; each of the entries (\aka
 elements) is a set of configuration consists of the keys in the following list.
 The \ckey{programs} table must have corresponding entries for all names in the
-\ckey{sequence} array, otherwise it will result in an error.
+\ckey{sequence} array, otherwise, it will result in an error.
 
-As well as the top-level keys, some available keys in \ckey{programs} table
+As well as the top-level keys, some available keys in the \ckey{programs} table
 have default values, and only the values for the keys you explicitly specified
 in your configuration override. In string values for some specific keys, the
 format specifiers described in Section~\ref{sec:top-level-keys} can be used in
@@ -517,7 +517,7 @@ program is necessary or not. If this key is set and the specified file that is
 non-empty (see \ckey{aux\_empty\_size}) exists, \prog{llmk} will repeat the
 program execution until no change is made to the auxiliary file. This key is
 originally for the auxiliary file of {\LaTeX}, but the monitoring feature
-should be applicable for other programs. The format specifiers are available
+should be applicable to other programs. The format specifiers are available
 for this key.
 \end{confkey}
 
@@ -525,7 +525,7 @@ for this key.
 The empty size in bytes with this key, The auxiliary files specified with the
 \ckey{aux\_file} which is smaller than the value of this key are recognized as
 \emph{empty} and will be ignored. For instance, the auxiliary files of {\LaTeX},
-that normally have \code{.aux} extensions, contains
+which normally have \code{.aux} extensions, contain
 |\cs{relax}\textvisiblespace\meta{line break}| (9 bytes); thus the default
 value of this key for the \progname{latex} program is \code{9}.
 \end{confkey}
@@ -537,7 +537,7 @@ each entry in the \ckey{programs} table.
 
 \begin{confkey}{generated\_target}{type: \type{boolean}}
 This flag is to denote whether or not the \ckey{target} is a file that should
-be generated in the \ckey{sequence} execution. For instance DVI files, PS files,
+be generated in the \ckey{sequence} execution. For instance, DVI files, PS files,
 and the input files for \prog{makeindex}, which have \code{.idx} extensions are
 applicable. Conversely, files that you directly edit are not generated files.
 When the value is \code{true}, \prog{llmk} will consider only the target files
@@ -560,14 +560,138 @@ program is executed.
 \begin{confkey}{target}{type: \type{string}}[default: \code{"\%S"}]
 The target filename of the program. The existence of the target file is checked
 by \prog{llmk} right before trying to execute each program, and the programs
-are invoked only when it exists. This filename is also used for replacing value
-for the format specifiers. When this key is not specified, the input filename
-that is given as a command-line argument, or the filename in the value for the
-\ckey{source} key is used as target.
+are invoked only when it exists. This filename is also used for replacing the
+value for the format specifiers. When this key is not specified, the input
+filename that is given as a command-line argument, or the filename in the value
+for the \ckey{source} key is used as a target.
 \end{confkey}
 
 \subsection{Default \code{programs} and \code{sequence}}
-\label{sec:default-config}
+
+In this section, the default values of the two important data structures for
+advanced control for \prog{llmk}, \ie the default configuration for the
+\ckey{programs} table and the \ckey{sequence} array. As it is already described
+in Section~\ref{sec:top-level-keys}, \ckey{programs} is the table to contain
+detailed configuration for each program to execute by \prog{llmk}, and
+\ckey{sequence} is an array to contain the names of entries in the
+\ckey{programs} table in the order of execution for a workflow. The default
+values of these are designed to work well for typical {\LaTeX} documents.
+Therefore, you normally do not need to change the values, but you can override
+any of the values by writing new values in your TOML configuration.
+
+\subsubsection{The default \code{programs}}
+\label{sec:default-programs}
+
+The followings are the default values in the \ckey{programs} table for each
+entry, \ie program, expressed in the TOML format. The default \ckey{programs}
+table contains useful settings for popular tools in the ecosystem of {\LaTeX}%
+\footnote{Reuquests for new settings for other programs will be considered.}.
+Only some of them are used in the default \ckey{sequence} (see Section~%
+\ref{sec:default-sequence}), but other entries can be easily used just by
+overriding the \ckey{sequence} array.
+
+\Program{bibtex} The entry for the {\BibTeX} program and friends. The
+\progname{latex} program is set as \ckey{postprocess} so that to make sure
+rerunning {\LaTeX} command after this execution.
+%
+\begin{lstlisting}[style=toml]
+[programs.bibtex]
+command = "bibtex"
+target = "%B.bib"
+args = ["%B"]
+postprocess = "latex"
+\end{lstlisting}
+
+\Program{dvipdf} The entry for the \prog{dvipdf} program and friends.
+%
+\begin{lstlisting}[style=toml]
+[programs.dvipdf]
+command = "dvipdfmx"
+target = "%B.dvi"
+generated_target = true
+\end{lstlisting}
+
+\Program{dvips} The entry for the \prog{dvips} program and friends.
+%
+\begin{lstlisting}[style=toml]
+[programs.dvips]
+command = "dvips"
+target = "%B.dvi"
+generated_target = true
+\end{lstlisting}
+
+\Program{latex} The entry for the main {\LaTeX} programs. The default value for
+the \ckey{command} is \code{"lualatex"}; since \prog{llmk} runs on
+\code{texlua}, the installation of {\LuaTeX} is guaranteed. That is why the
+command is chosen for the default.
+%
+\begin{lstlisting}[style=toml]
+[programs.latex]
+command = "lualatex"
+opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]
+aux_file = "%B.aux"
+aux_empty_size = 9
+\end{lstlisting}
+
+\Program{makeindex} The entry for the Makeindex program and friends. The
+\progname{latex} program is set as \ckey{postprocess} so that to make sure
+rerunning {\LaTeX} command after this execution.
+%
+\begin{lstlisting}[style=toml]
+[programs.makeindex]
+command = "makeindex"
+target = "%B.idx"
+generated_target = true
+postprocess = "latex"
+\end{lstlisting}
+
+\Program{ps2pdf} The entry for the \prog{ps2pdf} program and friends.
+%
+\begin{lstlisting}[style=toml]
+[programs.ps2pdf]
+command = "ps2pdf"
+target = "%B.ps"
+generated_target = true
+\end{lstlisting}
+
+\subsubsection{The default \code{sequence}}
+\label{sec:default-sequence}
+
+The following is the default value for the \ckey{sequence} array:
+%
+\begin{htcode}
+["latex", "bibtex", "makeindex", "dvipdf"]
+\end{htcode}
+
+With these default settings in the \ckey{programs} table the \ckey{sequence}
+array, the default behavior of \prog{llmk} can be summarized as follows.
+%
+\begin{enumerate}
+\item It runs the {\LaTeX} command, by default {\LuaLaTeX}, against your
+  {\LaTeX} source file. This execution may be repeated when the auxiliary file
+  exists until no change made for the file to resolve all cross-references and
+  so on.
+\item If the corresponding {\BibTeX} database file, whose name matches to
+  \code{\%B.bib}, exists, the {\BibTeX} program is executed. When the execution
+  occurs, the \progname{latex} program is executed again right after because
+  the program is set as \ckey{postprocess}.
+\item Identically, if the corresponding input file for Makeindex exists, the
+  program is executed. When the execution occurs, the \progname{latex} program
+  is executed again right after because the program is set as \ckey{postprocess}.
+\item In case the corresponding DVI file is generated in the previous steps,
+  though this will not happen with the default value of \ckey{latex}, \ie
+  \code{"lualatex"}, the \progname{dvipdf} program, by default \code{dvipdfmx},
+  is executed to produce the final PDF file.
+\end{enumerate}
+
+The entries that are not used within the default \ckey{sequence} are to make it
+easier to use other tools from the above. For instance, if you wan to use
+$\text{\progname{dvips}}+\text{\progname{ps2pdf}}$ combination instead of
+\progname{dvipdf}, you can just modify the value of \ckey{sequence} a bit:
+%
+\begin{lstlisting}[style=toml]
+sequence = ["latex", "bibtex", "makeindex", "dvips", "ps2pdf"]
+\end{lstlisting}
 
 \section{Other supported formats}
 \label{sec:magic-comment}
