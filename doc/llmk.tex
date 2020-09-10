@@ -280,7 +280,9 @@ When the \code{llmk} command is executed without any argument, the special file
 filename is fixed and cannot be customized at this point. The entire content of
 the file must be a valid TOML; you can include supplemental information in the
 form of TOML comment that starts with the \code{\#} character. The file must
-be encoded in UTF-8 because it is required by the TOML specification~\cite{toml}.
+be encoded in UTF-8 because it is required by the TOML
+specification~\cite{toml}. The \ckey{source} key is \emph{required} in this
+file.
 
 \subsubsection*{TOML field}
 
@@ -370,14 +372,15 @@ you do not write a key in your configuration, the default value will be used.
 In other words, you only need to write the differences from the default
 configuration.
 
-\begin{confkey}{bibtex}{type: \type{string}}
+\begin{confkey}{bibtex}{type: \type{string}}[default: \code{"bibtex"}]
 The command to use for the \progname{bibtex} program. Internally, this key is
-an alias for the \ckey{command} key in the \progname{bibtex} entry (default:
-\code{"bibtex"}). If the \ckey{command} key is specified in the \ckey{programs}
-table, this alias is ineffective.
+an alias for the \ckey{command} key in the \progname{bibtex} entry. If the
+\ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
-\begin{confkey}{clean\_files}{type: \type{array of strings}}[default: see bellow]
+\begin{confkey}{clean\_files}{type: \type{array of strings}}
+  [default: see bellow]
 The files to be removed with the cleaning action (\lopt{clean}). The format
 specifiers are available for this key. The default value is:
 %
@@ -399,25 +402,25 @@ specifiers are available for this key. The default value is:
 \end{htcode}
 \end{confkey}
 
-\begin{confkey}{dvipdf}{type: \type{string}}
+\begin{confkey}{dvipdf}{type: \type{string}}[default: \code{"dvipdfmx"}]
 The command to use for the \progname{dvipdf} program. Internally, this key is
-an alias for the \ckey{command} key in the \progname{dvipdf} entry (default:
-\code{"dvipdfmx"}). If the \ckey{command} key is specified in the \ckey{programs}
-table, this alias is ineffective.
+an alias for the \ckey{command} key in the \progname{dvipdf} entry. If the
+\ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
-\begin{confkey}{dvips}{type: \type{string}}
-The command to use for the \progname{dvips} program. Internally, this key is
-an alias for the \ckey{command} key in the \progname{dvips} entry (default:
-\code{"dvips"}). If the \ckey{command} key is specified in the \ckey{programs}
-table, this alias is ineffective.
+\begin{confkey}{dvips}{type: \type{string}}[default: \code{"dvips"}]
+The command to use for the \progname{dvips} program. Internally, this key is an
+alias for the \ckey{command} key in the \progname{dvips} entry. If the
+\ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
-\begin{confkey}{latex}{type: \type{string}}
+\begin{confkey}{latex}{type: \type{string}}[default: \code{"lualatex"}]
 The command to use for the \progname{latex} program. Internally, this key is an
-alias for the \ckey{command} key in the \progname{latex} entry (default:
-\code{"lualatex"}). If the \ckey{command} key is specified in the
-\ckey{programs} table, this alias is ineffective.
+alias for the \ckey{command} key in the \progname{latex} entry. If the
+\ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
 \begin{confkey}{llmk\_version}{type: \type{string}}
@@ -436,11 +439,11 @@ following syntax:
 Optionally, you can ommit the tailing \code{.\meta{patch}} part.
 \end{confkey}
 
-\begin{confkey}{makeindex}{type: \type{string}}
+\begin{confkey}{makeindex}{type: \type{string}}[default: \code{"makeindex"}]
 The command to use for the \progname{makeindex} program. Internally, this key
-is an alias for the \ckey{command} key in the \progname{makeindex} entry
-(default: \code{"makeindex"}). If the \ckey{command} key is specified in the
-\ckey{programs} table, this alias is ineffective.
+is an alias for the \ckey{command} key in the \progname{makeindex} entry. If
+the \ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
 \begin{confkey}{max\_repeat}{type: \type{integer}}[default: \code{5}]
@@ -457,11 +460,11 @@ The table that contains the detailed configuration for each program. See
 Section~\ref{sec:keys-in-programs} for the details.
 \end{confkey}
 
-\begin{confkey}{ps2pdf}{type: \type{string}}
+\begin{confkey}{ps2pdf}{type: \type{string}}[default: \code{"ps2pdf"}]
 The command to use for the \progname{ps2pdf} program. Internally, this key is
-an alias for the \ckey{command} key in the \progname{ps2pdf} entry (default:
-\code{"ps2pdf"}). If the \ckey{command} key is specified in the \ckey{programs}
-table, this alias is ineffective.
+an alias for the \ckey{command} key in the \progname{ps2pdf} entry. If the
+\ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
 \end{confkey}
 
 \begin{confkey}{sequence}{type: \type{array of strings}}
@@ -484,7 +487,86 @@ arguments.
 \subsection{Available keys in \code{programs} table}
 \label{sec:keys-in-programs}
 
-\subsection{Default \code{sequence} and \code{programs}}
+As it is described, \prog{llmk} invokes each program whose name specified in
+the \ckey{sequence} array in the given order. You can control each program
+execution by specifying the detailed configuration in the \ckey{programs}
+table.
+
+The \ckey{programs} table is a table of table; each of the entries (\aka
+elements) is a set of configuration consists of the keys in the following list.
+The \ckey{programs} table must have corresponding entries for all names in the
+\ckey{sequence} array, otherwise it will result in an error.
+
+As well as the top-level keys, some available keys in \ckey{programs} table
+have default values, and only the values for the keys you explicitly specified
+in your configuration override. In string values for some specific keys, the
+format specifiers described in Section~\ref{sec:top-level-keys} can be used in
+the same way.
+
+\begin{confkey}{args}{type: \type{string} or \type{array of strings}}
+  [default: \code{["\%T"]}]
+You can specify an argument to give the command as a \type{string} value or one
+or more arguments as an \type{array of strings}. Each argument will be
+surrounded by a pair of double quotations, \eg \code{"arg"}. The format
+specifiers are available for this key.
+\end{confkey}
+
+\begin{confkey}{aux\_file}{type: \type{string}}
+The auxiliary file to monitor so that to check whether rerunning for the
+program is necessary or not. If this key is set and the specified file that is
+non-empty (see \ckey{aux\_empty\_size}) exists, \prog{llmk} will repeat the
+program execution until no change is made to the auxiliary file. This key is
+originally for the auxiliary file of {\LaTeX}, but the monitoring feature
+should be applicable for other programs. The format specifiers are available
+for this key.
+\end{confkey}
+
+\begin{confkey}{aux\_empty\_size}{type: \type{integer}}
+The empty size in bytes with this key, The auxiliary files specified with the
+\ckey{aux\_file} which is smaller than the value of this key are recognized as
+\emph{empty} and will be ignored. For instance, the auxiliary files of {\LaTeX},
+that normally have \code{.aux} extensions, contains
+|\cs{relax}\textvisiblespace\meta{line break}| (9 bytes); thus the default
+value of this key for the \progname{latex} program is \code{9}.
+\end{confkey}
+
+\begin{confkey}{command}{type: \type{string}}
+The name of the command to invoke. This is the only \emph{required} key for
+each entry in the \ckey{programs} table.
+\end{confkey}
+
+\begin{confkey}{generated\_target}{type: \type{boolean}}
+This flag is to denote whether or not the \ckey{target} is a file that should
+be generated in the \ckey{sequence} execution. For instance DVI files, PS files,
+and the input files for \prog{makeindex}, which have \code{.idx} extensions are
+applicable. Conversely, files that you directly edit are not generated files.
+When the value is \code{true}, \prog{llmk} will consider only the target files
+newer than the time that the sequence processing starts. In case the target
+file is older, it will be ignored and the program will not be called.
+\end{confkey}
+
+\begin{confkey}{opts}{type: \type{string} or \type{array of strings}}
+You can specify a command-line option to give the command as a \type{string}
+value or one or more options as an \type{array of strings}. The format
+specifiers are available for this key.
+\end{confkey}
+
+\begin{confkey}{postprocess}{type: \type{string}}
+The name of a program (in the \ckey{programs} table) to be executed as
+postprocess. The specified program will be called only when the current main
+program is executed.
+\end{confkey}
+
+\begin{confkey}{target}{type: \type{string}}[default: \code{"\%S"}]
+The target filename of the program. The existence of the target file is checked
+by \prog{llmk} right before trying to execute each program, and the programs
+are invoked only when it exists. This filename is also used for replacing value
+for the format specifiers. When this key is not specified, the input filename
+that is given as a command-line argument, or the filename in the value for the
+\ckey{source} key is used as target.
+\end{confkey}
+
+\subsection{Default \code{programs} and \code{sequence}}
 \label{sec:default-config}
 
 \section{Other supported formats}
