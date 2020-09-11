@@ -44,7 +44,7 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(last_command_started).to be_successfully_executed
     end
   end
-  
+
   context "simple.tex" do
     before(:each) { run_llmk "-v", "simple.tex" }
     before(:each) { stop_all_commands }
@@ -58,7 +58,7 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(last_command_started).to be_successfully_executed
     end
   end
-  
+
   context "complex.tex" do
     before(:each) { run_llmk "-v", "complex.tex" }
     before(:each) { stop_all_commands }
@@ -73,7 +73,7 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(last_command_started).to be_successfully_executed
     end
   end
-  
+
   context "platex.tex" do
     before(:each) { run_llmk "-v", "platex.tex" }
     before(:each) { stop_all_commands }
@@ -84,6 +84,34 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line 'Running command: dvipdfmx "platex.dvi"')
 
       expect(file?('platex.pdf')).to be true
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+
+  context "shebang.tex" do
+    before(:each) { run_llmk "-v", "shebang.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce shebang.pdf" do
+      expect(stderr).to include(info_line_seq 'shebang.tex')
+      expect(stderr).to include(info_line_runcmd 'pdflatex', 'shebang.tex')
+
+      expect(file?('shebang.pdf')).to be true
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+
+  context "texshop.tex" do
+    before(:each) { run_llmk "-v", "texshop.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce texshop.pdf" do
+      expect(stderr).to include(info_line_seq 'texshop.tex')
+      expect(stderr).to include(info_line_runcmd 'xelatex', 'texshop.tex')
+
+      expect(file?('texshop.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
     end

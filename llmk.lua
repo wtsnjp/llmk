@@ -83,23 +83,9 @@ M.program_spec = {
 }
 
 M.default_programs = {
-  latex = {
-    opts = {
-      '-interaction=nonstopmode',
-      '-file-line-error',
-      '-synctex=1',
-    },
-    aux_file = '%B.aux',
-    aux_empty_size = 9, -- "\\relax \n" is empty
-  },
   bibtex = {
     target = '%B.bib',
     args = {'%B'}, -- "%B.bib" will result in an error
-    postprocess = 'latex',
-  },
-  makeindex = {
-    target = '%B.idx',
-    generated_target = true,
     postprocess = 'latex',
   },
   dvipdf = {
@@ -109,6 +95,20 @@ M.default_programs = {
   dvips = {
     target = '%B.dvi',
     generated_target = true,
+  },
+  latex = {
+    opts = {
+      '-interaction=nonstopmode',
+      '-file-line-error',
+      '-synctex=1',
+    },
+    aux_file = '%B.aux',
+    aux_empty_size = 9, -- "\\relax \n" is empty
+  },
+  makeindex = {
+    target = '%B.idx',
+    generated_target = true,
+    postprocess = 'latex',
   },
   ps2pdf = {
     target = '%B.ps',
@@ -377,7 +377,7 @@ function M.fetch_from_latex_source(fn)
   local toml, line = llmk.parser.get_toml(fn)
   if toml == '' then
     llmk.util.err_print('warning',
-      'Neither TOML field nor shebang is found in "%s"; ' ..
+      'Neither TOML field nor magic comment is found in "%s"; ' ..
       'using default config', fn)
   end
   tab = llmk.parser.parse_toml(toml, {fn, line})
@@ -813,7 +813,11 @@ function M.get_toml(fn)
 
   local f = io.open(toml_source)
 
-  llmk.util.dbg_print('config', 'Fetching TOML from the file "%s"', toml_source)
+  llmk.util.dbg_print('config', 'Looking for config in the file "%s"', toml_source)
+
+  local ts_tmp
+  local ts_latex
+  local ts_bibtex
 
   local first_line = true
   local shebang
@@ -831,25 +835,48 @@ function M.get_toml(fn)
         toml_field = true
         start_pos = line + 1
       else
+        llmk.util.dbg_print('config', 'TOML field found')
         break
       end
     else
       if toml_field then
-        toml = toml .. string.match(l, '^%s*%%%s*(.*)%s*$') .. '\n'
+        toml = toml .. string.match(l, '^%s*%%%s*(.-)%s*$') .. '\n'
       end
     end
 
-    -- 2. shebang
+    -- 2. TeXShop directives
+    ts_tmp = string.match(l, '^%s*%%%s*!%s*TEX%s+program%s*=%s*(.-)%s*$') or
+             string.match(l, '^%s*%%%s*!%s*TEX%s+TS%-program%s*=%s*(.-)%s*$')
+    if ts_tmp then
+      ts_latex = ts_latex or ts_tmp
+    end
+
+    ts_tmp = string.match(l, '^%s*%%%s*!%s*BIB%s+program%s*=%s*(.-)%s*$') or
+             string.match(l, '^%s*%%%s*!%s*BIB%s+TS%-program%s*=%s*(.-)%s*$')
+    if ts_tmp then
+      ts_bibtex = ts_bibtex or ts_tmp
+    end
+
+    -- 3. shebang
     if first_line then
       first_line = false
-      shebang = string.match(l, '^%s*%%#!%s*(.*)%s*$')
+      shebang = string.match(l, '^%s*%%#!%s*(.-)%s*$')
     end
   end
 
   f:close()
 
-  -- shebang to TOML
-  if toml == '' and shebang then
+  -- convert magic or shebang to TOML
+  if toml == '' and (ts_latex or ts_bibtex) then
+    llmk.util.dbg_print('config', 'TeXShop directives found')
+    if ts_latex then
+      toml = toml .. 'latex = "' .. ts_latex .. '"\n'
+    end
+    if ts_bibtex then
+      toml = toml .. 'bibtex = "' .. ts_bibtex .. '"\n'
+    end
+  elseif toml == '' and shebang then
+    llmk.util.dbg_print('config', 'Shebang found')
     toml = 'latex = "' .. shebang .. '"\n'
   end
 
