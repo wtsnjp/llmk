@@ -137,7 +137,10 @@ Alternatively, if the argument is not specified, \prog{llmk} will read the
 special TOML file \code{llmk.toml} in the working directory and execute the
 workflow specified in the file (see Section~\ref{sec:toml}). In case the
 argument is not specified and the \code{llmk.toml} does not exist, it will
-result in an error.
+result in an error. When \prog{llmk} executes the workflow specified in the
+file \code{llmk.toml}, all magic comments, including TOML fields and other
+formats, in each source {\LaTeX} files specified in the \ckey{source} array
+will be ignored.
 
 \subsubsection*{Command-line options \meta{options}}
 
@@ -306,13 +309,13 @@ The formal syntax of opening and closing for TOML fields is:
 \end{htcode}
 %
 where the definitions of \meta{optional spaces} and \meta{optional pluses} are
-given as follows (herein, \meta{whitespace} denotes tab \texttt{0x09} or space
-\texttt{0x20}).
+given as follows (hereafter, whitespace \code{\textvisiblespace} denotes tab
+\texttt{0x09} or space \texttt{0x20}).
 %
 \begin{align*}
 &\text{\meta{optional spaces}}
   \longrightarrow \text{\meta{empty}}
-  \mid\text{\meta{whitespace}\meta{optional spaces}} \\
+  \mid\text{\code{\textvisiblespace}\meta{optional spaces}} \\
 &\text{\meta{optional pluses}}
   \longrightarrow \text{\meta{empty}}
   \mid\text{\code{+}\meta{optional pluses}}
@@ -696,6 +699,124 @@ sequence = ["latex", "bibtex", "makeindex", "dvips", "ps2pdf"]
 \section{Other supported formats}
 \label{sec:magic-comment}
 
+In addition to the TOML format, \prog{llmk} also supports a few other magic
+comment formats that are supported in some existing tools. These features are
+for user convenience, but note that the aim of \prog{llmk} is not to behave
+perfectly compatible with other tools.
+
+For \prog{llmk}, in your {\LaTeX} file, configuration in TOML format has the
+highest priority: when a TOML field is found, all the other magic comments will
+be ignored. The precedence of magic comment formats is as follows. Remember
+that all of these will be ignored if \prog{llmk} uses the configuration in a
+special file \code{llmk.toml}.
+%
+\begin{enumerate}
+\item TOML field (Section~\ref{sec:toml})
+\item {\TeX}Shop directives (Section~\ref{sec:ts-directive})
+\item Shebang-like directive (Section~\ref{sec:shebang})
+\end{enumerate}
+
+\subsection{{\TeX}Shop directives}
+\label{sec:ts-directive}
+
+{\TeX}Shop~\cite{texshop}, a {\TeX}-oriented IDE, understands special
+directives, which typically start with \code{\%\textvisiblespace !TEX}, to
+specify a workflow for processing {\LaTeX} document, \eg which {\TeX} engine to
+use. Similar directives are also supported in a few other tools such as {\TeX}%
+works~\cite{texworks} and {\TeX}studio~\cite{texstudio}.
+
+Among several variation of the directives, \prog{llmk} supports two of them.
+One is the directive to specify a variant of {\TeX} engine. The formal syntax
+of the directive is:
+%
+\bgroup
+\newcommand{\OS}{\meta{optional spaces}}
+\newcommand{\VS}{\textvisiblespace}
+\begin{htcode}
+\meta{TS prefix}TEX\VS{\OS}program\meta{equals}\meta{command}\OS
+\meta{TS prefix}TEX\VS{\OS}TS-program\meta{equals}\meta{command}\OS
+\end{htcode}
+\egroup
+%
+where the definitions of \meta{TS prefix} and \meta{equals} are given as
+follows.
+%
+\bgroup
+\newcommand{\OS}{\meta{optional spaces}}
+\begin{align*}
+&\text{\meta{TS prefix}}
+  \longrightarrow \text{\code{\OS\%\OS!\OS}} \\
+&\text{\meta{equals}}
+  \longrightarrow \text{\code{\OS=\OS}}
+\end{align*}
+\egroup
+%
+The \meta{command} part will be passed to the \ckey{latex} key of \prog{llmk}.
+The other supported {\TeX}Shop directive is that for the {\BibTeX} program. The
+syntax is very similar to the first one:
+%
+\bgroup
+\newcommand{\OS}{\meta{optional spaces}}
+\newcommand{\VS}{\textvisiblespace}
+\begin{htcode}
+\meta{TS prefix}BIB\VS{\OS}program\meta{equals}\meta{command}\OS
+\meta{TS prefix}BIB\VS{\OS}TS-program\meta{equals}\meta{command}\OS
+\end{htcode}
+\egroup
+%
+The \meta{command} part will be passed to the \ckey{bibtex} key of \prog{llmk}.
+For both of the two directives, only the topmost ones are effective; the others
+will be ignored. For example, the following two configuration are equivalent:\\
+%
+\begin{minipage}[t]{.5\textwidth}
+\begin{lstlisting}[style=latex]
+% !TEX TS-program = xelatex
+% !BIB TS-program = biber
+\documentclass{article}
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.49\textwidth}
+\begin{lstlisting}[style=latex]
+% +++
+% latex = "xelatex"
+% bibtex = "biber"
+% +++
+\documentclass{article}
+\end{lstlisting}
+\end{minipage}
+
+\subsection{Shebang-like directive}
+\label{sec:shebang}
+
+A few existing tools, notably the YaTeX mode for Emacs~\cite{yatex}, supports
+so-called shebang-like directive. This is also supported by \prog{llmk}. The
+syntax is:
+%
+\begin{htcode}
+\meta{optional spaces}%#!\meta{optional spaces}\meta{command}\meta{optional spaces}
+\end{htcode}
+%
+The \meta{command} part will be passed to the \ckey{latex} key of \prog{llmk}.
+This directive is only effective strictly in the first line in your {\LaTeX}
+source file.
+
+For example, the following two configuration are equivalent:\\
+%
+\begin{minipage}[t]{.5\textwidth}
+\begin{lstlisting}[style=latex]
+%#!pdflatex
+\documentclass{article}
+\end{lstlisting}
+\end{minipage}
+\begin{minipage}[t]{.49\textwidth}
+\begin{lstlisting}[style=latex]
+% +++
+% latex = "pdflatex"
+% +++
+\documentclass{article}
+\end{lstlisting}
+\end{minipage}
+
 \section{Acknowledgements}
 
 This project has been supported by the {\TeX} Development Fund created by the {\TeX}
@@ -715,6 +836,19 @@ gave me advice and suggestions for new features for the \prog{llmk} project.
   John Collins. \textit{latexmk\Dash generate {\LaTeX} document}.
   \url{https://ctan.org/pkg/latexmk}
 
+\bibitem{yatex}
+  Yuuji Hirose. \textit{YaTeX\Dash Yet Another TeX mode for Emacs}.
+  \url{https://www.yatex.org/}
+
+\bibitem{texworks}
+  Jonathan Kew, Stefan L\"offler, and Charlie Sharpsteen.
+  \textit{{\TeX}works\Dash lowering the entry barrier to the {\TeX} world}.
+  \url{https://tug.org/texworks/}
+
+\bibitem{texshop}
+  Richard Koch, et al. \textit{{\TeX}Shop}.
+  \url{https://pages.uoregon.edu/koch/texshop/}
+
 \bibitem{semvar}
   Tom Preston-Werner. \textit{Semantic Versioning 2.0.0}.
   \url{https://semver.org/}
@@ -722,6 +856,11 @@ gave me advice and suggestions for new features for the \prog{llmk} project.
 \bibitem{toml}
   Tom Preston-Werner. \textit{TOML: Tom's Obvious Minimal Language}.
   \url{https://toml.io/}
+
+\bibitem{texstudio}
+  Benito van der Zander, et al.
+  \textit{{\TeX}studio\Dash {\LaTeX} made comfortable}.\\
+  \url{https://texstudio.org/}
 \end{thebibliography}
 
 \end{document}
