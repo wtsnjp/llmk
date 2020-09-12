@@ -153,7 +153,7 @@ with a hyphen after the first argument will be treated as an argument starting
 with a hyphen.
 
 When two or more options are specified, \prog{llmk} applies them in the given
-order. If conflicting options are specified, \eg \sopt{q} v.s.\ \sopt{v}, the
+order. If contradicting options are specified, \eg \sopt{q} v.s.\ \sopt{v}, the
 option in the latter position wins over the former one.
 
 The following is the full list of available command-line options:
@@ -788,9 +788,9 @@ will be ignored. For example, the following two configuration are equivalent:\\
 \subsection{Shebang-like directive}
 \label{sec:shebang}
 
-A few existing tools, notably the YaTeX mode for Emacs~\cite{yatex}, supports
-so-called shebang-like directive. This is also supported by \prog{llmk}. The
-syntax is:
+A few existing tools, notably the YaTeX mode for Emacs~\cite{yatex}, support
+the so-called shebang-like directive. This is also supported by \prog{llmk}.
+The syntax is:
 %
 \begin{htcode}
 \meta{optional spaces}%#!\meta{optional spaces}\meta{command}\meta{optional spaces}
@@ -822,6 +822,47 @@ For example, the following two configuration are equivalent:\\
 This project has been supported by the {\TeX} Development Fund created by the {\TeX}
 Users Group (No.~29). I would like to thank all contributors and the people who
 gave me advice and suggestions for new features for the \prog{llmk} project.
+
+\section{License}
+
+This software is released under the MIT license:
+%
+\begin{quotation}
+\parindent=0pt
+\parskip=\baselineskip
+\small\ttfamily
+\noindent
+The MIT License (MIT)
+
+Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+\end{quotation}
+
+\subsection*{Third-party software}
+
+\paragraph{toml.lua} Copyright 2017 Jonathan Stoler. Released under the MIT
+license:
+%
+\begin{quote}
+\url{https://github.com/jonstoler/lua-toml/blob/master/LICENSE}
+\end{quote}
 
 \begin{thebibliography}{9}
 \bibitem{asakura2020}

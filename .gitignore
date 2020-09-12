@@ -19,6 +19,7 @@
 *.ps
 *.pdf
 *.1
+doc/*.png
 
 # Bundle
 .bundle

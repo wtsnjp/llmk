@@ -1,4 +1,4 @@
-![llmk: The Light LaTeX Make](./doc/llmk-logo.png)
+![llmk: The Light LaTeX Make](./llmk-logo.png)
 
 [![Build Status](https://travis-ci.org/wtsnjp/llmk.svg?branch=master)](https://travis-ci.org/wtsnjp/llmk)
 [![Build status](https://ci.appveyor.com/api/projects/status/1papc7m85kl9iph1?svg=true)](https://ci.appveyor.com/project/wtsnjp/llmk)
@@ -9,6 +9,8 @@ This is yet another build tool for LaTeX documents. The features of **llmk** are
 * using TOML to declare the settings,
 * no complicated nesting of configuration, and
 * modern default settings (make LuaTeX de facto standard!)
+
+See the bundled reference manual (llmk.pdf) for the full specification of the program. The following sections are for a quick guidance.
 
 ## Basic Usage
 
@@ -75,12 +77,33 @@ If you run llmk without any argument, llmk will load `llmk.toml` in the working 
 $ llmk
 ```
 
-### Supports for shebang-like magic comments
+### Supports for other magic comment formats
 
-Some existing tools such as [Emacs/YaTeX](https://www.yatex.org/) support shebang-like magic comments. llmk also supports the magic comments. E.g.,
+A few other magic comment formats that are supported by existing tools are also supported by llmk.
+
+The directives supported by [TeXShop](https://pages.uoregon.edu/koch/texshop/) and friends, which typically start with `% !TEX`, can be used instead of `latex` and `bibtex` keys. E.g.,
+
+```
+%! TEX TS-program = xelatex
+%! BIB TS-program = biber
+\documentclass{article}
+```
+
+is equivalent to:
+
+```
+% +++
+% latex = "xelatex"
+% bibtex = "biber"
+% +++
+\documentclass{article}
+```
+
+Another supported format is shebang-like directive that is supported by [YaTeX mode for Emacs](https://www.yatex.org/). E.g.,
 
 ```
 %#!pdflatex
+\documentclass{article}
 ```
 
 is equivalent to:
@@ -89,9 +112,10 @@ is equivalent to:
 % +++
 % latex = "pdflatex"
 % +++
+\documentclass{article}
 ```
 
-Note that this magic comment is effective **only on the first line** of a LaTeX source file. Note also that if a TOML field exist in the file, the TOML field has higher priority and the shebang-like magic comment is simply ignored.
+Note that this magic comment is effective **only on the first line** of a LaTeX source file. Note also that if a TOML field exist in the file, the TOML field has higher priority and all the other magic comments will be ignored.
 
 ### Custom compile sequence
 
@@ -129,78 +153,83 @@ This way is a bit complicated but strong enough allowing you to use any kind of 
 
 ### Available TOML keys
 
-This is the list of currently available TOML keys.
+The following is the list of available TOML keys in llmk. See the reference manual for the details.
 
-* `latex` (type: *string*, default: `"lualatex"`)
 * `bibtex` (type: *string*, default: `"bibtex"`)
-* `makeindex` (type: *string*, default: `"makeindex"`)
-* `dvipdf` (type: *string*, default: `"dvipdfmx"`)
-* `dvips` (type: *string*, default: `"dvips"`)
-* `ps2pdf` (type: *string*, default: `"ps2pdf"`)
-* `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "dvipdf"]`)
-* `programs` (type: *table*)
-	* \<program name\>
-		* `command` (type: *string*, **required**)
-		* `target` (type: *string*, default: the input FILE)
-		* `generated_target` (type: *bool*, default: false)
-		* `opts` (type: *string* or *array of strings*)
-		* `args` (type: *string* or *array of strings*, default: `["%T"]`)
-		* `auxiliary` (type: *string*)
-		* `postprocess` (type: *string*)
-* `source` (type: *string* or *array of strings*, only for `llmk.toml`)
-* `llmk_version` (type: *string*)
-* `max_repeat` (type: *int*, default: 5)
 * `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.log", "%B.toc", "%B.out", "%B.bbl", "%B.bcf", "%B.blg", "%B-blx.bib", "%B.idx", "%B.ilg", "%B.fls", "%B.run.xml"]`)
 * `clobber_files` (type: *string* or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps", "%B.synctex.gz"]`)
-
-
-### Default settings for each program
-
-If following keys are omitted, these default values will be used instead.
-
-* `command` is **required** (no default)
-* `target = "%S"`
-* `opts = []`
-* `args = ["%T"]`
-
-Other from above, there are no default values (i.e., null).
+* `dvipdf` (type: *string*, default: `"dvipdfmx"`)
+* `dvips` (type: *string*, default: `"dvips"`)
+* `latex` (type: *string*, default: `"lualatex"`)
+* `llmk_version` (type: *string*)
+* `makeindex` (type: *string*, default: `"makeindex"`)
+* `max_repeat` (type: *integer*, default: 5)
+* `programs` (type: *table*)
+	* \<program name\>
+		* `args` (type: *string* or *array of strings*, default: `["%T"]`)
+		* `aux_file` (type: *string*)
+		* `aux_empty_size` (type: *integer*)
+		* `command` (type: *string*, **required**)
+		* `generated_target` (type: *boolean*, default: false)
+		* `opts` (type: *string* or *array of strings*)
+		* `postprocess` (type: *string*)
+		* `target` (type: *string*, default: `"%S"`)
+* `ps2pdf` (type: *string*, default: `"ps2pdf"`)
+* `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "dvipdf"]`)
+* `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 
 ### Default `programs` table
 
-* `latex`
-	* `command = "lualatex"`
-	* `opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]`
-	* `auxiliary = "%B.aux"`
-* `bibtex`
-	* `command = "bibtex"`
-	* `target = "%B.bib"`
-	* `args = ["%B"]`
-	* `postprocess = "latex"`
-* `makeindex`
-	* `command = "makeindex"`
-	* `target = "%B.idx"`
-	* `generated_target = true`
-	* `postprocess = "latex"`
-* `dvipdf`
-	* `command = "dvipdfmx"`
-	* `target = "%B.dvi"`
-	* `generated_target = true`
-* `dvips`
-	* `command = "dvips"`
-	* `target = "%B.dvi"`
-	* `generated_target = true`
-* `ps2pdf`
-	* `command = "ps2pdf"`
-	* `target = "%B.ps"`
-	* `generated_target = true`
+The following is the default values in the `programs` table in TOML format.
+
+```toml
+[programs.bibtex]
+command = "bibtex"
+target = "%B.bib"
+args = ["%B"]
+postprocess = "latex"
+
+[programs.dvipdf]
+command = "dvipdfmx"
+target = "%B.dvi"
+generated_target = true
+
+[programs.dvips]
+command = "dvips"
+target = "%B.dvi"
+generated_target = true
+
+[programs.latex]
+command = "lualatex"
+opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]
+aux_file = "%B.aux"
+aux_empty_size = 9
+
+[programs.makeindex]
+command = "makeindex"
+target = "%B.idx"
+generated_target = true
+postprocess = "latex"
+
+[programs.ps2pdf]
+command = "ps2pdf"
+target = "%B.ps"
+generated_target = true
+```
 
 ## Acknowledgements
 
-This project is supported by [TeX Development Fund](https://www.tug.org/tc/devfund/) created by TeX Users Group.
+This project has been supported by the [TeX Development Fund](https://www.tug.org/tc/devfund/) created by the TeX Users Group (No. 29). I would like to thank all contributors and the people who gave me advice and suggestions for new features for the llmk project.
 
 ## License
 
-This package released under [the MIT license](./LICENSE).
+Copyright 2018-2020 Takuto ASAKURA ([wtsnjp](https://twitter.com/wtsnjp))
+
+This software is licensed under [the MIT license](./LICENSE).
+
+### Third-party software
+
+* [toml.lua](https://github.com/jonstoler/lua-toml): Copyright 2017 Jonathan Stoler. Licensed under [the MIT license](https://github.com/jonstoler/lua-toml/blob/master/LICENSE).
 
 ---
 
