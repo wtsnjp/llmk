@@ -75,6 +75,28 @@ task :man do
   sh "bundle exec ronn -m #{OPT_MAN} #{OPT_ORG} llmk.1.md"
 end
 
+desc "Create an archive for CTAN"
+task :ctan => :doc do
+  # initialize the target
+  TARGET_DIR = TMP_DIR / PKG_NAME
+  rm_rf TARGET_DIR
+  mkdir_p TARGET_DIR
+
+  # copy all required files
+  cd PWD
+  cp ["LICENSE", "README.md", "llmk.lua", "llmk-logo.png"], TARGET_DIR
+
+  docs = ["llmk-doc.cls", "llmk-logo-code.tex", "llmk.tex", "llmk.pdf", "llmk.1"]
+  docs.each do |name|
+    cp "doc/#{name}", TARGET_DIR
+  end
+
+  # create zip archive
+  cd TMP_DIR
+  sh "zip -q -r #{PKG_NAME}.zip #{PKG_NAME}"
+  mv "#{PKG_NAME}.zip", PWD
+end
+
 desc "Setup TeX Live on Travis CI"
 task :setup_travis do
   # judge platform

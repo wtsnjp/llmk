@@ -7,7 +7,7 @@
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
--- This sofware is distributed under the MIT License.
+-- This sofware is released under the MIT License.
 --
 
 local llmk = {} -- the module table
@@ -38,7 +38,7 @@ local M = {}
 
 -- program information
 M.prog_name = 'llmk'
-M.version = '0.1'
+M.version = '0.1.0'
 M.copyright = 'Copyright 2018-2020'
 M.author = 'Takuto ASAKURA (wtsnjp)'
 M.llmk_toml = 'llmk.toml'
@@ -53,21 +53,21 @@ M.exit_type = 4
 -- config item specification
 M.top_level_spec = {
   -- <program> = {<type>, <default value>}
-  latex = {'string', 'lualatex'},
   bibtex = {'string', 'bibtex'},
-  makeindex = {'string', 'makeindex'},
-  dvipdf = {'string', 'dvipdfmx'},
-  dvips = {'string', 'dvips'},
-  ps2pdf = {'string', 'ps2pdf'},
-  source = {'*[string]', nil},
-  sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
-  max_repeat = {'integer', 5},
-  llmk_version = {'string', nil},
   clean_files = {'[string]', {
     '%B.aux', '%B.bbl', '%B.bcf', '%B-blx.bib', '%B.blg', '%B.fls',
     '%B.idx', '%B.ilg', '%B.log', '%B.out', '%B.run.xml', '%B.toc'
   }},
   clobber_files = {'[string]', {'%B.dvi', '%B.pdf', '%B.ps', '%B.synctex.gz'}},
+  dvipdf = {'string', 'dvipdfmx'},
+  dvips = {'string', 'dvips'},
+  latex = {'string', 'lualatex'},
+  llmk_version = {'string', nil},
+  makeindex = {'string', 'makeindex'},
+  max_repeat = {'integer', 5},
+  ps2pdf = {'string', 'ps2pdf'},
+  sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
+  source = {'*[string]', nil},
 }
 
 M.program_spec = {

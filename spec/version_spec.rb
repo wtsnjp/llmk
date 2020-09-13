@@ -3,7 +3,7 @@ require 'spec_helper'
 RSpec.describe "Showing version", :type => :aruba do
   include_context "messages"
 
-  let(:version) { "0.1" }
+  let(:version) { "0.1.0" }
   let(:version_text) do
     <<~EXPECTED
       llmk #{version}
