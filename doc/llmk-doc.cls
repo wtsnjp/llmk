@@ -166,8 +166,8 @@
 \newcommand*{\hyph}{-}
 \newcommand*{\meta}[1]{\bgroup
   \normalfont\color{special}$\langle$\textit{#1}$\rangle$\egroup}
-\newcommand*{\code}[1]{\bgroup
-  \chardef\_=`\_\code@font #1\egroup}
+\DeclareRobustCommand{\code}[1]{%
+  \texorpdfstring{\bgroup\chardef\_=`\_\code@font #1\egroup}{#1}}
 \newcommand*{\cs}[1]{\texttt{\char`\\#1}}
 \newcommand*{\sopt}[1]{\hyperlink{clo:#1}{\code{\hyph#1}}}
 \newcommand*{\lopt}[1]{\hyperlink{clo:#1}{\code{\hyph{}\hyph#1}}}
