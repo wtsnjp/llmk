@@ -10,7 +10,13 @@ This is yet another build tool for LaTeX documents. The features of **llmk** are
 * no complicated nesting of configuration, and
 * modern default settings (make LuaTeX de facto standard!)
 
-See the bundled reference manual (llmk.pdf) for the full specification of the program. The following sections are for a quick guidance.
+See the bundled reference manual ([llmk.pdf](http://mirrors.ctan.org/support/light-latex-make/llmk.pdf)) for the full specification of the program. The following sections are for a quick guidance.
+
+## Installation
+
+This program is included in [TeX Live](https://www.tug.org/texlive/) as `light-latex-make`. If you are using the latest TeX Live, you normally don't need to install it by yourself (please use the `tlmgr` command to install it, if the package is missing).
+
+In case the program is not installed in your TeX system, you have to install it manually. This is also very easy because the `llmk.lua` is the standalone executable. Running `texlua <path>/llmk.lua` should work in any case. In UNIX-like systems, the easiest way to install the program is copy or symlink the file `llmk.lua` as `llmk` in any place in the `PATH`.
 
 ## Basic Usage
 
