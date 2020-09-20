@@ -65,7 +65,7 @@ end
 desc "Generate all documentation"
 task :doc do
   cd "doc"
-  sh "llmk -q llmk.tex > #{File::NULL} 2> #{File::NULL}"
+  sh "llmk -qs llmk.tex"
   sh "bundle exec ronn -r #{OPT_MAN} #{OPT_ORG} llmk.1.md 2> #{File::NULL}"
 end
 

@@ -376,10 +376,11 @@ In other words, you only need to write the differences from the default
 configuration.
 
 \begin{confkey}{bibtex}{type: \type{string}}[default: \code{"bibtex"}]
-The command to use for the \progname{bibtex} program. Internally, this key is
-an alias for the \ckey{command} key in the \progname{bibtex} entry. If the
-\ckey{command} key is specified in the \ckey{programs} table, this alias is
-ineffective.
+The command to use for the \progname{bibtex} program. Reference processing
+tools that are compatible with {\BibTeX} can be specified for this key, \eg
+\code{"biber"}. Internally, this key is an alias for the \ckey{command} key in
+the \progname{bibtex} entry. If the \ckey{command} key is specified in the
+\ckey{programs} table, this alias is ineffective.
 \end{confkey}
 
 \begin{confkey}{clean\_files}{type: \type{array of strings}}
@@ -593,8 +594,8 @@ Only some of them are used in the default \ckey{sequence} (see Section~%
 \ref{sec:default-sequence}), but other entries can be easily used just by
 overriding the \ckey{sequence} array.
 
-\Program{bibtex} The entry for the {\BibTeX} program and friends. The
-\progname{latex} program is set as \ckey{postprocess} so that to make sure
+\Program{bibtex} The entry for the {\BibTeX} program and friends, \eg Biber.
+The \progname{latex} program is set as \ckey{postprocess} so that to make sure
 rerunning {\LaTeX} command after this execution.
 %
 \begin{lstlisting}[style=toml]
