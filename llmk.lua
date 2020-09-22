@@ -27,6 +27,7 @@ M.debug = {
 }
 M.verbosity_level = 1
 M.silent = false
+M.dry_run = false
 
 llmk.core = M
 end
@@ -1152,7 +1153,29 @@ local function silencer(cmd)
   return cmd .. redirect_code
 end
 
-local function run_program(name, prog, fn, fdb)
+local function run_program(name, prog, fn, fdb, postprocess)
+  -- preparation for dry run
+  local function concat_cond(tab)
+    local res
+    for i, v in ipairs(tab) do
+      if i == 1 then
+        res = v
+      else
+        res = res .. '; ' .. v
+      end
+    end
+    return res
+  end
+  local cond = {}
+
+  if postprocess then
+    cond[#cond + 1] = 'as postprocess'
+  end
+
+  if prog.aux_file then
+    cond[#cond + 1] = 'possibly with rerunning'
+  end
+
   -- does command specified?
   if #prog.command < 1 then
     llmk.util.err_print('warning',
@@ -1161,7 +1184,7 @@ local function run_program(name, prog, fn, fdb)
   end
 
   -- does target exist?
-  if not lfs.isfile(prog.target) then
+  if not llmk.core.dry_run and not lfs.isfile(prog.target) then
     llmk.util.dbg_print('run',
       'Skiping "%s" because target (%s) does not exist',
       prog.command, prog.target)
@@ -1169,15 +1192,32 @@ local function run_program(name, prog, fn, fdb)
   end
 
   -- is the target modified?
-  if prog.generated_target and file_mtime(prog.target) < start_time then
-    llmk.util.dbg_print('run',
-      'Skiping "%s" because target (%s) is not updated',
-      prog.command, prog.target)
-    return false
+  if prog.generated_target then
+    if llmk.core.dry_run then
+      cond[#cond + 1] = string.format('if the target file "%s" has been generated',
+        prog.target)
+    elseif file_mtime(prog.target) < start_time then
+      llmk.util.dbg_print('run',
+        'Skiping "%s" because target (%s) is not updated',
+        prog.command, prog.target)
+      return false
+    end
+  else
+    if llmk.core.dry_run then
+      cond[#cond + 1] = string.format('if the target file "%s" exists', prog.target)
+    end
   end
 
   local cmd = construct_cmd(prog, fn, prog.target)
-  llmk.util.err_print('info', 'Running command: ' .. cmd)
+  if llmk.core.dry_run then
+    print('Dry running: ' .. cmd)
+    if #cond > 0 then
+      llmk.util.err_print('info', '<-- ' .. concat_cond(cond))
+    end
+    return false
+  else
+    llmk.util.err_print('info', 'Running command: ' .. cmd)
+  end
 
   -- redirect stdout and stderr to NULL in silent mode
   if llmk.core.silent then
@@ -1195,7 +1235,8 @@ local function run_program(name, prog, fn, fdb)
   return true
 end
 
-local function process_program(programs, name, fn, fdb, config)
+local function process_program(programs, name, fn, fdb, config, postprocess)
+  local postprocess = postprocess or false
   local prog = programs[name]
   local should_rerun
 
@@ -1204,7 +1245,7 @@ local function process_program(programs, name, fn, fdb, config)
   local exe_count = 0
   while true do
     exe_count = exe_count + 1
-    run = run_program(name, prog, fn, fdb)
+    run = run_program(name, prog, fn, fdb, postprocess)
 
     -- if the run is skipped, break immediately
     if not run then break end
@@ -1217,9 +1258,9 @@ local function process_program(programs, name, fn, fdb, config)
   end
 
   -- go to the postprocess process
-  if prog.postprocess and run then
+  if prog.postprocess and (run or llmk.core.dry_run) then
     llmk.util.dbg_print('run', 'Going to postprocess "%s"', prog.postprocess)
-    process_program(programs, prog.postprocess, fn, fdb, config)
+    process_program(programs, prog.postprocess, fn, fdb, config, true)
   end
 end
 
@@ -1253,12 +1294,16 @@ local lfs = require("lfs")
 
 -- fn is filepath of target to remove.
 local function remove(fn)
-  local ok = os.remove(fn)
-  
-  if ok ~= true then
-    llmk.util.err_print('error', 'Failed to remove "%s"', fn)
+  if llmk.core.dry_run then
+    print(string.format('Dry running: removing file "%s"', fn))
   else
-    llmk.util.err_print('info', 'Removed "%s"', fn)
+    local ok = os.remove(fn)
+
+    if ok ~= true then
+      llmk.util.err_print('error', 'Failed to remove "%s"', fn)
+    else
+      llmk.util.err_print('info', 'Removed "%s"', fn)
+    end
   end
 end
 
@@ -1302,12 +1347,13 @@ Options:
   -d CAT, --debug=CAT   Activate debug output restricted to CAT.
   -D, --debug           Activate all debug output (equal to "--debug=all").
   -h, --help            Print this help message.
+  -n, --dry-run         Show what would have been executed.
   -q, --quiet           Suppress most messages.
   -s, --silent          Silence messages from called programs.
   -v, --verbose         Print additional information.
   -V, --version         Print the version number.
 
-Please report bugs to <tkt.asakura@gmail.com>.
+Please report bugs to <https://github.com/wtsnjp/llmk/issues>.
 ]]
 
 local version_text = [[
@@ -1405,6 +1451,9 @@ local function read_options()
       llmk.core.verbosity_level = 2
     elseif (curr_arg == '-s') or (curr_arg == '--silent') then
       llmk.core.silent = true
+    -- dry run
+    elseif (curr_arg == '-n') or (curr_arg == '--dry-run') then
+      llmk.core.dry_run = true
     -- problem
     else
       llmk.util.err_print('error', 'unknown option: ' .. curr_arg)

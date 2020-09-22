@@ -22,12 +22,14 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
   Activate all debug output (equal to "--debug=all").
 * `-h`, `--help`:
   Print this help message.
+* `-n`, `--dry-run`:
+  Show what would have been executed.
 * `-q`, `--quiet`:
   Suppress warnings and most error messages.
 * `-s`, `--silent`:
   Silence messages from called programs.
 * `-v`, `--verbose`:
-  Print additional information (e.g., viewer command).
+  Print additional information (e.g., running commands).
 * `-V`, `--version`:
   Print the version number.
 
@@ -46,8 +48,8 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
 
 ## REPORTING BUGS
 
-Report bugs to tkt.asakura@gmail.com.  
-Source: https://github.com/wtsnjp/llmk
+Report bugs to <https://github.com/wtsnjp/llmk/issues>.  
+Source: <https://github.com/wtsnjp/llmk>
 
 ## COPYRIGHT
 

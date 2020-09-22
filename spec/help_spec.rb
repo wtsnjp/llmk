@@ -13,12 +13,13 @@ RSpec.describe "Showing help", :type => :aruba do
         -d CAT, --debug=CAT   Activate debug output restricted to CAT.
         -D, --debug           Activate all debug output (equal to "--debug=all").
         -h, --help            Print this help message.
+        -n, --dry-run         Show what would have been executed.
         -q, --quiet           Suppress most messages.
         -s, --silent          Silence messages from called programs.
         -v, --verbose         Print additional information.
         -V, --version         Print the version number.
 
-      Please report bugs to <tkt.asakura@gmail.com>.
+      Please report bugs to <https://github.com/wtsnjp/llmk/issues>.
     EXPECTED
   end
 
