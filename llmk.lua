@@ -1149,7 +1149,7 @@ local function silencer(cmd)
   else
     redirect_code = ' >/dev/null 2>&1'
   end
-  silencer = function() return cmd .. redirect_code end
+  silencer = function(cmd) return cmd .. redirect_code end
   return cmd .. redirect_code
 end
 
