@@ -279,22 +279,31 @@ local function type_check(tab)
 end
 
 local function version_check(given_version)
-  if given_version then
-    local given_major, given_minor = given_version:match('^(%d+)%.(%d+)')
-    if not given_major or not given_minor then
-      llmk.util.err_print('warning', 'In valid llmk_version: ' .. given_version)
-      return
-    else
-      given_major, given_minor = tonumber(given_major), tonumber(given_minor)
-    end
-
-    local major, minor = llmk.const.version:match('^(%d+)%.(%d+)')
-    major, minor = tonumber(major), tonumber(minor)
-    if major < given_major or (major == given_major and minor < given_minor) then
-      llmk.util.err_print('warning',
-        'This program is older than specified "llmk_version"')
-    end
+  if not given_version then -- nothing to do
+    return
   end
+
+  -- parse the given version to the llmk_version key
+  local given_major, given_minor = given_version:match('^(%d+)%.(%d+)')
+  if not given_major or not given_minor then
+    llmk.util.err_print('warning', 'In valid llmk_version: ' .. given_version)
+    return
+  else
+    given_major, given_minor = tonumber(given_major), tonumber(given_minor)
+  end
+
+  -- the version of this program
+  local major, minor = llmk.const.version:match('^(%d+)%.(%d+)')
+  major, minor = tonumber(major), tonumber(minor)
+
+  -- warn if this program is older than the given version
+  if major < given_major or (major == given_major and minor < given_minor) then
+    llmk.util.err_print('warning',
+      'This program (v%d.%d) is older than the specified llmk_version (v%d.%d)',
+      major, minor, given_major, given_minor)
+  end
+
+  -- Note: no breaking change has been made (yet)
 end
 
 function M.check(tab)
@@ -1150,7 +1159,7 @@ local function silencer(cmd)
     redirect_code = ' >/dev/null 2>&1'
   end
   silencer = function(cmd) return cmd .. redirect_code end
-  return cmd .. redirect_code
+  return silencer(cmd)
 end
 
 local function run_program(name, prog, fn, fdb, postprocess)
