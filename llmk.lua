@@ -77,7 +77,7 @@ M.program_spec = {
   aux_file = {'string', {true, nil}},
   aux_empty_size = {'integer', {false, nil}},
   command = {'string', {false, ''}}, -- '' default because it must be string
-  generated_target = {'bool', {false, false}},
+  generated_target = {'boolean', {false, false}},
   opts = {'*[string]', {true, nil}},
   postprocess = {'string', {false, nil}},
   target = {'string', {true, '%S'}},
@@ -209,14 +209,14 @@ local function checked_value(k, v, expected)
 
   if expected == 'integer' then
     error_if_wrong_type(v, 'number')
-  elseif expected == 'bool' then
+  elseif expected == 'boolean' then
     error_if_wrong_type(v, 'boolean')
   elseif expected == 'string' then
     error_if_wrong_type(v, 'string')
   elseif expected == '[string]' then
     error_if_wrong_type(v, 'table')
 
-    if v[1] then -- it is not an empty array
+    if v[1] ~= nil then -- it is not an empty array
       error_if_wrong_type(v[1], 'string')
     end
   elseif expected == '*[string]' then
@@ -225,7 +225,7 @@ local function checked_value(k, v, expected)
     else
       error_if_wrong_type(v, 'table')
 
-      if v[1] then -- it is not an empty array
+      if v[1] ~= nil then -- it is not an empty array
         error_if_wrong_type(v[1], 'string')
       end
     end
