@@ -19,8 +19,8 @@
 
 \section{Overview}
 
-The \prog{llmk} program is yet another build tool specific for {\LaTeX}
-documents. Its aim is to provide a simple way to specify a workflow of
+Light {\LaTeX} Make (\prog{llmk}) is yet another build tool specific for
+{\LaTeX} documents. Its aim is to provide a simple way to specify a workflow of
 processing {\LaTeX} documents and encourage people to always explicitly show
 the right workflow for each document.
 
@@ -36,15 +36,20 @@ configuration. Therefore, one can guarantee that a {\LaTeX} document with an
 \prog{llmk} setup, the process of typesetting the document must be reproduced
 in any {\TeX} environment with the program.
 
-% TODO: explain that llmk is included in TeX Live and MiKTeX when ready
+\subsection{Installation}
+
+This software is included in {\TeX} Live as Package \code{light-latex-make}. If
+you have the latest {\TeX} Live, you normally don't need to install it by
+yourself. If you want to install the development version, please refer to our
+{\README}.
+% TODO: mention MiKTeX when ready
 
 \subsection{Learning \prog{llmk}}
 
-The bundled \href{https://github.com/wtsnjp/llmk/blob/master/README.md}
-{\code{README.md}} has a general introduction for the program. If you are new
-to \prog{llmk} and looking for a quick guidance, you are recommended to read it
-first. Conversely, this document can be regarded as a reference manual: it
-contains detailed descriptions for every feature of \prog{llmk} as much as
+The bundled {\README} has a general introduction for the program. If you are
+new to \prog{llmk} and looking for a quick guidance, you are recommended to
+read it first. Conversely, this document can be regarded as a reference manual:
+it contains detailed descriptions for every feature of \prog{llmk} as much as
 possible, but unsuitable for getting general ideas of its basic usage.
 
 \begin{samepage}
@@ -84,11 +89,6 @@ any aspect. At this moment, requests for new features are also welcome; the
 author cannot promise to implement the requested features, but will happy to
 take them into account. Before making a request, it is strongly recommended to
 read the article about the design concept~\cite{asakura2020}.
-
-One more thing: as you can see, the author of the program is not a native
-English speaker. Thus, there should be plenty of grammatical errors and
-unnatural sentences in the documentation, including this manual itself.
-Correction for such writing issues is particularly welcome.
 
 \section{Command-line interface}
 
@@ -143,20 +143,18 @@ formats, in each source {\LaTeX} files specified in the \ckey{source} array
 will be ignored.
 
 \subsubsection*{Command-line options \meta{options}}
+\enlargethispage{5mm}% FIXME
 
 We have tried to implement a GNU-compatible option parser. Short options, each of
 which consists of a single letter, must start with a single hyphen |-|.
 Multiple short options can be specified with a single hyphen, \eg |-vs| is
 equivalent to |-v -s|. Long options have to be following double hyphens |--|.
 All options must be specified before the first argument. A string beginning
-with a hyphen after the first argument will be treated as an argument starting
-with a hyphen.
+with a hyphen after the first argument will be treated as an argument.
 
 When two or more options are specified, \prog{llmk} applies them in the given
 order. If contradicting options are specified, \eg \sopt{q} v.s.\ \sopt{v}, the
 option in the latter position wins over the former one.
-
-The following is the full list of available command-line options:
 
 \begin{clopt}{\sopt{c}, \lopt{clean}}
 Removes temporary files such as \code{aux} and \code{log} files. The files
@@ -213,23 +211,23 @@ specified, all other options and arguments are ignored.
 
 \subsection{Exit codes}
 
+\begin{samepage}
 You can grasp whether \prog{llmk} successfully executed or not by seeing its
 status code. Note that the exit codes of invoked programs are not directly
 transferred as the exit code of \prog{llmk}; instead, the statuses of external
 programs that failed, if any, are reported in the error messages.
 %
-\begin{description}[left=2em]
-\item[\code{0}]
-  Success.
-\item[\code{1}]
-  General error.
-\item[\code{2}]
-  Invoked program failed.
-\item[\code{3}]
-  Parser error.
-\item[\code{4}]
-  Type error.
-\end{description}
+\begin{center}
+\begin{tabular}{rp{12em}rp{12em}}
+\toprule
+Code & Error type & Code & Error Type \\ \midrule
+\code{0} & Success & \code{3} & Parser Error \\
+\code{1} & General Error & \code{4} & Type Error \\
+\code{2} & Invoked program failed & \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{samepage}
 
 \section{Writing workflows in TOML format}
 \label{sec:toml}
@@ -840,27 +838,7 @@ This software is released under the MIT license:
 \parskip=\baselineskip
 \small\ttfamily
 \noindent
-The MIT License (MIT)
-
-Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+\printLICENSE
 \end{quotation}
 
 \subsection*{Third-party software}

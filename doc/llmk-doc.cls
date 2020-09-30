@@ -16,7 +16,7 @@
   \def\@tempb{\@gobble}%
   \@for\next:=\@classoptionslist\do
     {\ifx\next\@tempa
-       \message{Cleared  option \next\space from global list}%
+       \message{Cleared option \next\space from global list}%
      \else
        \edef\@tempb{\@tempb,\next}%
      \fi}%
@@ -131,7 +131,7 @@
     \vskip 1em
     {\fontsize{1.2cm}{0pt}\selectfont\logomainfont llmk}
     \vskip .3em
-    {\fontsize{0.5cm}{0pt}\selectfont\logosubfont The Light {\LaTeX} Make}
+    {\fontsize{0.5cm}{0pt}\selectfont\logosubfont Light {\LaTeX} Make}
     \vskip .5em
     %{\ifx\@subtitle\@empty\else\usekomafont{subtitle}\@subtitle\par\fi}%
     \vskip 1em
@@ -182,6 +182,13 @@
   \expandafter\egroup\x
   \hyperlink{\@tmp@hyname}{\code{#1}}}
 \newcommand*{\type}[1]{\textcolor{special}{#1}}
+\newcommand*{\README}{%
+  \href{https://github.com/wtsnjp/llmk/blob/master/README.md}
+  {\code{README.md}}}
+\newcommand{\printLICENSE}{%
+  \IfFileExists{./LICENSE}{\input{./LICENSE}}{% else
+    \IfFileExists{../LICENSE}{\input{../LICENSE}}{% else
+      \message{File LICENSE not found}}}}
 
 % verbatim
 \def\code@font{% code
