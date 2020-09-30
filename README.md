@@ -20,7 +20,7 @@ In case the package is not installed in your TeX system or you want to use the l
 
 ## Basic Usage
 
-The easiest way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as [TOML](https://toml.io) format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` characters (at least three).
+The most simple way to use **llmk** is to write the build settings into the LaTeX document itself. The settings can be written as [TOML](https://toml.io) format in comments of a source file, and those have to be placed between the comment lines only with the consecutive `+` characters (at least three).
 
 Here's a very simple example:
 
@@ -222,6 +222,12 @@ command = "ps2pdf"
 target = "%B.ps"
 generated_target = true
 ```
+
+## Links to other materials
+
+* [Reference manual](http://mirrors.ctan.org/support/light-latex-make/llmk.pdf): it describes the full specification.
+* [Talk in TUG 2020](https://www.youtube.com/watch?v=kzqlNHKmzBo): the author talked about the design concept with a demonstration.
+* [TUGboat article](https://tug.org/members/TUGboat/tb41-2/tb128asakura-llmk.pdf): the post-proceedings of the above talk. (currently TUG member access only)
 
 ## Acknowledgements
 
