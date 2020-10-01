@@ -474,6 +474,11 @@ function M.parse_toml(toml, file_info)
 
   local function step(n)
     n = n or 1
+    for i = 0, n-1 do
+      if char(i):match(nl) then
+        line = line + 1
+      end
+    end
     cursor = cursor + n
   end
 
@@ -590,7 +595,6 @@ function M.parse_toml(toml, file_info)
           num = num .. char()
         end
       elseif char():match(nl) then
-        line = line + 1
         break
       elseif char():match(ws) or char() == '#' then
         break
@@ -614,10 +618,8 @@ function M.parse_toml(toml, file_info)
 
     while(bounds()) do
       if char() == ']' then
-        line = line + 1
         break
       elseif char():match(nl) then
-        line = line + 1
         step()
         skip_ws()
       elseif char() == '#' then
@@ -692,10 +694,6 @@ function M.parse_toml(toml, file_info)
       while(not char():match(nl)) do
         step()
       end
-    end
-
-    if char():match(nl) then
-      line = line + 1
     end
 
     if char() == '=' then
