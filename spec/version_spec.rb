@@ -4,11 +4,13 @@ RSpec.describe "Showing version", :type => :aruba do
   include_context "messages"
 
   let(:version) { "0.1.0" }
+  let(:copyright) { "Copyright 2018-2020" }
+
   let(:version_text) do
     <<~EXPECTED
       llmk #{version}
 
-      Copyright 2018-2020 Takuto ASAKURA (wtsnjp).
+      #{copyright} Takuto ASAKURA (wtsnjp).
       License: The MIT License <https://opensource.org/licenses/mit-license>.
       This is free software: you are free to change and redistribute it.
     EXPECTED

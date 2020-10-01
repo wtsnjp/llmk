@@ -14,6 +14,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "llmk.toml" do
+    before(:each) { use_example "llmk.toml", "simple.tex", "default.tex" }
     before(:each) { run_llmk "-v" }
     before(:each) { stop_all_commands }
 
@@ -24,6 +25,8 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_seq 'default.tex')
       expect(stderr).to include(info_line_runcmd 'xelatex', 'default.tex')
 
+      expect(stdout).to include('This is XeTeX')
+
       expect(file?('simple.pdf')).to be true
       expect(file?('default.pdf')).to be true
 
@@ -32,6 +35,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "default.tex" do
+    before(:each) { use_example "default.tex" }
     before(:each) { run_llmk "-v", "default.tex" }
     before(:each) { stop_all_commands }
 
@@ -46,6 +50,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "simple.tex" do
+    before(:each) { use_example "simple.tex" }
     before(:each) { run_llmk "-v", "simple.tex" }
     before(:each) { stop_all_commands }
 
@@ -60,6 +65,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "complex.tex" do
+    before(:each) { use_example "complex.tex" }
     before(:each) { run_llmk "-v", "complex.tex" }
     before(:each) { stop_all_commands }
 
@@ -68,6 +74,9 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_runcmd 'uplatex', 'complex.tex')
       expect(stderr).to include(info_line 'Running command: dvipdfmx "complex"')
 
+      expect(stdout).to include('This is e-upTeX')
+      expect(stderr).to include('complex -> complex.pdf')
+
       expect(file?('complex.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
@@ -75,6 +84,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "platex.tex" do
+    before(:each) { use_example "platex.tex" }
     before(:each) { run_llmk "-v", "platex.tex" }
     before(:each) { stop_all_commands }
 
@@ -90,6 +100,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "shebang.tex" do
+    before(:each) { use_example "shebang.tex" }
     before(:each) { run_llmk "-v", "shebang.tex" }
     before(:each) { stop_all_commands }
 
@@ -104,6 +115,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   context "texshop.tex" do
+    before(:each) { use_example "texshop.tex" }
     before(:each) { run_llmk "-v", "texshop.tex" }
     before(:each) { stop_all_commands }
 
