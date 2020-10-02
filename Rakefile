@@ -6,7 +6,7 @@ require 'pathname'
 require 'optparse'
 
 # basics
-LLMK_VERSION = "0.1.0"
+LLMK_VERSION = "0.2.0"
 PKG_NAME = "llmk-#{LLMK_VERSION}"
 
 # woking/temporaly dirs

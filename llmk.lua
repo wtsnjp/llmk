@@ -39,7 +39,7 @@ local M = {}
 
 -- program information
 M.prog_name = 'llmk'
-M.version = '0.1.0'
+M.version = '0.2.0'
 M.copyright = 'Copyright 2018-2020'
 M.author = 'Takuto ASAKURA (wtsnjp)'
 M.llmk_toml = 'llmk.toml'
