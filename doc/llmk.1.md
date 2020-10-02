@@ -1,4 +1,4 @@
-# llmk(1) -- The Light LaTeX Make
+# llmk(1) -- Light LaTeX Make
 
 ## SYNOPSIS
 
