@@ -7,7 +7,6 @@ require 'optparse'
 
 # basics
 LLMK_VERSION = "0.2.0"
-PKG_NAME = "llmk-#{LLMK_VERSION}"
 
 # woking/temporaly dirs
 PWD = Pathname.pwd
@@ -78,7 +77,8 @@ end
 desc "Create an archive for CTAN"
 task :ctan => :doc do
   # initialize the target
-  TARGET_DIR = TMP_DIR / PKG_NAME
+  CTAN_PKG_ID = "light-latex-make-#{LLMK_VERSION}"
+  TARGET_DIR = TMP_DIR / CTAN_PKG_ID
   rm_rf TARGET_DIR
   mkdir_p TARGET_DIR
 
@@ -93,8 +93,8 @@ task :ctan => :doc do
 
   # create zip archive
   cd TMP_DIR
-  sh "zip -q -r #{PKG_NAME}.zip #{PKG_NAME}"
-  mv "#{PKG_NAME}.zip", PWD
+  sh "zip -q -r #{CTAN_PKG_ID}.zip #{CTAN_PKG_ID}"
+  mv "#{CTAN_PKG_ID}.zip", PWD
 end
 
 desc "Setup TeX Live on Travis CI"
