@@ -57,7 +57,8 @@ M.top_level_spec = {
   bibtex = {'string', 'bibtex'},
   clean_files = {'[string]', {
     '%B.aux', '%B.bbl', '%B.bcf', '%B-blx.bib', '%B.blg', '%B.fls',
-    '%B.idx', '%B.ilg', '%B.log', '%B.out', '%B.run.xml', '%B.toc'
+    '%B.idx', '%B.ilg', '%B.ind', '%B.log', '%B.nav', '%B.out',
+    '%B.run.xml', '%B.snm', '%B.toc', '%B.vrb',
   }},
   clobber_files = {'[string]', {'%B.dvi', '%B.pdf', '%B.ps', '%B.synctex.gz'}},
   dvipdf = {'string', 'dvipdfmx'},
