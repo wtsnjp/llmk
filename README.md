@@ -162,7 +162,7 @@ This way is a bit complicated but strong enough allowing you to use any kind of 
 The following is the list of available TOML keys in llmk. See the reference manual for the details.
 
 * `bibtex` (type: *string*, default: `"bibtex"`)
-* `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.log", "%B.toc", "%B.out", "%B.bbl", "%B.bcf", "%B.blg", "%B-blx.bib", "%B.idx", "%B.ilg", "%B.fls", "%B.run.xml"]`)
+* `clean_files` (type: *string* or *array of strings*, default: `["%B.aux", "%B.bbl", "%B.bcf", "%B-blx.bib", "%B.blg", "%B.fls", "%B.idx", "%B.ilg", "%B.ind", "%B.log", "%B.nav", "%B.out", "%B.run.xml", "%B.snm", "%B.toc", "%B.vrb"]`)
 * `clobber_files` (type: *string* or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps", "%B.synctex.gz"]`)
 * `dvipdf` (type: *string*, default: `"dvipdfmx"`)
 * `dvips` (type: *string*, default: `"dvips"`)
@@ -176,7 +176,7 @@ The following is the list of available TOML keys in llmk. See the reference manu
 		* `aux_file` (type: *string*)
 		* `aux_empty_size` (type: *integer*)
 		* `command` (type: *string*, **required**)
-		* `generated_target` (type: *boolean*, default: false)
+		* `generated_target` (type: *boolean*, default: `false`)
 		* `opts` (type: *string* or *array of strings*)
 		* `postprocess` (type: *string*)
 		* `target` (type: *string*, default: `"%S"`)
