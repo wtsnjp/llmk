@@ -166,10 +166,11 @@ The following is the list of available TOML keys in llmk. See the reference manu
 * `clobber_files` (type: *string* or *array of strings*, default: `["%B.pdf", "%B.dvi", "%B.ps", "%B.synctex.gz"]`)
 * `dvipdf` (type: *string*, default: `"dvipdfmx"`)
 * `dvips` (type: *string*, default: `"dvips"`)
+* `extra_clean_files` (type: *string* or *array of strings*, default: `[]`)
 * `latex` (type: *string*, default: `"lualatex"`)
 * `llmk_version` (type: *string*)
 * `makeindex` (type: *string*, default: `"makeindex"`)
-* `max_repeat` (type: *integer*, default: 5)
+* `max_repeat` (type: *integer*, default: `5`)
 * `programs` (type: *table*)
 	* \<program name\>
 		* `args` (type: *string* or *array of strings*, default: `["%T"]`)

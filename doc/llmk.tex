@@ -157,7 +157,8 @@ option in the latter position wins over the former one.
 
 \begin{clopt}{\sopt{c}, \lopt{clean}}
 Removes temporary files such as \code{aux} and \code{log} files. The files
-removed with this action can be customized with the key \ckey{clean\_files}.
+removed with this action can be customized with keys \ckey{clean\_files} and
+\ckey{extra\_clean\_files}.
 \end{clopt}
 
 \begin{clopt}{\sopt{C}, \lopt{clobber}}
@@ -423,6 +424,13 @@ The command to use for the \progname{dvips} program. Internally, this key is an
 alias for the \ckey{command} key in the \progname{dvips} entry. If the
 \ckey{command} key is specified in the \ckey{programs} table, this alias is
 ineffective.
+\end{confkey}
+
+\begin{confkey}{extra\_clean\_files}{type: \type{array of strings}}
+  [default: \code{[]}]
+Extra files to be removed with the cleaning action (\lopt{clean}). By using
+this key, you can easily add files to be removed on top of the default
+\ckey{clean\_files}.
 \end{confkey}
 
 \begin{confkey}{latex}{type: \type{string}}[default: \code{"lualatex"}]

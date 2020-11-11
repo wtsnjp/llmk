@@ -63,6 +63,7 @@ M.top_level_spec = {
   clobber_files = {'[string]', {'%B.dvi', '%B.pdf', '%B.ps', '%B.synctex.gz'}},
   dvipdf = {'string', 'dvipdfmx'},
   dvips = {'string', 'dvips'},
+  extra_clean_files = {'[string]', {}},
   latex = {'string', 'lualatex'},
   llmk_version = {'string', nil},
   makeindex = {'string', 'makeindex'},
@@ -1328,12 +1329,14 @@ end
 function M.clean(fn, config)
   llmk.util.err_print('info', 'Begining cleaning for "%s"', fn)
   replace_spec_and_remove_files(config.clean_files, fn)
+  replace_spec_and_remove_files(config.extra_clean_files, fn)
 end
 
 -- the actual process for the --clobber action
 function M.clobber(fn, config)
   llmk.util.err_print('info', 'Begining clobbering for "%s"', fn)
   replace_spec_and_remove_files(config.clean_files, fn)
+  replace_spec_and_remove_files(config.extra_clean_files, fn)
   replace_spec_and_remove_files(config.clobber_files, fn)
 end
 
