@@ -228,7 +228,7 @@ generated_target = true
 
 * [Reference manual](http://mirrors.ctan.org/support/light-latex-make/llmk.pdf): it describes the full specification.
 * [Talk in TUG 2020](https://www.youtube.com/watch?v=kzqlNHKmzBo): the author talked about the design concept with a demonstration.
-* [TUGboat article](https://tug.org/members/TUGboat/tb41-2/tb128asakura-llmk.pdf): the post-proceedings of the above talk. (currently TUG member access only)
+* [TUGboat article](https://www.tug.org/TUGboat/tb41-2/tb128asakura-llmk.pdf): the post-proceedings of the above talk.
 
 ## Acknowledgements
 
