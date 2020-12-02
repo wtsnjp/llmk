@@ -850,7 +850,13 @@ function M.get_toml(fn)
       end
     else
       if toml_field then
-        toml = toml .. string.match(l, '^%s*%%%s*(.-)%s*$') .. '\n'
+        local match = string.match(l, '^%s*%%%s*(.-)%s*$')
+        if match == nil then
+          llmk.util.err_print('error', 'Encounter invalid line in TOML field')
+          os.exit(llmk.const.exit_error)
+        else
+          toml = toml .. match .. '\n'
+        end
       end
     end
 
