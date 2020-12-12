@@ -87,8 +87,8 @@ M.program_spec = {
 
 M.default_programs = {
   bibtex = {
-    target = '%B.bib',
-    args = {'%B'}, -- "%B.bib" will result in an error
+    target = '%B.aux',
+    args = {'%B'},
     postprocess = 'latex',
   },
   dvipdf = {
