@@ -75,7 +75,7 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line 'Running command: dvipdfmx "complex"')
 
       expect(stdout).to include('This is e-upTeX')
-      expect(stderr).to include('complex -> complex.pdf')
+      expect(stderr).to include('complex.dvi -> complex.pdf')
 
       expect(file?('complex.pdf')).to be true
 

@@ -1,0 +1,85 @@
+name: CI
+on: [push, pull_request]
+env:
+  cache-revision: r20210426b
+
+jobs:
+  test:
+    strategy:
+      matrix: 
+        os:
+          - ubuntu-latest
+          - macos-latest
+          - windows-latest
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+
+    - if: matrix.os == 'ubuntu-latest'
+      name: Set up PATH on Linux
+      run: echo "/tmp/texlive/bin/x86_64-linux" >> $GITHUB_PATH
+
+    - if: matrix.os == 'macos-latest'
+      name: Set up PATH on macOS
+      run: echo "/tmp/texlive/bin/universal-darwin" >> $GITHUB_PATH
+
+    - if: matrix.os == 'windows-latest'
+      name: Set up PATH on Windows
+      run: echo "D:\texlive\bin\win32" >> $GITHUB_PATH
+      shell: bash
+
+    - if: matrix.os != 'windows-latest'
+      name: Cache TeX Live on Unix
+      uses: actions/cache@v2
+      id: cache-texlive-unix
+      with:
+        path: /tmp/texlive
+        key: ${{ runner.os }}-texlive-${{ env.cache-revision }}
+        restore-keys: |
+          ${{ runner.os }}-texlive-
+
+    - if: matrix.os == 'windows-latest'
+      name: Cache TeX Live on Windows
+      uses: actions/cache@v2
+      id: cache-texlive-windows
+      with:
+        path: D:\texlive
+        key: ${{ runner.os }}-texlive-${{ env.cache-revision }}
+        restore-keys: |
+          ${{ runner.os }}-texlive-
+
+    - name: Cache RubyGems
+      uses: actions/cache@v2
+      id: cache-gems
+      with:
+        path: vendor/bundle
+        key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-gems-
+
+    - name: Set up RubyGems
+      run: |
+        gem update --system --no-document --conservative
+        bundle config path vendor/bundle
+        bundle install --jobs 4 --retry 3
+
+    - if: |
+        matrix.os != 'windows-latest' &&
+        steps.cache-texlive-unix.outputs.cache-hit != 'true'
+      name: Set up TeX Live on Unix
+      run: bundle exec rake setup_unix
+
+    - if: |
+        matrix.os == 'windows-latest' &&
+        steps.cache-texlive-windows.outputs.cache-hit != 'true'
+      name: Set up TeX Live on Windows
+      run: bundle exec rake setup_windows
+
+    - name: Run tests
+      run: bundle exec rake test
