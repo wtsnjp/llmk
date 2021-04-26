@@ -1,7 +1,7 @@
 ![llmk: The Light LaTeX Make](./llmk-logo.png)
 
 [![CI](https://github.com/wtsnjp/llmk/actions/workflows/ci.yml/badge.svg)](https://github.com/wtsnjp/llmk/actions/workflows/ci.yml)
-[![CTAN](https://img.shields.io/ctan/v/light-latex-make?color=FC02FF&style=plastic)](https://www.ctan.org/pkg/light-latex-make)
+[![CTAN](https://img.shields.io/ctan/v/light-latex-make?color=FC02FF&label=CTAN)](https://www.ctan.org/pkg/light-latex-make)
 
 This is yet another build tool for LaTeX documents. The features of **llmk** are:
 
