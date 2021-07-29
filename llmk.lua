@@ -171,9 +171,13 @@ function M.dbg_print_table(dbg_type, table)
   helper(table, 2)
 end
 
--- return the filename if exits, even if the ".tex" extension is omitted
--- otherwise return nil
-local lfs = require("lfs")
+function M.get_status(raw)
+  if os.type == 'windows' then
+    return raw
+  else
+    return raw / 256
+  end
+end
 
 -- Replace config param to filename
 function M.replace_specifiers(str, source, target)
@@ -1240,10 +1244,12 @@ local function run_program(name, prog, fn, fdb, postprocess)
   end
 
   -- call and check the status
-  local status = os.execute(cmd)
-  if status > 0 then
+  -- Note: os.execute() returns values 256 multiples of actual status
+  --       except on Windows
+  local cmd_status = llmk.util.get_status(os.execute(cmd))
+  if cmd_status > 0 then
     llmk.util.err_print('error',
-      'Fail running %s (exit code: %d)', cmd, status)
+      'Fail running %s (exit code: %d)', cmd, cmd_status)
     os.exit(llmk.const.exit_failure)
   end
 

@@ -45,13 +45,11 @@ RSpec.describe "Errors", :type => :aruba do
     before(:each) { run_llmk "-v" }
     before(:each) { stop_all_commands }
 
-    let(:exit_code) { OS.windows? ? 1 : 256 }
-
     it 'result in "invoked command failure" error' do
       expect(stderr).to eq <<~EXPECTED
         llmk info: Beginning a sequence for "foo.tex"
         llmk info: Running command: false -interaction=nonstopmode -file-line-error -synctex=1 "foo.tex"
-        llmk error: Fail running false -interaction=nonstopmode -file-line-error -synctex=1 "foo.tex" (exit code: #{exit_code})
+        llmk error: Fail running false -interaction=nonstopmode -file-line-error -synctex=1 "foo.tex" (exit code: 1)
       EXPECTED
 
       expect(last_command_started).to have_exit_status(2)
