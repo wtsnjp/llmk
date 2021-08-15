@@ -3,8 +3,8 @@ require 'spec_helper'
 RSpec.describe "Showing version", :type => :aruba do
   include_context "messages"
 
-  let(:version) { "0.2.0" }
-  let(:copyright) { "Copyright 2018-2020" }
+  let(:version) { "1.0.0" }
+  let(:copyright) { "Copyright 2018-2021" }
 
   let(:version_text) do
     <<~EXPECTED

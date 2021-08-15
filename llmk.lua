@@ -3,7 +3,7 @@
 --
 -- This is file `llmk.lua'.
 --
--- Copyright 2018-2020 Takuto ASAKURA (wtsnjp)
+-- Copyright 2018-2021 Takuto ASAKURA (wtsnjp)
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
@@ -39,8 +39,8 @@ local M = {}
 
 -- program information
 M.prog_name = 'llmk'
-M.version = '0.2.0'
-M.copyright = 'Copyright 2018-2020'
+M.version = '1.0.0'
+M.copyright = 'Copyright 2018-2021'
 M.author = 'Takuto ASAKURA (wtsnjp)'
 M.llmk_toml = 'llmk.toml'
 
@@ -307,6 +307,13 @@ local function version_check(given_version)
     llmk.util.err_print('warning',
       'This program (v%d.%d) is older than the specified llmk_version (v%d.%d)',
       major, minor, given_major, given_minor)
+  end
+
+  -- warn if the given mojor version is older than this program
+  if given_major < major then
+    llmk.util.err_print('warning',
+      'The specified llmk_version (v%d.%d) is older than this program (v%d.%d)',
+      given_major, given_minor, major, minor)
   end
 
   -- Note: no breaking change has been made (yet)
