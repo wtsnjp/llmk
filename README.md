@@ -41,7 +41,7 @@ Hello \textsf{llmk}!
 
 Suppose we save this file as `hello.tex`, then run
 
-```
+```bash
 $ llmk hello.tex
 ```
 
@@ -62,7 +62,7 @@ source = "hello.tex"
 
 If you run llmk without any argument, llmk will load `llmk.toml` in the working directory, and compile files specified by `source` key with the settings written in the file.
 
-```
+```bash
 $ llmk
 ```
 
@@ -72,7 +72,7 @@ A few other magic comment formats that are supported by existing tools are also 
 
 The directives supported by [TeXShop](https://pages.uoregon.edu/koch/texshop/) and friends, which typically start with `% !TEX`, can be used instead of `latex` and `bibtex` keys. E.g.,
 
-```
+```latex
 %! TEX TS-program = xelatex
 %! BIB TS-program = biber
 \documentclass{article}
@@ -80,7 +80,7 @@ The directives supported by [TeXShop](https://pages.uoregon.edu/koch/texshop/) a
 
 is equivalent to:
 
-```
+```latex
 % +++
 % latex = "xelatex"
 % bibtex = "biber"
@@ -90,14 +90,14 @@ is equivalent to:
 
 Another supported format is shebang-like directive that is supported by [YaTeX mode for Emacs](https://www.yatex.org/). E.g.,
 
-```
+```latex
 %#!pdflatex
 \documentclass{article}
 ```
 
 is equivalent to:
 
-```
+```latex
 % +++
 % latex = "pdflatex"
 % +++
@@ -115,7 +115,7 @@ Similar to [latexmk](http://personal.psu.edu/jcc8/software/latexmk/), Actions `-
 
 Specifically,
 
-```
+```bash
 $ llmk --clean FILE...
 ```
 
