@@ -128,4 +128,19 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(last_command_started).to be_successfully_executed
     end
   end
+
+  context "texstudio.tex" do
+    before(:each) { use_example "texstudio.tex" }
+    before(:each) { run_llmk "-v", "texstudio.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce texstudio.pdf" do
+      expect(stderr).to include(info_line_seq 'texstudio.tex')
+      expect(stderr).to include(info_line_runcmd 'xelatex', 'texstudio.tex')
+
+      expect(file?('texstudio.pdf')).to be true
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
 end

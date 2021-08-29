@@ -873,6 +873,7 @@ function M.get_toml(fn)
 
     -- 2. TeXShop directives
     ts_tmp = string.match(l, '^%s*%%%s*!%s*TEX%s+program%s*=%s*(.-)%s*$') or
+             string.match(l, '^%s*%%%s*!%s*TeX%s+program%s*=%s*(.-)%s*$') or
              string.match(l, '^%s*%%%s*!%s*TEX%s+TS%-program%s*=%s*(.-)%s*$')
     if ts_tmp then
       ts_latex = ts_latex or ts_tmp
