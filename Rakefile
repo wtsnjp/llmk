@@ -6,7 +6,7 @@ require 'pathname'
 require 'optparse'
 
 # basics
-LLMK_VERSION = "1.0.0"
+LLMK_VERSION = "1.1.0"
 CTAN_MIRROR = "http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
 
 # woking/temporaly dirs
