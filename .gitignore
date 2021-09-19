@@ -37,6 +37,7 @@ vendor/*
 # Temporaly
 tmp/*
 llmk-*.zip
+light-latex-make-*.zip
 
 # local
 .vimrc
