@@ -69,6 +69,7 @@ M.top_level_spec = {
   makeindex = {'string', 'makeindex'},
   makeglossaries = {'string', 'makeglossaries'},
   max_repeat = {'integer', 5},
+  output_directory = {'string', nil},
   ps2pdf = {'string', 'ps2pdf'},
   sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'makeglossaries', 'dvipdf'}},
   source = {'*[string]', nil},
@@ -105,6 +106,7 @@ M.default_programs = {
       '-interaction=nonstopmode',
       '-file-line-error',
       '-synctex=1',
+      '-output-directory="%o"',
     },
     aux_file = '%B.aux',
     aux_empty_size = 9, -- "\\relax \n" is empty
@@ -115,9 +117,13 @@ M.default_programs = {
     postprocess = 'latex',
   },
   makeglossaries = {
-    target = '%B.glo',
+    target = '%b.glo',
+    target_path = '%B.glo',
     generated_target = true,
     postprocess = 'latex',
+    opts = {
+      '-d', '"%o"',
+    }
   },
   ps2pdf = {
     target = '%B.ps',
@@ -186,18 +192,28 @@ function M.get_status(raw)
 end
 
 -- Replace config param to filename
-function M.replace_specifiers(str, source, target)
+function M.replace_specifiers(str, source, target, config)
   local tmp = '/' .. source
-  local basename = tmp:match('^.*/(.*)%..*$')
+  local basename_match = tmp:match('^.*/(.*)%..*$')
 
   str = str:gsub('%%S', source)
   str = str:gsub('%%T', target)
-
-  if basename then
-    str = str:gsub('%%B', basename)
-  else
-    str = str:gsub('%%B', source)
+  
+  local basename = source
+  if basename_match then
+    basename = basename_match
   end
+  
+  local output_directory = '.'
+  local output_directory_basename = basename
+  if config.output_directory then
+    output_directory = config.output_directory
+    output_directory_basename = config.output_directory .. '/' .. basename
+  end
+  
+  str = str:gsub('%%b', basename)
+  str = str:gsub('%%o', output_directory)
+  str = str:gsub('%%B', output_directory_basename)
 
   return str
 end
@@ -998,16 +1014,22 @@ local function setup_programs(fn, config)
 
     -- setup the `prog.target`
     local cur_target
+    local cur_target_path
 
     if prog.target == nil then
       -- the default value of `prog.target` is `fn`
       cur_target = fn
     else
       -- here, %T should be replaced by `fn`
-      cur_target = llmk.util.replace_specifiers(prog.target, fn, fn)
+      cur_target = llmk.util.replace_specifiers(prog.target, fn, fn, config)
+    end
+    if not(prog.target_path == nil) then
+      -- here, %T should be replaced by `fn`
+      cur_target_path = llmk.util.replace_specifiers(prog.target_path, fn, fn, config)
     end
 
     prog.target = cur_target
+    prog.target_path = cur_target_path or cur_target
 
     -- initialize other items
     for k, v in pairs(llmk.const.program_spec) do
@@ -1024,11 +1046,11 @@ local function setup_programs(fn, config)
           if type(prog[k]) == 'table' then
             for ik, iv in ipairs(prog[k]) do
               if type(prog[k][ik]) == 'string' then
-                prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target)
+                prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target, config)
               end
             end
           elseif type(prog[k]) == 'string' then
-            prog[k] = llmk.util.replace_specifiers(prog[k], fn, cur_target)
+            prog[k] = llmk.util.replace_specifiers(prog[k], fn, cur_target, config)
           end
         end
       end
@@ -1217,10 +1239,10 @@ local function run_program(name, prog, fn, fdb, postprocess)
   end
 
   -- does target exist?
-  if not llmk.core.dry_run and not lfs.isfile(prog.target) then
+  if not llmk.core.dry_run and not lfs.isfile(prog.target_path) then
     llmk.util.dbg_print('run',
-      'Skiping "%s" because target (%s) does not exist',
-      prog.command, prog.target)
+      'Skipping "%s" because target (%s) does not exist',
+      prog.command, prog.target_path)
     return false
   end
 
@@ -1228,16 +1250,16 @@ local function run_program(name, prog, fn, fdb, postprocess)
   if prog.generated_target then
     if llmk.core.dry_run then
       cond[#cond + 1] = string.format('if the target file "%s" has been generated',
-        prog.target)
-    elseif file_mtime(prog.target) < start_time then
+        prog.target_path)
+    elseif file_mtime(prog.target_path) < start_time then
       llmk.util.dbg_print('run',
-        'Skiping "%s" because target (%s) is not updated',
-        prog.command, prog.target)
+        'Skipping "%s" because target (%s) is not updated',
+        prog.command, prog.target_path)
       return false
     end
   else
     if llmk.core.dry_run then
-      cond[#cond + 1] = string.format('if the target file "%s" exists', prog.target)
+      cond[#cond + 1] = string.format('if the target file "%s" exists', prog.target_path)
     end
   end
 
@@ -1311,6 +1333,11 @@ function M.run_sequence(fn, config)
   local fdb = init_file_database(programs, fn, config)
   llmk.util.dbg_print('fdb', 'The initial file database is as follows:')
   llmk.util.dbg_print_table('fdb', fdb)
+  
+  -- check if output directory exists
+  if config.output_directory and not lfs.isdir(config.output_directory) then
+    llmk.util.err_print('error', 'Output directory does not exist "%s"', config.output_directory)
+  end
 
   for _, name in ipairs(config.sequence) do
     llmk.util.dbg_print('run', 'Preparing for program "%s"', name)
@@ -1342,9 +1369,9 @@ local function remove(fn)
   end
 end
 
-local function replace_spec_and_remove_files(fns, source)
+local function replace_spec_and_remove_files(fns, source, config)
   for _, fn in ipairs(fns) do
-    local replaced_fn = llmk.util.replace_specifiers(fn, source, source)
+    local replaced_fn = llmk.util.replace_specifiers(fn, source, source, config)
     if lfs.isfile(replaced_fn) then
       remove(replaced_fn)
     end
@@ -1354,16 +1381,16 @@ end
 -- the actual process for the --clean action
 function M.clean(fn, config)
   llmk.util.err_print('info', 'Begining cleaning for "%s"', fn)
-  replace_spec_and_remove_files(config.clean_files, fn)
-  replace_spec_and_remove_files(config.extra_clean_files, fn)
+  replace_spec_and_remove_files(config.clean_files, fn, config)
+  replace_spec_and_remove_files(config.extra_clean_files, fn, config)
 end
 
 -- the actual process for the --clobber action
 function M.clobber(fn, config)
   llmk.util.err_print('info', 'Begining clobbering for "%s"', fn)
-  replace_spec_and_remove_files(config.clean_files, fn)
-  replace_spec_and_remove_files(config.extra_clean_files, fn)
-  replace_spec_and_remove_files(config.clobber_files, fn)
+  replace_spec_and_remove_files(config.clean_files, fn, config)
+  replace_spec_and_remove_files(config.extra_clean_files, fn, config)
+  replace_spec_and_remove_files(config.clobber_files, fn, config)
 end
 
 llmk.cleaner = M

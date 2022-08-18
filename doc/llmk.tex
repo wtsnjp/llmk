@@ -368,8 +368,12 @@ executing actions by \prog{llmk}:
   argument or as an element of the \ckey{source} array.
 \item |%T|
   is replaced by the target for each program.
-\item |%B|
+\item |%o|
+  is replaced by the output directory, or \code{.} if none was specified.
+\item |%b|
   is replaced by the basename of |%S|.
+\item |%B|
+  is replaced by the output directory concatenated with the basename of |%S|.
 \end{itemize}
 
 Some keys have default values; the default configuration of \prog{llmk} should
@@ -475,6 +479,10 @@ your \ckey{sequence}. When processing your \ckey{sequence}, \prog{llmk} repeats
 a command until \ckey{aux\_file} becomes unchanged from the former execution if
 the key is specified and the corresponding auxiliary file exists. This key is to
 prevent the potential infinite loop of repetition.
+\end{confkey}
+
+\begin{confkey}{output\_directory}{type: \type{string}}[default: \code{nil}]
+Use this option to specify a directory where \progname{latex} output files should be written to and read from. This directory must already exist, or else \prog{llmk} will fail with an error. If the option is not specified, then output files will be written to the directory where \prog{llmk} is run from.
 \end{confkey}
 
 \begin{confkey}{programs}{type: \type{table}}
