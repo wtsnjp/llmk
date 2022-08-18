@@ -683,9 +683,11 @@ rerunning {\LaTeX} command after this execution.
 \begin{lstlisting}[style=toml]
 [programs.makeglossaries]
 command = "makeglossaries"
-target = "%B.glo"
+target = "%b.glo"
+target_path = "%B.glo",
 generated_target = true
 postprocess = "latex"
+opts = ["-d", "\"%o\""]
 \end{lstlisting}
 
 \Program{ps2pdf} The entry for the \prog{ps2pdf} program and friends.
