@@ -48,8 +48,8 @@ RSpec.describe "Errors", :type => :aruba do
     it 'result in "invoked command failure" error' do
       expect(stderr).to eq <<~EXPECTED
         llmk info: Beginning a sequence for "foo.tex"
-        llmk info: Running command: false -interaction=nonstopmode -file-line-error -synctex=1 "foo.tex"
-        llmk error: Fail running false -interaction=nonstopmode -file-line-error -synctex=1 "foo.tex" (exit code: 1)
+        llmk info: Running command: false -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "foo.tex"
+        llmk error: Fail running false -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "foo.tex" (exit code: 1)
       EXPECTED
 
       expect(last_command_started).to have_exit_status(2)
