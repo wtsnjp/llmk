@@ -150,13 +150,12 @@ RSpec.describe "Processing example", :type => :aruba do
   end
   
   context "outputdirectory.tex" do
+    before(:each) { create_directory("output") }
     before(:each) { use_example "outputdirectory.tex" }
     before(:each) { run_llmk "-v", "outputdirectory.tex" }
     before(:each) { stop_all_commands }
 
     it "should produce outputdirectory.pdf" do
-      Dir.mkdir 'output'
-      
       expect(stderr).to include(info_line_seq 'outputdirectory.tex')
       expect(stderr).to include(info_line_runcmd_with_output_directory 'xelatex', 'outputdirectory.tex', 'output')
 
