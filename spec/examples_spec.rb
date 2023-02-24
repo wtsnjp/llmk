@@ -150,7 +150,7 @@ RSpec.describe "Processing example", :type => :aruba do
   end
   
   context "outputdirectory.tex" do
-    before(:each) { create_directory("output") }
+    before(:each) { create_directory "output" }
     before(:each) { use_example "outputdirectory.tex" }
     before(:each) { run_llmk "-v", "outputdirectory.tex" }
     before(:each) { stop_all_commands }
