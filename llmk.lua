@@ -67,9 +67,10 @@ M.top_level_spec = {
   latex = {'string', 'lualatex'},
   llmk_version = {'string', nil},
   makeindex = {'string', 'makeindex'},
+  makeglossaries = {'string', 'makeglossaries'},
   max_repeat = {'integer', 5},
   ps2pdf = {'string', 'ps2pdf'},
-  sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'dvipdf'}},
+  sequence = {'[string]', {'latex', 'bibtex', 'makeindex', 'makeglossaries', 'dvipdf'}},
   source = {'*[string]', nil},
 }
 
@@ -110,6 +111,11 @@ M.default_programs = {
   },
   makeindex = {
     target = '%B.idx',
+    generated_target = true,
+    postprocess = 'latex',
+  },
+  makeglossaries = {
+    target = '%B.glo',
     generated_target = true,
     postprocess = 'latex',
   },
@@ -380,7 +386,7 @@ local function update_config(config, tab)
   local config = merge_table(config, tab)
 
   -- set essential program names from top-level
-  local prg_names = {'latex', 'bibtex', 'makeindex', 'dvipdf', 'dvips', 'ps2pdf'}
+  local prg_names = {'latex', 'bibtex', 'makeindex', 'makeglossaries', 'dvipdf', 'dvips', 'ps2pdf'}
   for _, name in pairs(prg_names) do
     config = fetch_from_top_level(config, name)
   end

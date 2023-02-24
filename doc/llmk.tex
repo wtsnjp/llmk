@@ -462,6 +462,13 @@ the \ckey{command} key is specified in the \ckey{programs} table, this alias is
 ineffective.
 \end{confkey}
 
+\begin{confkey}{makeglossaries}{type: \type{string}}[default: \code{"makeglossaries"}]
+The command to use for the \progname{makeglossaries} program. Internally, this key
+is an alias for the \ckey{command} key in the \progname{makeglossaries} entry. If
+the \ckey{command} key is specified in the \ckey{programs} table, this alias is
+ineffective.
+\end{confkey}
+
 \begin{confkey}{max\_repeat}{type: \type{integer}}[default: \code{5}]
 You can specify the maximum number of execution repetitions for each command in
 your \ckey{sequence}. When processing your \ckey{sequence}, \prog{llmk} repeats
@@ -661,6 +668,18 @@ generated_target = true
 postprocess = "latex"
 \end{lstlisting}
 
+\Program{makeglossaries} The entry for the Makeglossaries program and friends. The
+\progname{latex} program is set as \ckey{postprocess} so that to make sure
+rerunning {\LaTeX} command after this execution.
+%
+\begin{lstlisting}[style=toml]
+[programs.makeglossaries]
+command = "makeglossaries"
+target = "%B.glo"
+generated_target = true
+postprocess = "latex"
+\end{lstlisting}
+
 \Program{ps2pdf} The entry for the \prog{ps2pdf} program and friends.
 %
 \begin{lstlisting}[style=toml]
@@ -676,7 +695,7 @@ generated_target = true
 The following is the default value for the \ckey{sequence} array:
 %
 \begin{htcode}
-["latex", "bibtex", "makeindex", "dvipdf"]
+["latex", "bibtex", "makeindex", "makeglossaries", "dvipdf"]
 \end{htcode}
 
 With these default settings in the \ckey{programs} table the \ckey{sequence}
@@ -706,7 +725,7 @@ $\text{\progname{dvips}}+\text{\progname{ps2pdf}}$ combination instead of
 \progname{dvipdf}, you can just modify the value of \ckey{sequence} a bit:
 %
 \begin{lstlisting}[style=toml]
-sequence = ["latex", "bibtex", "makeindex", "dvips", "ps2pdf"]
+sequence = ["latex", "bibtex", "makeindex", "makeglossaries", "dvips", "ps2pdf"]
 \end{lstlisting}
 
 \section{Other supported formats}

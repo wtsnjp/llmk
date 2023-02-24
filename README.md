@@ -170,6 +170,7 @@ The following is the list of available TOML keys in llmk. See the reference manu
 * `latex` (type: *string*, default: `"lualatex"`)
 * `llmk_version` (type: *string*)
 * `makeindex` (type: *string*, default: `"makeindex"`)
+* `makeglossaries` (type: *string*, default: `"makeglossaries"`)
 * `max_repeat` (type: *integer*, default: `5`)
 * `programs` (type: *table*)
 	* \<program name\>
@@ -182,7 +183,7 @@ The following is the list of available TOML keys in llmk. See the reference manu
 		* `postprocess` (type: *string*)
 		* `target` (type: *string*, default: `"%S"`)
 * `ps2pdf` (type: *string*, default: `"ps2pdf"`)
-* `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "dvipdf"]`)
+* `sequence` (type: *array of strings*, default: `["latex", "bibtex", "makeindex", "makeglossaries", "dvipdf"]`)
 * `source` (type: *string* or *array of strings*, only for `llmk.toml`)
 
 ### Default `programs` table
@@ -215,6 +216,12 @@ aux_empty_size = 9
 [programs.makeindex]
 command = "makeindex"
 target = "%B.idx"
+generated_target = true
+postprocess = "latex"
+
+[programs.makeglossaries]
+command = "makeglossaries"
+target = "%B.glo"
 generated_target = true
 postprocess = "latex"
 

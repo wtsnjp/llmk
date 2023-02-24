@@ -25,11 +25,15 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
         Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
         Dry running: makeindex "simple.idx"
         Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
+        Dry running: makeglossaries "simple.glo"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
         Dry running: dvipdfmx "simple.dvi"
         Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
         Dry running: bibtex "default"
         Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
         Dry running: makeindex "default.idx"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
+        Dry running: makeglossaries "default.glo"
         Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
         Dry running: dvipdfmx "default.dvi"
       EXPECTED
@@ -41,12 +45,16 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
         llmk info: <-- as postprocess; possibly with rerunning; if the target file "simple.tex" exists
         llmk info: <-- if the target file "simple.idx" has been generated
         llmk info: <-- as postprocess; possibly with rerunning; if the target file "simple.tex" exists
+        llmk info: <-- if the target file "simple.glo" has been generated
+        llmk info: <-- as postprocess; possibly with rerunning; if the target file "simple.tex" exists
         llmk info: <-- if the target file "simple.dvi" has been generated
         llmk info: Beginning a sequence for "default.tex"
         llmk info: <-- possibly with rerunning; if the target file "default.tex" exists
         llmk info: <-- if the target file "default.bib" exists
         llmk info: <-- as postprocess; possibly with rerunning; if the target file "default.tex" exists
         llmk info: <-- if the target file "default.idx" has been generated
+        llmk info: <-- as postprocess; possibly with rerunning; if the target file "default.tex" exists
+        llmk info: <-- if the target file "default.glo" has been generated
         llmk info: <-- as postprocess; possibly with rerunning; if the target file "default.tex" exists
         llmk info: <-- if the target file "default.dvi" has been generated
       EXPECTED
