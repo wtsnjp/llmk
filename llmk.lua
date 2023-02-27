@@ -199,19 +199,19 @@ function M.replace_specifiers(str, source, target, output_directory)
   str = str:gsub('%%S', source)
   str = str:gsub('%%T', target)
   
-  local basename = source
+  local sub_basename = source
   if basename_match then
-    basename = basename_match
+    sub_basename = basename_match
   end
   
   local sub_output_directory = '.'
-  local sub_output_directory_basename = basename
+  local sub_output_directory_basename = sub_basename
   if output_directory then
     sub_output_directory = output_directory
-    sub_output_directory_basename = output_directory .. '/' .. basename
+    sub_output_directory_basename = output_directory .. '/' .. sub_basename
   end
   
-  str = str:gsub('%%b', basename)
+  str = str:gsub('%%b', sub_basename)
   str = str:gsub('%%o', sub_output_directory)
   str = str:gsub('%%B', sub_output_directory_basename)
 
