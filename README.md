@@ -228,7 +228,7 @@ target = "%b.glo"
 target_path = "%B.glo",
 generated_target = true
 postprocess = "latex"
-opts = ["-d", "\"%o\""]
+opts = ["-d", '"%o"']
 
 [programs.ps2pdf]
 command = "ps2pdf"

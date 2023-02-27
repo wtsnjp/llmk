@@ -192,7 +192,7 @@ function M.get_status(raw)
 end
 
 -- Replace config param to filename
-function M.replace_specifiers(str, source, target, config)
+function M.replace_specifiers(str, source, target, output_directory)
   local tmp = '/' .. source
   local basename_match = tmp:match('^.*/(.*)%..*$')
 
@@ -204,16 +204,16 @@ function M.replace_specifiers(str, source, target, config)
     basename = basename_match
   end
   
-  local output_directory = '.'
-  local output_directory_basename = basename
-  if config.output_directory then
-    output_directory = config.output_directory
-    output_directory_basename = config.output_directory .. '/' .. basename
+  local sub_output_directory = '.'
+  local sub_output_directory_basename = basename
+  if output_directory then
+    sub_output_directory = output_directory
+    sub_output_directory_basename = output_directory .. '/' .. basename
   end
   
   str = str:gsub('%%b', basename)
-  str = str:gsub('%%o', output_directory)
-  str = str:gsub('%%B', output_directory_basename)
+  str = str:gsub('%%o', sub_output_directory)
+  str = str:gsub('%%B', sub_output_directory_basename)
 
   return str
 end
@@ -1021,11 +1021,11 @@ local function setup_programs(fn, config)
       cur_target = fn
     else
       -- here, %T should be replaced by `fn`
-      cur_target = llmk.util.replace_specifiers(prog.target, fn, fn, config)
+      cur_target = llmk.util.replace_specifiers(prog.target, fn, fn, config.output_directory)
     end
     if not(prog.target_path == nil) then
       -- here, %T should be replaced by `fn`
-      cur_target_path = llmk.util.replace_specifiers(prog.target_path, fn, fn, config)
+      cur_target_path = llmk.util.replace_specifiers(prog.target_path, fn, fn, config.output_directory)
     end
 
     prog.target = cur_target
@@ -1046,11 +1046,11 @@ local function setup_programs(fn, config)
           if type(prog[k]) == 'table' then
             for ik, iv in ipairs(prog[k]) do
               if type(prog[k][ik]) == 'string' then
-                prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target, config)
+                prog[k][ik] = llmk.util.replace_specifiers(iv, fn, cur_target, config.output_directory)
               end
             end
           elseif type(prog[k]) == 'string' then
-            prog[k] = llmk.util.replace_specifiers(prog[k], fn, cur_target, config)
+            prog[k] = llmk.util.replace_specifiers(prog[k], fn, cur_target, config.output_directory)
           end
         end
       end
@@ -1369,9 +1369,9 @@ local function remove(fn)
   end
 end
 
-local function replace_spec_and_remove_files(fns, source, config)
+local function replace_spec_and_remove_files(fns, source, output_directory)
   for _, fn in ipairs(fns) do
-    local replaced_fn = llmk.util.replace_specifiers(fn, source, source, config)
+    local replaced_fn = llmk.util.replace_specifiers(fn, source, source, output_directory)
     if lfs.isfile(replaced_fn) then
       remove(replaced_fn)
     end
@@ -1381,16 +1381,16 @@ end
 -- the actual process for the --clean action
 function M.clean(fn, config)
   llmk.util.err_print('info', 'Begining cleaning for "%s"', fn)
-  replace_spec_and_remove_files(config.clean_files, fn, config)
-  replace_spec_and_remove_files(config.extra_clean_files, fn, config)
+  replace_spec_and_remove_files(config.clean_files, fn, config.output_directory)
+  replace_spec_and_remove_files(config.extra_clean_files, fn, config.output_directory)
 end
 
 -- the actual process for the --clobber action
 function M.clobber(fn, config)
   llmk.util.err_print('info', 'Begining clobbering for "%s"', fn)
-  replace_spec_and_remove_files(config.clean_files, fn, config)
-  replace_spec_and_remove_files(config.extra_clean_files, fn, config)
-  replace_spec_and_remove_files(config.clobber_files, fn, config)
+  replace_spec_and_remove_files(config.clean_files, fn, config.output_directory)
+  replace_spec_and_remove_files(config.extra_clean_files, fn, config.output_directory)
+  replace_spec_and_remove_files(config.clobber_files, fn, config.output_directory)
 end
 
 llmk.cleaner = M
