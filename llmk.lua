@@ -196,19 +196,19 @@ function M.replace_specifiers(str, source, target, output_directory)
 
   str = str:gsub('%%S', source)
   str = str:gsub('%%T', target)
-  
+
   local sub_basename = source
   if basename_match then
     sub_basename = basename_match
   end
-  
+
   local sub_output_directory = '.'
   local sub_output_directory_basename = sub_basename
   if output_directory then
     sub_output_directory = output_directory
     sub_output_directory_basename = output_directory .. '/' .. sub_basename
   end
-  
+
   str = str:gsub('%%b', sub_basename)
   str = str:gsub('%%o', sub_output_directory)
   str = str:gsub('%%B', sub_output_directory_basename)
@@ -1012,7 +1012,7 @@ local function setup_programs(fn, config)
 
     -- setup the `prog.target`
     local cur_target
-    
+
     if prog.target == nil then
       -- the default value of `prog.target` is `fn`
       cur_target = fn
@@ -1325,7 +1325,7 @@ function M.run_sequence(fn, config)
   local fdb = init_file_database(programs, fn, config)
   llmk.util.dbg_print('fdb', 'The initial file database is as follows:')
   llmk.util.dbg_print_table('fdb', fdb)
-  
+
   -- check if output directory exists
   if config.output_directory and not lfs.isdir(config.output_directory) then
     llmk.util.err_print('error', 'Output directory does not exist "%s"', config.output_directory)
@@ -1485,7 +1485,7 @@ local function read_options()
     elseif (curr_arg == '-V') or (curr_arg == '--version') then
       return 'version' -- immediately show version
     elseif (curr_arg == '-c') or (curr_arg == '--clean') then
-      action = 'clean'      
+      action = 'clean'
     elseif (curr_arg == '-C') or (curr_arg == '--clobber') then
       action = 'clobber'
     -- debug
