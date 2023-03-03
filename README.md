@@ -224,11 +224,11 @@ postprocess = "latex"
 
 [programs.makeglossaries]
 command = "makeglossaries"
-target = "%b.glo"
-target_path = "%B.glo"
+target = "%B.glo"
 generated_target = true
 postprocess = "latex"
 opts = ['-d "%o"']
+args = ["%b.glo"]
 
 [programs.ps2pdf]
 command = "ps2pdf"

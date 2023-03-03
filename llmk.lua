@@ -117,13 +117,11 @@ M.default_programs = {
     postprocess = 'latex',
   },
   makeglossaries = {
-    target = '%b.glo',
-    target_path = '%B.glo',
+    target = '%B.glo',
     generated_target = true,
     postprocess = 'latex',
-    opts = {
-      '-d "%o"',
-    }
+    opts = {'-d "%o"'},
+    args = {'%b.glo'}, -- "%B.glo" will result in an error
   },
   ps2pdf = {
     target = '%B.ps',
@@ -1014,8 +1012,7 @@ local function setup_programs(fn, config)
 
     -- setup the `prog.target`
     local cur_target
-    local cur_target_path
-
+    
     if prog.target == nil then
       -- the default value of `prog.target` is `fn`
       cur_target = fn
@@ -1023,13 +1020,8 @@ local function setup_programs(fn, config)
       -- here, %T should be replaced by `fn`
       cur_target = llmk.util.replace_specifiers(prog.target, fn, fn, config.output_directory)
     end
-    if not(prog.target_path == nil) then
-      -- here, %T should be replaced by `fn`
-      cur_target_path = llmk.util.replace_specifiers(prog.target_path, fn, fn, config.output_directory)
-    end
 
     prog.target = cur_target
-    prog.target_path = cur_target_path or cur_target
 
     -- initialize other items
     for k, v in pairs(llmk.const.program_spec) do
@@ -1115,7 +1107,7 @@ local function init_file_database(programs, fn, config)
   return fdb
 end
 
-local function construct_cmd(prog, fn, target)
+local function construct_cmd(prog)
   -- construct the option
   local cmd_opt = ''
 
@@ -1239,10 +1231,10 @@ local function run_program(name, prog, fn, fdb, postprocess)
   end
 
   -- does target exist?
-  if not llmk.core.dry_run and not lfs.isfile(prog.target_path) then
+  if not llmk.core.dry_run and not lfs.isfile(prog.target) then
     llmk.util.dbg_print('run',
       'Skipping "%s" because target (%s) does not exist',
-      prog.command, prog.target_path)
+      prog.command, prog.target)
     return false
   end
 
@@ -1250,20 +1242,20 @@ local function run_program(name, prog, fn, fdb, postprocess)
   if prog.generated_target then
     if llmk.core.dry_run then
       cond[#cond + 1] = string.format('if the target file "%s" has been generated',
-        prog.target_path)
-    elseif file_mtime(prog.target_path) < start_time then
+        prog.target)
+    elseif file_mtime(prog.target) < start_time then
       llmk.util.dbg_print('run',
         'Skipping "%s" because target (%s) is not updated',
-        prog.command, prog.target_path)
+        prog.command, prog.target)
       return false
     end
   else
     if llmk.core.dry_run then
-      cond[#cond + 1] = string.format('if the target file "%s" exists', prog.target_path)
+      cond[#cond + 1] = string.format('if the target file "%s" exists', prog.target)
     end
   end
 
-  local cmd = construct_cmd(prog, fn, prog.target)
+  local cmd = construct_cmd(prog)
   if llmk.core.dry_run then
     print('Dry running: ' .. cmd)
     if #cond > 0 then
