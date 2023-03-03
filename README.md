@@ -212,7 +212,7 @@ generated_target = true
 
 [programs.latex]
 command = "lualatex"
-opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]
+opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1", '-output-directory="%o"']
 aux_file = "%B.aux"
 aux_empty_size = 9
 
@@ -225,10 +225,10 @@ postprocess = "latex"
 [programs.makeglossaries]
 command = "makeglossaries"
 target = "%b.glo"
-target_path = "%B.glo",
+target_path = "%B.glo"
 generated_target = true
 postprocess = "latex"
-opts = ["-d", '"%o"']
+opts = ['-d "%o"']
 
 [programs.ps2pdf]
 command = "ps2pdf"

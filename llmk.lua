@@ -122,7 +122,7 @@ M.default_programs = {
     generated_target = true,
     postprocess = 'latex',
     opts = {
-      '-d', '"%o"',
+      '-d "%o"',
     }
   },
   ps2pdf = {

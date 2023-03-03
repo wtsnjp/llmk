@@ -659,7 +659,7 @@ command is chosen for the default.
 \begin{lstlisting}[style=toml]
 [programs.latex]
 command = "lualatex"
-opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]
+opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1", '-output-directory="%o"']
 aux_file = "%B.aux"
 aux_empty_size = 9
 \end{lstlisting}
@@ -684,10 +684,10 @@ rerunning {\LaTeX} command after this execution.
 [programs.makeglossaries]
 command = "makeglossaries"
 target = "%b.glo"
-target_path = "%B.glo",
+target_path = "%B.glo"
 generated_target = true
 postprocess = "latex"
-opts = ["-d", "\"%o\""]
+opts = ["-d "%o"']
 \end{lstlisting}
 
 \Program{ps2pdf} The entry for the \prog{ps2pdf} program and friends.
