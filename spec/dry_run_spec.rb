@@ -9,7 +9,7 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
   end
 
   def info_line_runcmd cmd, file
-    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1"
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\".\""
     info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
   end
 
@@ -20,21 +20,21 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
 
     it "should report the commands to produce simple.pdf and default.pdf" do
       expect(stdout).to eq <<~EXPECTED
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "simple.tex"
         Dry running: bibtex "simple"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "simple.tex"
         Dry running: makeindex "simple.idx"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
-        Dry running: makeglossaries "simple.glo"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "simple.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "simple.tex"
+        Dry running: makeglossaries -d "." "simple.glo"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "simple.tex"
         Dry running: dvipdfmx "simple.dvi"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "default.tex"
         Dry running: bibtex "default"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "default.tex"
         Dry running: makeindex "default.idx"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
-        Dry running: makeglossaries "default.glo"
-        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 "default.tex"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "default.tex"
+        Dry running: makeglossaries -d "." "default.glo"
+        Dry running: xelatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "default.tex"
         Dry running: dvipdfmx "default.dvi"
       EXPECTED
 
@@ -76,9 +76,9 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
 
     it "should report the commands to produce complex.pdf" do
       expect(stdout).to eq <<~EXPECTED
-        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 "complex.tex"
-        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 "complex.tex"
-        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 "complex.tex"
+        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "complex.tex"
+        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "complex.tex"
+        Dry running: uplatex -interaction=nonstopmode -file-line-error -synctex=1 -output-directory="." "complex.tex"
         Dry running: dvipdfmx "complex"
       EXPECTED
 

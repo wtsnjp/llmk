@@ -9,7 +9,12 @@ RSpec.describe "Processing example", :type => :aruba do
   end
 
   def info_line_runcmd cmd, file
-    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1"
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\".\""
+    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
+  end
+  
+  def info_line_runcmd_with_output_directory cmd, file, output_directory
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\"#{output_directory}\""
     info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
   end
 
@@ -139,6 +144,23 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(stderr).to include(info_line_runcmd 'xelatex', 'texstudio.tex')
 
       expect(file?('texstudio.pdf')).to be true
+
+      expect(last_command_started).to be_successfully_executed
+    end
+  end
+  
+  context "outputdirectory.tex" do
+    before(:each) { create_directory "output" }
+    before(:each) { use_example "outputdirectory.tex" }
+    before(:each) { run_llmk "-v", "outputdirectory.tex" }
+    before(:each) { stop_all_commands }
+
+    it "should produce outputdirectory.pdf" do
+      expect(stderr).to include(info_line_seq 'outputdirectory.tex')
+      expect(stderr).to include(info_line_runcmd_with_output_directory 'xelatex', 'outputdirectory.tex', 'output')
+
+      expect(file?('outputdirectory.pdf')).to be false
+      expect(file?('output/outputdirectory.pdf')).to be true
 
       expect(last_command_started).to be_successfully_executed
     end

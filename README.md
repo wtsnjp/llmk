@@ -153,7 +153,9 @@ In the `args` keys in each program, some format specifiers are available. Those 
 
 * `%S`: the file name given to llmk as an argument (source)
 * `%T`: the target for each program
-* `%B`: the base name of `%S`
+* `%o`: the output directory, or `.` if none was specified
+* `%b`: the base name of `%S`
+* `%B`: the output directory concatenated with the base name of `%S`
 
 This way is a bit complicated but strong enough allowing you to use any kind of outer programs.
 
@@ -172,6 +174,7 @@ The following is the list of available TOML keys in llmk. See the reference manu
 * `makeindex` (type: *string*, default: `"makeindex"`)
 * `makeglossaries` (type: *string*, default: `"makeglossaries"`)
 * `max_repeat` (type: *integer*, default: `5`)
+* `output_directory` (type: *string*)
 * `programs` (type: *table*)
 	* \<program name\>
 		* `args` (type: *string* or *array of strings*, default: `["%T"]`)
@@ -209,7 +212,7 @@ generated_target = true
 
 [programs.latex]
 command = "lualatex"
-opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1"]
+opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1", '-output-directory="%o"']
 aux_file = "%B.aux"
 aux_empty_size = 9
 
@@ -224,6 +227,8 @@ command = "makeglossaries"
 target = "%B.glo"
 generated_target = true
 postprocess = "latex"
+opts = ['-d "%o"']
+args = ["%b.glo"]
 
 [programs.ps2pdf]
 command = "ps2pdf"

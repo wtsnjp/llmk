@@ -9,7 +9,7 @@ RSpec.describe "With --silent, processing example", :type => :aruba do
   end
 
   def info_line_runcmd cmd, file
-    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1"
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\".\""
     info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
   end
 
