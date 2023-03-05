@@ -3,7 +3,7 @@
 --
 -- This is file `llmk.lua'.
 --
--- Copyright 2018-2021 Takuto ASAKURA (wtsnjp)
+-- Copyright 2018-2023 Takuto Asakura (wtsnjp)
 --   GitHub:   https://github.com/wtsnjp
 --   Twitter:  @wtsnjp
 --
@@ -40,8 +40,8 @@ local M = {}
 -- program information
 M.prog_name = 'llmk'
 M.version = '1.1.0'
-M.copyright = 'Copyright 2018-2021'
-M.author = 'Takuto ASAKURA (wtsnjp)'
+M.copyright = 'Copyright 2018-2023'
+M.author = 'Takuto Asakura (wtsnjp)'
 M.llmk_toml = 'llmk.toml'
 
 -- exit codes

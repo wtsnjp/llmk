@@ -292,7 +292,7 @@ This project has been supported by the [TeX Development Fund](https://www.tug.or
 
 ## License
 
-Copyright 2018-2021 Takuto ASAKURA ([wtsnjp](https://twitter.com/wtsnjp))
+Copyright 2018-2023 Takuto Asakura ([wtsnjp](https://twitter.com/wtsnjp))
 
 This software is licensed under [the MIT license](./LICENSE).
 
@@ -302,4 +302,4 @@ This software is licensed under [the MIT license](./LICENSE).
 
 ---
 
-Takuto ASAKURA ([wtsnjp](https://twitter.com/wtsnjp))
+Takuto Asakura ([wtsnjp](https://twitter.com/wtsnjp))
