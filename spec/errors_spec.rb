@@ -22,7 +22,6 @@ RSpec.describe "Errors", :type => :aruba do
     end
 
     before(:each) { run_llmk "-v" }
-    before(:each) { stop_all_commands }
 
     it 'result in a general error' do
       expect(stderr).to eq <<~EXPECTED
@@ -43,7 +42,6 @@ RSpec.describe "Errors", :type => :aruba do
     end
 
     before(:each) { run_llmk "-v" }
-    before(:each) { stop_all_commands }
 
     it 'result in "invoked command failure" error' do
       expect(stderr).to eq <<~EXPECTED
@@ -64,7 +62,6 @@ RSpec.describe "Errors", :type => :aruba do
     end
 
     before(:each) { run_llmk "-v" }
-    before(:each) { stop_all_commands }
 
     it 'result in a parser error' do
       expect(stderr).to eq <<~EXPECTED
@@ -84,7 +81,6 @@ RSpec.describe "Errors", :type => :aruba do
     end
 
     before(:each) { run_llmk "-v" }
-    before(:each) { stop_all_commands }
 
     it 'result in a type error' do
       expect(stderr).to eq <<~EXPECTED

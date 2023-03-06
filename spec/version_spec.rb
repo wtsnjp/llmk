@@ -18,7 +18,6 @@ RSpec.describe "Showing version", :type => :aruba do
 
   context "with --version" do
     before(:each) { run_llmk "--version" }
-    before(:each) { stop_all_commands }
 
     it do
       expect(stdout).to eq version_text
@@ -28,7 +27,6 @@ RSpec.describe "Showing version", :type => :aruba do
 
   context "with -V" do
     before(:each) { run_llmk "-V" }
-    before(:each) { stop_all_commands }
 
     it do
       expect(stdout).to eq version_text

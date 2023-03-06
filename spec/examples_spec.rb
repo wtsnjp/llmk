@@ -21,7 +21,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "llmk.toml" do
     before(:each) { use_example "llmk.toml", "simple.tex", "default.tex" }
     before(:each) { run_llmk "-v" }
-    before(:each) { stop_all_commands }
 
     it "should produce simple.pdf and default.pdf" do
       expect(stderr).to include(info_line_seq 'simple.tex')
@@ -42,7 +41,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "default.tex" do
     before(:each) { use_example "default.tex" }
     before(:each) { run_llmk "-v", "default.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce default.pdf" do
       expect(stderr).to include(info_line_seq 'default.tex')
@@ -57,7 +55,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "simple.tex" do
     before(:each) { use_example "simple.tex" }
     before(:each) { run_llmk "-v", "simple.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce simple.pdf" do
       expect(stderr).to include(info_line_seq 'simple.tex')
@@ -72,7 +69,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "complex.tex" do
     before(:each) { use_example "complex.tex" }
     before(:each) { run_llmk "-v", "complex.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce complex.pdf" do
       expect(stderr).to include(info_line_seq 'complex.tex')
@@ -91,7 +87,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "platex.tex" do
     before(:each) { use_example "platex.tex" }
     before(:each) { run_llmk "-v", "platex.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce platex.pdf" do
       expect(stderr).to include(info_line_seq 'platex.tex')
@@ -107,7 +102,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "shebang.tex" do
     before(:each) { use_example "shebang.tex" }
     before(:each) { run_llmk "-v", "shebang.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce shebang.pdf" do
       expect(stderr).to include(info_line_seq 'shebang.tex')
@@ -122,7 +116,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "texshop.tex" do
     before(:each) { use_example "texshop.tex" }
     before(:each) { run_llmk "-v", "texshop.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce texshop.pdf" do
       expect(stderr).to include(info_line_seq 'texshop.tex')
@@ -137,7 +130,6 @@ RSpec.describe "Processing example", :type => :aruba do
   context "texstudio.tex" do
     before(:each) { use_example "texstudio.tex" }
     before(:each) { run_llmk "-v", "texstudio.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce texstudio.pdf" do
       expect(stderr).to include(info_line_seq 'texstudio.tex')
@@ -153,7 +145,6 @@ RSpec.describe "Processing example", :type => :aruba do
     before(:each) { create_directory "output" }
     before(:each) { use_example "outputdirectory.tex" }
     before(:each) { run_llmk "-v", "outputdirectory.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce outputdirectory.pdf" do
       expect(stderr).to include(info_line_seq 'outputdirectory.tex')

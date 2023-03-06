@@ -16,7 +16,6 @@ RSpec.describe "With --silent, processing example", :type => :aruba do
   context "llmk.toml" do
     before(:each) { use_example "llmk.toml", "simple.tex", "default.tex" }
     before(:each) { run_llmk "-sv" }
-    before(:each) { stop_all_commands }
 
     it "should produce simple.pdf and default.pdf" do
       expect(stderr).to include(info_line_seq 'simple.tex')
@@ -38,7 +37,6 @@ RSpec.describe "With --silent, processing example", :type => :aruba do
   context "complex.tex" do
     before(:each) { use_example "complex.tex" }
     before(:each) { run_llmk "-sv", "complex.tex" }
-    before(:each) { stop_all_commands }
 
     it "should produce complex.pdf" do
       expect(stderr).to include(info_line_seq 'complex.tex')

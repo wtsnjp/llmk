@@ -2,10 +2,11 @@ require 'fileutils'
 require 'pathname'
 
 shared_context "examples" do
+  let(:base_dir) { SpecHelplers::Llmk::BASE_DIR }
+
   def use_example *fns
-    pwd = Pathname.pwd
     fns.each do |fn|
-      FileUtils.cp pwd / "examples" / fn, pwd / "tmp/aruba"
+      FileUtils.cp base_dir / "examples" / fn, base_dir / "tmp/aruba"
     end
   end
 end

@@ -1,54 +1,25 @@
 require 'aruba/rspec'
 require 'pathname'
-require 'os'
 
 module SpecHelplers
   module Llmk
-    # constants
-    PWD = Pathname.pwd
-    if OS.windows?
-      PATH = ENV["Path"]
-    else
-      PATH = ENV["PATH"]
-    end
+    BASE_DIR = Pathname.pwd
 
     # running the target llmk
-    def run_llmk(*args)
+    def run_llmk *args, interactive: false
       if args.size > 0
-        run_command "texlua #{PWD}/llmk.lua #{args.join(' ')}"
+        arg_str = " " + args.join(" ") 
       else
-        run_command "texlua #{PWD}/llmk.lua"
+        arg_str = ""
       end
-    end
 
-    def set_default_env
-      # clear all
-      ENV.clear
+      run_command "texlua #{BASE_DIR}/llmk.lua #{arg_str}"
 
-      # basics
-      if OS.windows?
-        ENV["Path"] = PATH
-      else
-        ENV["PATH"] = PATH
-      end
-    end
-
-    # generate debug line
-    def error_line(msg)
-      return "llmk error: #{msg}"
-    end
-
-    def debug_line(cat, msg="")
-      if msg.empty?
-        return "llmk debug-#{cat}:"
-      else
-        return "llmk debug-#{cat}: #{msg}"
-      end
+      stop_all_commands if !interactive
     end
   end
 end
 
 RSpec.configure do |config|
   config.include SpecHelplers::Llmk
-  config.before(:each) { set_default_env }
 end

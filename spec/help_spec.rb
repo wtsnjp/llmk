@@ -25,7 +25,6 @@ RSpec.describe "Showing help", :type => :aruba do
 
   context "with --help" do
     before(:each) { run_llmk "--help" }
-    before(:each) { stop_all_commands }
 
     it do
       expect(stdout).to eq help_text
@@ -35,7 +34,6 @@ RSpec.describe "Showing help", :type => :aruba do
 
   context "with -h" do
     before(:each) { run_llmk "-h" }
-    before(:each) { stop_all_commands }
 
     it do
       expect(stdout).to eq help_text
