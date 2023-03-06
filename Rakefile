@@ -10,8 +10,8 @@ LLMK_VERSION = "1.1.0"
 CTAN_MIRROR = "http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
 
 # woking/temporaly dirs
-PWD = Pathname.pwd
-TMP_DIR = PWD + "tmp"
+BASE_DIR = Pathname.pwd
+TMP_DIR = BASE_DIR + "tmp"
 
 # options for ronn
 OPT_MAN = "--manual=\"llmk manual\""
@@ -84,7 +84,7 @@ task :ctan => :doc do
   mkdir_p TARGET_DIR
 
   # copy all required files
-  cd PWD
+  cd BASE_DIR
   cp ["LICENSE", "README.md", "llmk.lua", "llmk-logo.png"], TARGET_DIR
 
   docs = ["llmk-doc.cls", "llmk-logo-code.tex", "llmk.tex", "llmk.pdf", "llmk.1"]
@@ -95,7 +95,7 @@ task :ctan => :doc do
   # create zip archive
   cd TMP_DIR
   sh "zip -q -r #{CTAN_PKG_ID}.zip #{CTAN_PKG_ID}"
-  mv "#{CTAN_PKG_ID}.zip", PWD
+  mv "#{CTAN_PKG_ID}.zip", BASE_DIR
 end
 
 desc "Setup TeX Live on Unix-like pratforms"
@@ -135,7 +135,7 @@ task :setup_unix do
   sh "tlmgr -repository #{CTAN_MIRROR} install collection-langjapanese"
 
   # finish
-  cd PWD
+  cd BASE_DIR
   rm_rf INSTALL_DIR
 end
 
@@ -179,6 +179,6 @@ task :setup_windows do
   sh "tlmgr.bat #{opt_repo} install collection-langjapanese"
 
   # finish
-  cd PWD
+  cd BASE_DIR
   rm_rf INSTALL_DIR
 end
