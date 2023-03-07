@@ -481,7 +481,7 @@ the key is specified and the corresponding auxiliary file exists. This key is to
 prevent the potential infinite loop of repetition.
 \end{confkey}
 
-\begin{confkey}{output\_directory}{type: \type{string}}[default: \code{nil}]
+\begin{confkey}{output\_directory}{type: \type{string}}
 Use this option to specify a directory where \progname{latex} output files should be written to and read from. This directory must already exist, or else \prog{llmk} will fail with an error. If the option is not specified, then output files will be written to the directory where \prog{llmk} is run from.
 \end{confkey}
 
@@ -659,7 +659,12 @@ command is chosen for the default.
 \begin{lstlisting}[style=toml]
 [programs.latex]
 command = "lualatex"
-opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1", '-output-directory="%o"']
+opts = [
+  "-interaction=nonstopmode",
+  "-file-line-error",
+  "-synctex=1",
+  '-output-directory="%o"'
+]
 aux_file = "%B.aux"
 aux_empty_size = 9
 \end{lstlisting}
@@ -720,9 +725,10 @@ array, the default behavior of \prog{llmk} can be summarized as follows.
   \code{\%B.bib}, exists, the {\BibTeX} program is executed. When the execution
   occurs, the \progname{latex} program is executed again right after because
   the program is set as \ckey{postprocess}.
-\item Identically, if the corresponding input file for Makeindex exists, the
-  program is executed. When the execution occurs, the \progname{latex} program
-  is executed again right after because the program is set as \ckey{postprocess}.
+\item Identically, if the corresponding input files for Makeindex and
+  Makeglossaries exist, the program is executed. When the execution occurs,
+  the \progname{latex} program is executed again right after because the
+  program is set as \ckey{postprocess}.
 \item In case the corresponding DVI file is generated in the previous steps,
   though this will not happen with the default value of \ckey{latex}, \ie
   \code{"lualatex"}, the \progname{dvipdf} program, by default \code{dvipdfmx},
@@ -734,9 +740,11 @@ easier to use other tools from the above. For instance, if you wan to use
 $\text{\progname{dvips}}+\text{\progname{ps2pdf}}$ combination instead of
 \progname{dvipdf}, you can just modify the value of \ckey{sequence} a bit:
 %
-\begin{lstlisting}[style=toml]
-sequence = ["latex", "bibtex", "makeindex", "makeglossaries", "dvips", "ps2pdf"]
-\end{lstlisting}
+\begin{htcode}
+sequence = [
+  "latex", "bibtex", "makeindex", "makeglossaries", "dvips", "ps2pdf"
+]
+\end{htcode}
 
 \section{Other supported formats}
 \label{sec:magic-comment}
