@@ -39,18 +39,22 @@
 \RequirePackage{listings}
 \RequirePackage{xparse}
 
-% logo
-\input{llmk-logo-code}
-\RequirePackage[no-math]{fontspec}
+% font settings
+\RequirePackage{fontspec}
 \defaultfontfeatures{Ligatures=TeX}
+
+\RequirePackage{unicode-math}
+\RequirePackage{utfsym}
+
+\setmainfont{STIX Two Text}
+\setsansfont{Helvetica Neue}
+\setmathfont{STIX Two Math}[StylisticSet=02, StylisticSet=08]
+\setmonofont[StylisticSet={1,3}]{Inconsolatazi4}
+
+% logo
 \newcommand{\logomainfont}{\fontspec{Helvetica Neue}}
 \newcommand{\logosubfont}{\fontspec{Helvetica Neue Thin}}
-
-% font settings
-\let\Zbar\relax
-\RequirePackage[defaultsups]{newtxtext}
-\RequirePackage[varqu,varl]{inconsolata}
-\RequirePackage[bigdelims,vvarbb]{newtxmath}
+\input{llmk-logo-code}
 
 % for headings
 %\setkomafont{title}{}
