@@ -1,9 +1,9 @@
 # Rakefile for llmk.
 # Public domain.
-
 require 'rake/clean'
 require 'pathname'
 require 'optparse'
+require 'date'
 
 # basics
 PKG_NAME = "llmk"
@@ -184,4 +184,41 @@ task :setup_windows do
   # finish
   cd BASE_DIR
   rm_rf INSTALL_DIR
+end
+
+desc "Bump version"
+task :bump_version do
+  if ARGV.delete("--")
+    new_version = ARGV[1].gsub(".", "\\.")
+  end
+  fail "New version must be specified" if new_version == nil
+
+  old_version = PKG_VERSION.gsub(".", "\\.")
+  this_year = Date.today.year.to_s
+  release_date = Date.today.strftime('%Y-%m-%d')
+
+  # version
+  [
+    "./spec/version_spec.rb",
+    "./doc/llmk.tex",
+    "./llmk.lua",
+    "./Rakefile"
+  ].each do |file|
+    sh "sed -i '' 's/#{old_version}/#{new_version}/' #{file}"
+  end
+
+  # copyright year
+  [
+    "./spec/version_spec.rb",
+    "./doc/llmk-logo-code.tex",
+    "./doc/llmk.1.md",
+    "./doc/llmk.tex",
+    "./llmk.lua",
+    "./README.md",
+    "./LICENSE",
+  ].each do |file|
+    sh "sed -i '' -E 's/-20[0-9][0-9]/-#{this_year}/' #{file}"
+  end
+
+  exit 0
 end
