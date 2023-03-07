@@ -6,7 +6,8 @@ require 'pathname'
 require 'optparse'
 
 # basics
-LLMK_VERSION = "1.1.0"
+PKG_NAME = "llmk"
+PKG_VERSION = "1.1.0"
 CTAN_MIRROR = "http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
 
 # woking/temporaly dirs
@@ -14,8 +15,10 @@ BASE_DIR = Pathname.pwd
 TMP_DIR = BASE_DIR + "tmp"
 
 # options for ronn
-OPT_MAN = "--manual=\"llmk manual\""
-OPT_ORG = "--organization=\"llmk #{LLMK_VERSION}\""
+RONN_OPTS = [
+  "--manual=\"llmk manual\"",
+  "--organization=\"llmk #{PKG_VERSION}\""
+].join(" ")
 
 # cleaning
 CLEAN.include(["doc/*", "tmp"])
@@ -66,20 +69,19 @@ desc "Generate all documentation"
 task :doc do
   cd "doc"
   sh "llmk -qs llmk.tex"
-  sh "bundle exec ronn -r #{OPT_MAN} #{OPT_ORG} llmk.1.md 2> #{File::NULL}"
+  sh "bundle exec ronn -r #{RONN_OPTS} llmk.1.md 2> #{File::NULL}"
 end
 
 desc "Preview the manpage"
 task :man do
   cd "doc"
-  sh "bundle exec ronn -m #{OPT_MAN} #{OPT_ORG} llmk.1.md"
+  sh "bundle exec ronn -m #{RONN_OPTS} llmk.1.md"
 end
 
 desc "Create an archive for CTAN"
 task :ctan => :doc do
   # initialize the target
-  CTAN_PKG_ID = "light-latex-make-#{LLMK_VERSION}"
-  TARGET_DIR = TMP_DIR / CTAN_PKG_ID
+  TARGET_DIR = TMP_DIR / PKG_NAME
   rm_rf TARGET_DIR
   mkdir_p TARGET_DIR
 
@@ -93,9 +95,10 @@ task :ctan => :doc do
   end
 
   # create zip archive
+  ZIP_NAME = "#{PKG_NAME}-#{PKG_VERSION}.zip"
   cd TMP_DIR
-  sh "zip -q -r #{CTAN_PKG_ID}.zip #{CTAN_PKG_ID}"
-  mv "#{CTAN_PKG_ID}.zip", BASE_DIR
+  sh "zip -q -r #{ZIP_NAME} #{PKG_NAME}"
+  mv "#{ZIP_NAME}", BASE_DIR
 end
 
 desc "Setup TeX Live on Unix-like pratforms"
