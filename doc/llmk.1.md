@@ -40,7 +40,7 @@ If one or more FILE(s) are specified, `llmk` reads the TOML fields or other supp
 * 1:
   General error.
 * 2:
-  Failure executing the workflow. The exit status of the external program is reported in an error message.
+  Error in invoked program. The exit status of the external program is reported in an error message.
 * 3:
   Parser error.
 * 4:
