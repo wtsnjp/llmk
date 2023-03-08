@@ -7,7 +7,7 @@ require 'date'
 
 # basics
 PKG_NAME = "llmk"
-PKG_VERSION = "1.1.0"
+PKG_VERSION = "1.2.0"
 CTAN_MIRROR = "http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
 
 # woking/temporaly dirs
