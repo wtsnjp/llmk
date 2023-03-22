@@ -31,7 +31,7 @@ jobs:
 
     - if: matrix.os == 'windows-latest'
       name: Set up PATH on Windows
-      run: echo "D:\texlive\bin\win32" >> $GITHUB_PATH
+      run: echo "D:\texlive\bin\windows" >> $GITHUB_PATH
       shell: bash
 
     - if: matrix.os != 'windows-latest'
