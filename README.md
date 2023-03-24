@@ -182,6 +182,7 @@ The following is the list of available TOML keys in llmk. See the reference manu
 		* `aux_empty_size` (type: *integer*)
 		* `command` (type: *string*, **required**)
 		* `generated_target` (type: *boolean*, default: `false`)
+        * `in_postprocess` (type: *table*)
 		* `opts` (type: *string* or *array of strings*)
 		* `postprocess` (type: *string*)
 		* `target` (type: *string*, default: `"%S"`)
@@ -212,9 +213,17 @@ generated_target = true
 
 [programs.latex]
 command = "lualatex"
-opts = ["-interaction=nonstopmode", "-file-line-error", "-synctex=1", '-output-directory="%o"']
-aux_file = "%B.aux"
-aux_empty_size = 9
+opts = [
+  "-interaction=nonstopmode",
+  "-file-line-error",
+  "-synctex=1",
+  '-output-directory="%o"'
+]
+postprocess = "latex"
+
+  [programs.latex.in_postprocess]
+  aux_file = "%B.aux"
+  aux_empty_size = 9
 
 [programs.makeindex]
 command = "makeindex"
