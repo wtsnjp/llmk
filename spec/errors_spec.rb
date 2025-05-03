@@ -8,7 +8,7 @@ RSpec.describe "Errors", :type => :aruba do
 
   def write_file fn, content
     pwd = Pathname.pwd
-    File.open(pwd / "tmp/aruba" / fn, 'w') do |f|
+    File.open(pwd / "tmp/aruba" / fn, "w") do |f|
       f.puts content
     end
   end
@@ -23,7 +23,7 @@ RSpec.describe "Errors", :type => :aruba do
 
     before(:each) { run_llmk "-v" }
 
-    it 'result in a general error' do
+    it "result in a general error" do
       expect(stderr).to eq <<~EXPECTED
         llmk error: Source file "foo.tex" does not exist
       EXPECTED
@@ -63,7 +63,7 @@ RSpec.describe "Errors", :type => :aruba do
 
     before(:each) { run_llmk "-v" }
 
-    it 'result in a parser error' do
+    it "result in a parser error" do
       expect(stderr).to eq <<~EXPECTED
         llmk error: [Parse Error] Invalid primitive
         llmk error: --> llmk.toml:1: source = invalid  # invalid primitive
@@ -82,7 +82,7 @@ RSpec.describe "Errors", :type => :aruba do
 
     before(:each) { run_llmk "-v" }
 
-    it 'result in a type error' do
+    it "result in a type error" do
       expect(stderr).to eq <<~EXPECTED
         llmk error: [Type Error] Key "source" must have value of type *[string]
       EXPECTED

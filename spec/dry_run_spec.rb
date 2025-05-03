@@ -59,10 +59,10 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
       EXPECTED
 
       # no actual run
-      expect(stdout).not_to include('This is XeTeX')
+      expect(stdout).not_to include("This is XeTeX")
 
-      expect(file?('simple.pdf')).not_to be true
-      expect(file?('default.pdf')).not_to be true
+      expect(file?("simple.pdf")).not_to be true
+      expect(file?("default.pdf")).not_to be true
 
       expect(last_command_started).to be_successfully_executed
     end
@@ -89,10 +89,10 @@ RSpec.describe "With --dry-run, processing example", :type => :aruba do
       EXPECTED
 
       # no actual run
-      expect(stdout).not_to include('This is e-upTeX')
-      expect(stderr).not_to include('complex -> complex.pdf')
+      expect(stdout).not_to include("This is e-upTeX")
+      expect(stderr).not_to include("complex -> complex.pdf")
 
-      expect(file?('complex.pdf')).not_to be true
+      expect(file?("complex.pdf")).not_to be true
 
       expect(last_command_started).to be_successfully_executed
     end
