@@ -23,4 +23,18 @@ shared_context "messages" do
       return "llmk debug-#{cat}: #{msg}"
     end
   end
+
+  def info_line_seq file
+    info_line "Beginning a sequence for \"#{file}\""
+  end
+
+  def info_line_runcmd cmd, file
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\".\""
+    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
+  end
+
+  def info_line_runcmd_with_output_directory cmd, file, output_directory
+    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\"#{output_directory}\""
+    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
+  end
 end

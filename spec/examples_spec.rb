@@ -4,20 +4,6 @@ RSpec.describe "Processing example", :type => :aruba do
   include_context "examples"
   include_context "messages"
 
-  def info_line_seq file
-    info_line "Beginning a sequence for \"#{file}\""
-  end
-
-  def info_line_runcmd cmd, file
-    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\".\""
-    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
-  end
-  
-  def info_line_runcmd_with_output_directory cmd, file, output_directory
-    default_opts = "-interaction=nonstopmode -file-line-error -synctex=1 -output-directory=\"#{output_directory}\""
-    info_line "Running command: #{cmd} #{default_opts} \"#{file}\""
-  end
-
   context "llmk.toml" do
     before(:each) { use_example "llmk.toml", "simple.tex", "default.tex" }
     before(:each) { run_llmk "-v" }
@@ -140,7 +126,7 @@ RSpec.describe "Processing example", :type => :aruba do
       expect(last_command_started).to be_successfully_executed
     end
   end
-  
+
   context "outputdirectory.tex" do
     before(:each) { create_directory "output" }
     before(:each) { use_example "outputdirectory.tex" }
