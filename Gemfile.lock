@@ -51,7 +51,7 @@ GEM
     os (1.1.4)
     racc (1.8.1)
     rake (13.0.6)
-    rexml (3.4.1)
+    rexml (3.4.2)
     ronn-ng (0.10.1)
       kramdown (~> 2, >= 2.1)
       kramdown-parser-gfm (~> 1, >= 1.0.1)
