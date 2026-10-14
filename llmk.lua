@@ -418,9 +418,9 @@ local function update_config(config, tab)
   return config
 end
 
-function M.fetch_from_latex_source(fn)
+function M.fetch_from_latex_source(fn, config)
   local tab
-  local config = init_config()
+  config = config or init_config()
 
   -- get TOML field and parse it
   local toml, line = llmk.parser.get_toml(fn)
@@ -438,24 +438,19 @@ function M.fetch_from_latex_source(fn)
   return config
 end
 
-function M.fetch_from_llmk_toml()
+function M.fetch_from_llmk_toml(config)
   local tab
-  local config = init_config()
+  config = config or init_config()
 
   local f = io.open(llmk.const.llmk_toml)
   if f ~= nil then
     local toml = f:read('*all')
     tab = llmk.parser.parse_toml(toml, {llmk.const.llmk_toml, 1})
     f:close()
-  else
-    llmk.util.err_print('error', 'No target specified and no %s found',
-      llmk.const.llmk_toml)
-    os.exit(llmk.const.exit_error)
+    -- check input and merge it to the config
+    tab = llmk.checker.check(tab)
+    config = update_config(config, tab)
   end
-
-  -- check input and merge it to the config
-  tab = llmk.checker.check(tab)
-  config = update_config(config, tab)
 
   return config
 end
@@ -1579,34 +1574,23 @@ local function check_filename(fn)
 end
 
 local function make(fns, func)
-  local config
-  if #fns > 0 then
-    for _, fn in ipairs(fns) do
-      local checked_fn = check_filename(fn)
-      if checked_fn then
-        config = llmk.config.fetch_from_latex_source(checked_fn)
-        func(checked_fn, config)
-      else
-        llmk.util.err_print('error', 'Source file "%s" does not exist', fn)
-        os.exit(C.exit_error)
-      end
-    end
-  else
-    config = llmk.config.fetch_from_llmk_toml()
-
-    local source = config.source
-    if source ~= nil then
-      for _, fn in ipairs(source) do
-        local checked_fn = check_filename(fn)
-        if checked_fn then
-          func(checked_fn, config)
-        else
-          llmk.util.err_print('error', 'Source file "%s" does not exist', fn)
-          os.exit(C.exit_error)
-        end
-      end
-    else
+  local project_config = llmk.config.fetch_from_llmk_toml()
+  if #fns == 0 then
+    fns = (project_config or {}).source
+    if fns == nil then
       llmk.util.err_print('error', 'No source detected')
+      os.exit(C.exit_error)
+    end
+  end
+
+  local config
+  for _, fn in ipairs(fns) do
+    local checked_fn = check_filename(fn)
+    if checked_fn then
+      config = llmk.config.fetch_from_latex_source(checked_fn, project_config)
+      func(checked_fn, config)
+    else
+      llmk.util.err_print('error', 'Source file "%s" does not exist', fn)
       os.exit(C.exit_error)
     end
   end
