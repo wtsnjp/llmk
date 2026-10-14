@@ -497,7 +497,7 @@ prevent the potential infinite loop of repetition.
 \end{confkey}
 
 \begin{confkey}{output\_directory}{type: \type{string}}
-Use this option to specify a directory where \progname{latex} output files should be written to and read from. This directory must already exist, or else \prog{llmk} will fail with an error. If the option is not specified, then output files will be written to the directory where \prog{llmk} is run from.
+Use this option to specify a directory where \progname{latex} output files should be written to and read from. If the directory does not exist, \prog{llmk} creates it, along with any missing parent directories. If the option is not specified, then output files will be written to the directory where \prog{llmk} is run from.
 \end{confkey}
 
 \begin{confkey}{programs}{type: \type{table}}
