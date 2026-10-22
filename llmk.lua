@@ -1338,9 +1338,11 @@ function M.run_sequence(fn, config)
   llmk.util.dbg_print('fdb', 'The initial file database is as follows:')
   llmk.util.dbg_print_table('fdb', fdb)
 
-  -- check if output directory exists
+  -- create the output directory if it does not exist
   if config.output_directory and not lfs.isdir(config.output_directory) then
-    llmk.util.err_print('error', 'Output directory does not exist "%s"', config.output_directory)
+    if not lfs.mkdirp(config.output_directory) then
+      llmk.util.err_print('error', 'Failed to create output directory "%s"', config.output_directory)
+    end
   end
 
   for _, name in ipairs(config.sequence) do
