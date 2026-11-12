@@ -16,7 +16,7 @@ See the bundled reference manual ([llmk.pdf](http://mirrors.ctan.org/support/lig
 
 This software is included in [TeX Live](https://www.tug.org/texlive/) and [MiKTeX](https://miktex.org/) as Package `light-latex-make`. If you are using one of the latest distributions, you normally don't need to install it by yourself (for TeX Live, please use the `tlmgr` command to install it, if the package is missing).
 
-In case the package is not installed in your TeX system or you want to use the latest (development) version of the program, you have to install it manually. You can acquire any material related to this software from [our GitHub repository](https://github.com/wtsnjp/llmk). The installation procedure is very simple anyway because the `llmk.lua` is the standalone executable. Running `texlua <path>/llmk.lua` should work in any case. In UNIX-like systems, the easiest way to install the program is copy or symlink the file `llmk.lua` as `llmk` in any place in the `PATH`.
+In case the package is not installed in your TeX system or you want to use the latest (development) version of the program, you have to install it manually. You can acquire any material related to this software from [our GitHub repository](https://github.com/wtsnjp/llmk). The installation procedure is very simple anyway because the `llmk.lua` is the standalone executable. Running `texlua <path>/llmk.lua` should work in any case. In Unix-like systems, the easiest way to install the program is copy or symlink the file `llmk.lua` as `llmk` in any place in the `PATH`.
 
 ## Basic Usage
 
@@ -292,7 +292,7 @@ This project has been supported by the [TeX Development Fund](https://www.tug.or
 
 ## License
 
-Copyright 2018-2025 Takuto Asakura ([wtsnjp](https://twitter.com/wtsnjp))
+Copyright 2018-2026 Takuto Asakura ([wtsnjp](https://twitter.com/wtsnjp))
 
 This software is licensed under [the MIT license](./LICENSE).
 
