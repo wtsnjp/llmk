@@ -49,7 +49,11 @@
 \setmainfont{STIX Two Text}
 \setsansfont{Helvetica Neue}
 \setmathfont{STIX Two Math}[StylisticSet=02, StylisticSet=08]
-\setmonofont[StylisticSet={1,3}]{Inconsolatazi4}
+\setmonofont[StylisticSet={1,3}]{Inconsolatazi4}[
+  Extension = .otf,
+  UprightFont = *-Regular,
+  BoldFont = *-Bold
+]
 
 % logo
 \newcommand{\logomainfont}{\fontspec{Helvetica Neue}}

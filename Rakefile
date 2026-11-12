@@ -7,6 +7,7 @@ require 'date'
 
 # basics
 PKG_NAME = "llmk"
+PKG_NAME_LONG = "light-latex-make"
 PKG_VERSION = "1.3.0"
 CTAN_MIRROR = "http://ctan.mirror.rafal.ca/systems/texlive/tlnet"
 
@@ -81,7 +82,7 @@ end
 desc "Create an archive for CTAN"
 task :ctan => :doc do
   # initialize the target
-  TARGET_DIR = TMP_DIR / PKG_NAME
+  TARGET_DIR = TMP_DIR / PKG_NAME_LONG
   rm_rf TARGET_DIR
   mkdir_p TARGET_DIR
 
