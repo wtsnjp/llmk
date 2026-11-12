@@ -80,6 +80,8 @@ jobs:
         steps.cache-texlive-windows.outputs.cache-hit != 'true'
       name: Set up TeX Live on Windows
       run: bundle exec rake setup_windows
+      env:
+        TEXLIVE_PREFER_OWN: 1
 
     - name: Run tests
       run: bundle exec rake test
