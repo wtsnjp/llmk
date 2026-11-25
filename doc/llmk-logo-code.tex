@@ -12,13 +12,15 @@
 \newcommand{\llmkLogo}[1][1]{\bgroup
   % scale
   \pgfmathsetlength{\llmkLogoUnit}{0.2cm * (#1)}%
-  % colors
-  % - paleturquoise (RGB: 143, 229, 216; CMYK: 38, 0, 6, 10)
-  \definecolor{color1}{RGB}{143, 229, 216}%
-  % - symphony blue (RGB: 24, 87, 227; CMYK: 92, 63, 0, 0)
-  \definecolor{color2}{RGB}{24, 87, 227}%
-  % - obaku (RGB: 255, 242, 127; CMYK: 1, 5, 62, 0)
-  \definecolor{color3}{RGB}{255, 242, 127}%
+  % colors (Arcade Bloom palette)
+  % - Primary: red (RGB: 191, 1, 8; HEX: BF0108)
+  \definecolor{color1}{RGB}{191, 1, 8}%
+  % - Accent 2: blue (RGB: 1, 113, 160; HEX: 0171A0)
+  \definecolor{color2}{RGB}{1, 113, 160}%
+  % - Accent 1: yellow (RGB: 245, 154, 2; HEX: F59A02)
+  \definecolor{color3}{RGB}{245, 154, 2}%
+  % - Main text: black (RGB: 66, 66, 66; HEX: 424242)
+  \definecolor{colorLine}{RGB}{66, 66, 66}%
   % shapes
   \pgfdeclarelayer{bg}%
   \pgfsetlayers{bg,main}%
@@ -36,7 +38,7 @@
   \node [octagon, minimum width = {5\llmkLogoUnit}, fill = color2, right = {2\llmkLogoUnit of n1}] (n2) {};
   \node [star, minimum width = {5\llmkLogoUnit}, fill = color3, right = {2\llmkLogoUnit of n2}] (n3) {};
   \begin{pgfonlayer}{bg}
-  \draw [line width=.25\llmkLogoUnit, shorten <= -\llmkLogoUnit, shorten >= -\llmkLogoUnit] (n1) -- (n3);
+  \draw [colorLine, line width=.25\llmkLogoUnit, shorten <= -\llmkLogoUnit, shorten >= -\llmkLogoUnit] (n1) -- (n3);
   \end{pgfonlayer}%
   \end{tikzpicture}\egroup}
 
